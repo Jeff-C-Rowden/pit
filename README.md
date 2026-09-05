@@ -54,7 +54,11 @@ Production image uses Next.js `output: 'standalone'` (see `Dockerfile`). SQLite 
 
 ### Railway
 
-`railway.toml` builds with the Dockerfile and starts `node server.js`. Mount a persistent volume at `/data` so `PIT_DB_PATH=/data/pit.sqlite` survives redeploys. Set `SESSION_SECRET` and `PIT_PAYMENTS=sandbox` in the service env.
+`railway.toml` builds with the Dockerfile. The image `ENTRYPOINT` (`docker-entrypoint.sh`) creates/chowns the `PIT_DB_PATH` directory (default `/data/pit.sqlite`) then drops to the `node` user via gosu — needed because Railway volumes are often root-owned while the app should not stay root.
+
+Mount a persistent volume at `/data`. Set `SESSION_SECRET` and `PIT_PAYMENTS=sandbox` in the service env. Cookies use `Secure` when `NODE_ENV=production` (or set `PIT_COOKIE_SECURE=1`).
+
+If signup still returns `unable to open database file` after a volume mount, set emergency env `PIT_DB_PATH=/tmp/pit.sqlite` (ephemeral; prefer fixing volume ownership via the entrypoint).
 
 ## Tests
 
