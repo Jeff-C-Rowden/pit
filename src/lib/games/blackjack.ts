@@ -276,6 +276,15 @@ export function split(s: BjState): { state: BjState; extraBet: number } {
   return { state: s, extraBet: extra };
 }
 
+
+export function abandonHand(s: BjState): BjState {
+  if (s.phase === "settled") throw new Error("hand already settled");
+  s.phase = "settled";
+  s.result = "hand closed";
+  s.payoutCents = 0;
+  return s;
+}
+
 export function publicBlackjack(s: BjState, revealDealer: boolean) {
   const hideHole = !revealDealer && s.phase !== "settled" && s.phase !== "dealer";
   return {

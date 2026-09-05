@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { startBlackjackWithCards, hit, stand, double, split, takeInsurance } from "../src/lib/games/blackjack";
+import { startBlackjackWithCards, hit, stand, double, split, takeInsurance, abandonHand } from "../src/lib/games/blackjack";
 import type { Card } from "../src/lib/games/cards";
 
 const c = (rank: Card["rank"], suit: Card["suit"] = "s"): Card => ({ rank, suit });
@@ -59,5 +59,14 @@ describe("blackjack rules", () => {
     const d = takeInsurance(s, true);
     expect(d.phase).toBe("settled");
     expect(d.payoutCents).toBe(1500); // 500 premium * 3
+  });
+
+  it("abandon settles open hand without payout", () => {
+    const s = startBlackjackWithCards(1000, [c(10), c(9), c(1), c(8)]);
+    expect(s.phase).toBe("insurance");
+    const d = abandonHand(s);
+    expect(d.phase).toBe("settled");
+    expect(d.result).toBe("hand closed");
+    expect(d.payoutCents).toBe(0);
   });
 });

@@ -39,9 +39,9 @@ export default function BlackjackPage() {
   const result = String(game?.result || "");
   const isPush = result.includes("push") && !result.includes("win") && !result.includes("blackjack");
   const isWin = game?.phase === "settled" && (game.payoutCents || 0) > 0 && !isPush;
-  const isLoss = game?.phase === "settled" && !isWin && !isPush;
+  const isLoss = game?.phase === "settled" && !isWin && !isPush && result !== "hand closed";
   let hint = "Pick a bet, then Deal. Click an empty chair to sit.";
-  if (game?.phase === "insurance") hint = "Dealer shows an ace. Take insurance or pass.";
+  if (game?.phase === "insurance") hint = "Dealer shows an Ace — insurance?";
   else if (game?.phase === "play") hint = "Hit or Stand. Double and split when offered.";
   else if (game?.phase === "settled") hint = "Hand is over. Deal the next one when you are ready.";
 
@@ -75,6 +75,11 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
   const youBet = game?.playerHands?.reduce((s: number, h: any) => s + (h.betCents || 0), 0)
     || (game?.insuranceCents || 0)
     || (betting ? bet : 0);
+  const canAfford = u.balanceCents >= bet;
+  const openHand = game && game.phase !== "settled";
+  const dealHint = betting && !canAfford
+    ? "Cage needs funds first — open Cage and add test money."
+    : hint;
 
   useEffect(() => {
     if (!game || game.phase !== "settled") return;
@@ -99,7 +104,6 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
   return (
     <>
       <div className="rail-label" style={{ marginTop: 20 }}>Blackjack · 7-spot · 6 decks · S17 · 3:2</div>
-      {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
       <div className="felt-table seated bj-table">
         <DealerBooth>
           <div className="muted">Dealer {game?.dealer?.value ? `(${game.dealer.value.total})` : ""}</div>
@@ -108,9 +112,15 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
           </div>
         </DealerBooth>
         <TableHeart>
+          {game?.phase === "insurance" && (
+            <OutcomeBanner message="Dealer shows an Ace — insurance?" />
+          )}
           {isWin && <OutcomeBanner win amountCents={game.payoutCents} message={`You won ${money(game.payoutCents)} — added to your stack`} />}
           {isPush && <OutcomeBanner push amountCents={game.payoutCents} />}
           {isLoss && <OutcomeBanner message={result || "You lost this hand."} />}
+          {game?.phase === "settled" && result === "hand closed" && (
+            <OutcomeBanner message="Hand closed — bets already taken stay taken. Deal when ready." />
+          )}
         </TableHeart>
         {occupants.map((occ) => {
           const isYou = occ.kind === "you";
@@ -144,11 +154,17 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
           );
         })}
       </div>
-      <ActionDock hint={hint}>
+      <ActionDock hint={dealHint}>
+        {err && <p className="err dock-err">{err}</p>}
         {betting && (
           <>
             <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} />
-            <button className="btn primary hero-act" disabled={busy} onClick={() => act("deal")}>
+            <button
+              className="btn primary hero-act"
+              disabled={busy || !canAfford}
+              title={!canAfford ? "Cage needs funds first — open Cage and add test money." : undefined}
+              onClick={() => act("deal")}
+            >
               {game?.phase === "settled" ? "Next hand" : "Deal"}
             </button>
           </>
@@ -166,6 +182,11 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
             {game.canDouble && <button className="btn" disabled={busy} onClick={() => act("double")}>Double</button>}
             {game.canSplit && <button className="btn" disabled={busy} onClick={() => act("split")}>Split</button>}
           </>
+        )}
+        {openHand && (
+          <button className="btn" disabled={busy} onClick={() => act("abandon")}>
+            Leave hand
+          </button>
         )}
       </ActionDock>
     </>

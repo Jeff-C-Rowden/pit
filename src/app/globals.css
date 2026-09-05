@@ -244,6 +244,9 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 .action-dock-row {
   display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: center;
 }
+.action-dock-row .dock-err {
+  flex: 1 0 100%; text-align: center; margin: 0 0 4px;
+}
 .table-hint {
   text-align: center; margin: 0 0 10px;
   font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold-hi);

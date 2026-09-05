@@ -4,7 +4,7 @@ import { toPublic } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
 import {
-  startBlackjack, hit, stand, double, split, takeInsurance, publicBlackjack, type BjState,
+  startBlackjack, hit, stand, double, split, takeInsurance, abandonHand, publicBlackjack, type BjState,
 } from "@/lib/games/blackjack";
 
 function freshUser(id: string) {
@@ -74,6 +74,8 @@ export async function POST(req: Request) {
       const r = split(state);
       debitBet(user.id, r.extraBet, "blackjack", state.id, `bj-spl-${state.id}-${key}`, { action: "split" });
       state = r.state;
+    } else if (action === "abandon") {
+      state = abandonHand(state);
     } else return err("unknown action");
 
     const done = state.phase === "settled";
