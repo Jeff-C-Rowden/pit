@@ -41,6 +41,21 @@ PIT_PAYMENTS — payments adapter selector (default `sandbox`):
 
 Cage UI shows adapter mode via `GET /api/wallet/status`.
 
+
+## Deploy
+
+Production image uses Next.js `output: 'standalone'` (see `Dockerfile`). SQLite lives on a volume at `PIT_DB_PATH` (default `/data/pit.sqlite`).
+
+### Fly.io
+
+1. Create the app volume once: `fly volumes create pit_data --region ord --size 1`
+2. Set secrets as needed: `fly secrets set SESSION_SECRET=...`
+3. Deploy: `fly deploy` (uses `fly.toml`; app name `pit-demo-jeff` — rename if taken)
+
+### Railway
+
+`railway.toml` builds with the Dockerfile and starts `node server.js`. Mount a persistent volume at `/data` so `PIT_DB_PATH=/data/pit.sqlite` survives redeploys. Set `SESSION_SECRET` and `PIT_PAYMENTS=sandbox` in the service env.
+
 ## Tests
 
 The test script runs vitest: ledger idempotency and isolation, blackjack rules, hold'em ranking, roulette payouts, craps come-out/point, pai gow, slot RTP band, payments adapter selection.

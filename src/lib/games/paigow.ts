@@ -26,7 +26,7 @@ function isFlush(cards: Card[]): boolean {
 
 function straightHigh(cards: Card[]): number {
   const jokers = cards.filter((c) => c.joker).length;
-  const ranks = [...new Set(cards.filter((c) => !c.joker).map(r))].sort((a, b) => a - b);
+  const ranks: number[] = [...new Set(cards.filter((c) => !c.joker).map(r))].sort((a, b) => a - b);
   if (ranks.length + jokers !== cards.length && cards.length === 5) {
     // duplicates can't straight unless joker filling - duplicates fail
     if (ranks.length + jokers < 5) return 0;

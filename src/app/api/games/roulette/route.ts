@@ -15,7 +15,8 @@ export async function GET() {
 export async function POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
-    const raw = Array.isArray(body.bets) ? body.bets as RouletteBet[] : [];
+    type IncomingBet = RouletteBet & { which?: number };
+    const raw = Array.isArray(body.bets) ? body.bets as IncomingBet[] : [];
     if (!raw.length) return err("place at least one bet");
     if (raw.length > 40) return err("too many bets");
     const bets: RouletteBet[] = raw.map((b) => {
@@ -41,7 +42,7 @@ export async function POST(req: Request) {
     const u = getDb().prepare("SELECT * FROM users WHERE id = ?").get(user.id) as typeof user;
     return json({
       user: toPublic(u),
-      spin: { id, pocket, ...settled, stakeCents: stake, netCents: settled.payoutCents - stake },
+      spin: { id, ...settled, stakeCents: stake, netCents: settled.payoutCents - stake },
       balanceCents: getBalance(user.id),
     });
   });

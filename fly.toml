@@ -1,0 +1,32 @@
+# fly.toml — Pit demo on Fly.io
+# App name: change if pit-demo-jeff is taken (e.g. pit-jeff-rowden / pit-sandbox).
+#
+# Volume (create once before first deploy):
+#   fly volumes create pit_data --region ord --size 1
+# Then: fly deploy
+
+app = 'pit-demo-jeff'
+primary_region = 'ord'
+
+[build]
+
+[env]
+  PORT = '3000'
+  PIT_DB_PATH = '/data/pit.sqlite'
+  PIT_PAYMENTS = 'sandbox'
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[mounts]
+  source = 'pit_data'
+  destination = '/data'

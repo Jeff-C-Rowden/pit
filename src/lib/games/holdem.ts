@@ -231,7 +231,8 @@ export function playerAct(s: HoldemState, a: PlayerAction): { extraDebit: number
     closeIfFolded(s);
     return { extraDebit: extra };
   }
-  if (s.toAct === "house") houseAct(s);
+  // applyAction mutates toAct; refresh for the checker
+  if ((s.toAct as HoldemState["toAct"]) === "house") houseAct(s);
   if (s.playerFolded || s.houseFolded) closeIfFolded(s);
   return { extraDebit: extra };
 }
