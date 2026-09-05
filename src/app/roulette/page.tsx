@@ -1,10 +1,13 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Shell from "@/components/Shell";
 import { ActionDock, Chip, OutcomeBanner } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 import RouletteCloth, {
+  LastNine,
+  PIT_ROULETTE_BOTS,
+  RouletteBots,
   RouletteStats,
   RouletteWheel,
   SPIN_MS,
@@ -18,19 +21,25 @@ const OUTSIDE = [
   "1-18", "even", "red", "black", "odd", "19-36",
   "col 1", "col 2", "col 3",
 ];
+const BOT_CHIP_CENTS = [25, 100, 500, 1000, 2500];
 
 function sleep(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
 function pickGhosts(): GhostChip[] {
-  const n = Math.random() < 0.45 ? 1 : 2;
+  const n = 2 + Math.floor(Math.random() * 3); // 2–4 outside drops
   const pool = [...OUTSIDE];
+  const bots = [...PIT_ROULETTE_BOTS];
   const out: GhostChip[] = [];
   for (let i = 0; i < n && pool.length; i++) {
     const j = Math.floor(Math.random() * pool.length);
     const label = pool.splice(j, 1)[0]!;
-    out.push({ label, cents: Math.random() < 0.55 ? 100 : 500 });
+    const bot = bots.length
+      ? bots.splice(Math.floor(Math.random() * bots.length), 1)[0]!
+      : PIT_ROULETTE_BOTS[i % PIT_ROULETTE_BOTS.length]!;
+    const cents = BOT_CHIP_CENTS[Math.floor(Math.random() * BOT_CHIP_CENTS.length)]!;
+    out.push({ label, cents, bot });
   }
   return out;
 }
@@ -70,6 +79,11 @@ export default function RoulettePage() {
 
   const stake = bets.reduce((a, b) => a + b.amountCents, 0);
   const on = (label: string) => bets.filter((b) => b.label === label).reduce((s, b) => s + b.amountCents, 0);
+
+  const botFlashes = useMemo(
+    () => ghosts.filter((g) => g.bot).map((g) => ({ bot: g.bot!, label: g.label })),
+    [ghosts],
+  );
 
   function add(b: ClothBet) {
     if (busy) return;
@@ -119,7 +133,11 @@ export default function RoulettePage() {
     <Shell>
       {(u) => (
         <div className="roulette-page">
-          <div className="rail-label" style={{ marginTop: 16 }}>American roulette · 0 and 00 · house edge 5.26%</div>
+          <div className="rl-chrome">
+            <div className="rl-chrome-mark">Pit</div>
+            <div className="rl-chrome-title">American · 0 / 00</div>
+            <div className="rl-chrome-meta">House edge 5.26%</div>
+          </div>
           {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
           {won && !spinning && (
             <OutcomeBanner
@@ -143,7 +161,12 @@ export default function RoulettePage() {
           <div className="rl-stage">
             <div className="rl-star">
               <RouletteWheel pocket={displayPocket} spinning={spinning} spinId={spinId} />
+              <div className="rl-last9-wrap">
+                <div className="rl-last9-lab">Last 9</div>
+                <LastNine pockets={history} />
+              </div>
               <RouletteStats pockets={history} />
+              <RouletteBots active={spinning} flashes={spinning || ghosts.length ? botFlashes : []} />
             </div>
             <RouletteCloth
               onAdd={add}
@@ -152,10 +175,11 @@ export default function RoulettePage() {
               lastNine={history}
               ghosts={ghosts}
               locked={busy}
+              hideLastNine
             />
           </div>
           <StandingRail youName={u.displayName} youStack={u.balanceCents} coinIn={stake} />
-          <ActionDock hint={spinning ? "Ball in play." : bets.length ? "Spin the wheel." : "Pick a chip, drop it on a number, then Spin."}>
+          <ActionDock hint={spinning ? "Ball in play — bots dropping chips." : bets.length ? "Spin the wheel." : "Pick a chip, drop it on a number, then Spin."}>
             {[25, 100, 500, 1000, 2500].map((c) => (
               <Chip key={c} cents={c} selected={chip === c} onClick={() => setChip(c)} />
             ))}

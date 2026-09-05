@@ -1,11 +1,13 @@
 "use client";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChipStack } from "./TableUX";
+import { SeatAvatar } from "./Seating";
 import { money } from "./useUser";
 import { RED, WHEEL_ORDER as WHEEL, FELT_ROWS, pocketColor } from "@/lib/games/rouletteFelt";
 export { RED, FELT_ROWS, pocketColor, WHEEL };
 
-export const SPIN_MS = 1600;
+/** Smooth casino spin — ball arcs then settles with the cylinder. */
+export const SPIN_MS = 3000;
 
 export type ClothBet = {
   kind: string;
@@ -14,7 +16,10 @@ export type ClothBet = {
   label: string;
 };
 
-export type GhostChip = { label: string; cents: number };
+export type GhostChip = { label: string; cents: number; bot?: string };
+
+/** House bots that linger at the American table — Pit names only. */
+export const PIT_ROULETTE_BOTS = ["Mara", "Vince", "Delia", "Otto", "June"] as const;
 
 function OnChip({ cents, ghost }: { cents: number; ghost?: boolean }) {
   if (cents <= 0) return null;
@@ -56,7 +61,7 @@ function pocketAngle(pocket: string) {
 function nextRotation(current: number, pocket: string) {
   const land = pocketAngle(pocket);
   const landNorm = ((land % 360) + 360) % 360;
-  const turns = 2 + (pocket.length % 2);
+  const turns = 3 + (pocket.length % 2);
   let target = current - 360 * turns;
   const targetNorm = ((target % 360) + 360) % 360;
   let adj = landNorm - targetNorm;
@@ -72,7 +77,7 @@ function LastNine({ pockets }: { pockets: string[] }) {
         const p = pockets[i];
         if (!p) return <span key={`e${i}`} className="rl-last9-pip empty" />;
         return (
-          <span key={`${p}-${i}`} className={`rl-last9-pip ${pocketColor(p)} ${i === 0 ? "newest" : ""}`}>
+          <span key={`${p}-${i}`} className={`rl-last9-pip chip ${pocketColor(p)} ${i === 0 ? "newest" : ""}`}>
             {p}
           </span>
         );
@@ -83,12 +88,15 @@ function LastNine({ pockets }: { pockets: string[] }) {
 
 export function tallySession(pockets: string[]) {
   const dozens = [0, 0, 0];
-  let red = 0, black = 0, even = 0, odd = 0, low = 0, high = 0;
+  let red = 0, black = 0, green = 0, even = 0, odd = 0, low = 0, high = 0;
   const freq = new Map<string, { n: number; recency: number }>();
   pockets.forEach((p, i) => {
     const prev = freq.get(p);
     freq.set(p, { n: (prev?.n || 0) + 1, recency: prev ? prev.recency : i });
-    if (p === "0" || p === "00") return;
+    if (p === "0" || p === "00") {
+      green += 1;
+      return;
+    }
     const n = Number(p);
     if (n >= 1 && n <= 12) dozens[0]! += 1;
     else if (n <= 24) dozens[1]! += 1;
@@ -103,16 +111,21 @@ export function tallySession(pockets: string[]) {
   });
   const hot = [...freq.entries()]
     .sort((a, b) => b[1].n - a[1].n || a[1].recency - b[1].recency)
-    .slice(0, 3)
+    .slice(0, 5)
     .map(([p, v]) => ({ pocket: p, hits: v.n }));
-  return { dozens, red, black, even, odd, low, high, hot };
+  return { spins: pockets.length, dozens, red, black, green, even, odd, low, high, hot };
 }
 
 export function RouletteStats({ pockets }: { pockets: string[] }) {
   const s = useMemo(() => tallySession(pockets), [pockets]);
   return (
     <aside className="rl-stats" aria-label="Session statistics from last numbers">
-      <div className="rl-stats-h">Session · last {pockets.length}</div>
+      <div className="rl-stats-h">Session · {s.spins} spin{s.spins === 1 ? "" : "s"}</div>
+      <div className="rl-stats-colors">
+        <span className="rl-stat-pill red"><em>Red</em><strong>{s.red}</strong></span>
+        <span className="rl-stat-pill black"><em>Black</em><strong>{s.black}</strong></span>
+        <span className="rl-stat-pill green"><em>0 / 00</em><strong>{s.green}</strong></span>
+      </div>
       <div className="rl-stats-grid">
         <div>
           <div className="rl-stats-row"><span>1st 12</span><strong>{s.dozens[0]}</strong></div>
@@ -120,8 +133,6 @@ export function RouletteStats({ pockets }: { pockets: string[] }) {
           <div className="rl-stats-row"><span>3rd 12</span><strong>{s.dozens[2]}</strong></div>
         </div>
         <div>
-          <div className="rl-stats-row"><span>Red</span><strong>{s.red}</strong></div>
-          <div className="rl-stats-row"><span>Black</span><strong>{s.black}</strong></div>
           <div className="rl-stats-row"><span>Even</span><strong>{s.even}</strong></div>
           <div className="rl-stats-row"><span>Odd</span><strong>{s.odd}</strong></div>
           <div className="rl-stats-row"><span>1–18</span><strong>{s.low}</strong></div>
@@ -134,13 +145,45 @@ export function RouletteStats({ pockets }: { pockets: string[] }) {
           <span className="muted">—</span>
         ) : (
           s.hot.map((h) => (
-            <span key={h.pocket} className={`rl-last9-pip ${pocketColor(h.pocket)}`} title={`${h.hits} hit${h.hits === 1 ? "" : "s"}`}>
+            <span key={h.pocket} className={`rl-last9-pip chip ${pocketColor(h.pocket)}`} title={`${h.hits} hit${h.hits === 1 ? "" : "s"}`}>
               {h.pocket}
             </span>
           ))
         )}
       </div>
     </aside>
+  );
+}
+
+export function RouletteBots({
+  active,
+  flashes,
+}: {
+  active?: boolean;
+  flashes?: { bot: string; label: string }[];
+}) {
+  const bots = PIT_ROULETTE_BOTS;
+  return (
+    <div className={`rl-bots${active ? " live" : ""}`} aria-label="House bots at the table">
+      {bots.map((name) => {
+        const flash = flashes?.find((f) => f.bot === name);
+        return (
+          <div key={name} className={`rl-bot${flash ? " betting" : ""}`}>
+            <SeatAvatar name={name} size={34} />
+            <div className="rl-bot-meta">
+              <span className="rl-bot-name">{name}</span>
+              {flash ? (
+                <span className="rl-bot-flash" key={`${flash.label}-${flash.bot}`}>
+                  {flash.label}
+                </span>
+              ) : (
+                <span className="rl-bot-idle">{active ? "watching" : "at table"}</span>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -160,10 +203,10 @@ export function RouletteWheel({
   const applied = useRef(0);
   const [rot, setRot] = useState(0);
   const [orbitKey, setOrbitKey] = useState(0);
-  const cx = 200;
-  const cy = 200;
-  const r0 = 62;
-  const r1 = 168;
+  const cx = 220;
+  const cy = 220;
+  const r0 = 72;
+  const r1 = 188;
 
   useEffect(() => {
     if (!spinning || !pocket || !spinId) return;
@@ -181,74 +224,108 @@ export function RouletteWheel({
   return (
     <div className={`rl-wheel-scene ${spinning ? "spinning" : ""} ${settled ? "settled" : ""}`}>
       <div className="rl-bowl">
-        <svg viewBox="0 0 400 400" className="rl-bowl-svg" aria-hidden>
+        <svg viewBox="0 0 440 440" className="rl-bowl-svg" aria-hidden>
           <defs>
-            <radialGradient id={`wood${uid}`} cx="38%" cy="30%" r="72%">
-              <stop offset="0%" stopColor="#8a5a3a" />
-              <stop offset="38%" stopColor="#5a3422" />
-              <stop offset="68%" stopColor="#2a160e" />
-              <stop offset="100%" stopColor="#4a2a1a" />
+            <radialGradient id={`wood${uid}`} cx="36%" cy="28%" r="74%">
+              <stop offset="0%" stopColor="#a06840" />
+              <stop offset="22%" stopColor="#7a4a2c" />
+              <stop offset="48%" stopColor="#4a2818" />
+              <stop offset="72%" stopColor="#1e100a" />
+              <stop offset="100%" stopColor="#3a2214" />
             </radialGradient>
             <linearGradient id={`brass${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#f0e0b0" />
-              <stop offset="45%" stopColor="#c9a227" />
-              <stop offset="100%" stopColor="#7a5a10" />
+              <stop offset="0%" stopColor="#f5e6c0" />
+              <stop offset="35%" stopColor="#d4b24a" />
+              <stop offset="70%" stopColor="#a07818" />
+              <stop offset="100%" stopColor="#6a4a0c" />
             </linearGradient>
-            <radialGradient id={`groove${uid}`} cx="50%" cy="50%" r="50%">
-              <stop offset="78%" stopColor="#1a100c" />
-              <stop offset="86%" stopColor="#3a2418" />
-              <stop offset="92%" stopColor="#1a100c" />
-              <stop offset="100%" stopColor="#2a1810" />
+            <radialGradient id={`groove${uid}`} cx="50%" cy="48%" r="52%">
+              <stop offset="70%" stopColor="#0c0806" />
+              <stop offset="82%" stopColor="#2a1810" />
+              <stop offset="90%" stopColor="#120c08" />
+              <stop offset="100%" stopColor="#241610" />
+            </radialGradient>
+            <radialGradient id={`rimShine${uid}`} cx="30%" cy="22%" r="70%">
+              <stop offset="0%" stopColor="rgba(255,220,170,.22)" />
+              <stop offset="45%" stopColor="rgba(255,220,170,0)" />
+              <stop offset="100%" stopColor="rgba(0,0,0,.35)" />
             </radialGradient>
           </defs>
-          <circle cx="200" cy="200" r="198" fill={`url(#wood${uid})`} />
-          <circle cx="200" cy="200" r="186" fill="none" stroke={`url(#brass${uid})`} strokeWidth="10" />
-          <circle cx="200" cy="200" r="178" fill={`url(#groove${uid})`} />
-          <circle cx="200" cy="200" r="170" fill="none" stroke="#c9a227" strokeWidth="2.4" opacity="0.85" />
-          <circle cx="200" cy="200" r="54" fill="#120c08" />
+          <circle cx="220" cy="220" r="218" fill={`url(#wood${uid})`} />
+          <circle cx="220" cy="220" r="218" fill={`url(#rimShine${uid})`} />
+          <circle cx="220" cy="220" r="204" fill="none" stroke={`url(#brass${uid})`} strokeWidth="12" />
+          <circle cx="220" cy="220" r="194" fill="none" stroke="#8a6a20" strokeWidth="1.5" opacity="0.7" />
+          <circle cx="220" cy="220" r="192" fill={`url(#groove${uid})`} />
+          <circle cx="220" cy="220" r="186" fill="none" stroke="#e8d5a3" strokeWidth="2.2" opacity="0.75" />
+          <circle cx="220" cy="220" r="64" fill="#0a0604" />
+          {/* frets shadow ring */}
+          <circle cx="220" cy="220" r="76" fill="none" stroke="rgba(0,0,0,.45)" strokeWidth="8" />
         </svg>
 
         <div
           className="rl-cylinder"
           style={{
             transform: `rotate(${rot}deg)`,
-            transition: `transform ${SPIN_MS}ms cubic-bezier(0.12, 0.62, 0.18, 1)`,
+            transition: `transform ${SPIN_MS}ms cubic-bezier(0.08, 0.72, 0.12, 1)`,
           }}
         >
-          <svg viewBox="0 0 400 400" className="rl-wheel" aria-hidden>
+          <svg viewBox="0 0 440 440" className="rl-wheel" aria-hidden>
+            <defs>
+              <linearGradient id={`pocketRed${uid}`} x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#d42832" />
+                <stop offset="55%" stopColor="#9a1218" />
+                <stop offset="100%" stopColor="#5c0a0e" />
+              </linearGradient>
+              <linearGradient id={`pocketBlk${uid}`} x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#2a2a2a" />
+                <stop offset="55%" stopColor="#121212" />
+                <stop offset="100%" stopColor="#050505" />
+              </linearGradient>
+              <linearGradient id={`pocketGrn${uid}`} x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#1a9a52" />
+                <stop offset="55%" stopColor="#0c6a34" />
+                <stop offset="100%" stopColor="#064020" />
+              </linearGradient>
+            </defs>
             {WHEEL.map((p, i) => {
               const a0 = i * slice - 90;
               const a1 = (i + 1) * slice - 90;
               const col = pocketColor(p);
-              const fill = col === "green" ? "#0f7a3e" : col === "red" ? "#b31b24" : "#161616";
+              const fill =
+                col === "green"
+                  ? `url(#pocketGrn${uid})`
+                  : col === "red"
+                    ? `url(#pocketRed${uid})`
+                    : `url(#pocketBlk${uid})`;
               const mid = ((i * slice + slice / 2 - 90) * Math.PI) / 180;
-              const tx = cx + 118 * Math.cos(mid);
-              const ty = cy + 118 * Math.sin(mid);
-              const fret0 = ((a0) * Math.PI) / 180;
+              const tx = cx + 132 * Math.cos(mid);
+              const ty = cy + 132 * Math.sin(mid);
+              const fret0 = (a0 * Math.PI) / 180;
               const fx0 = cx + r0 * Math.cos(fret0);
               const fy0 = cy + r0 * Math.sin(fret0);
               const fx1 = cx + r1 * Math.cos(fret0);
               const fy1 = cy + r1 * Math.sin(fret0);
               return (
                 <g key={p + i}>
-                  <path d={sectorPath(cx, cy, r0, r1, a0, a1)} fill={fill} />
+                  <path d={sectorPath(cx, cy, r0, r1, a0, a1)} fill={fill} stroke="#0a0604" strokeWidth="0.4" />
                   <line
                     x1={fx0.toFixed(2)}
                     y1={fy0.toFixed(2)}
                     x2={fx1.toFixed(2)}
                     y2={fy1.toFixed(2)}
-                    stroke="#e8d5a3"
-                    strokeWidth="1.1"
-                    opacity="0.85"
+                    stroke="#f0e0b0"
+                    strokeWidth="1.35"
+                    opacity="0.9"
                   />
                   <text
                     x={tx.toFixed(2)}
                     y={ty.toFixed(2)}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fill="#f3ead7"
-                    fontSize={p.length > 1 ? 11 : 13}
-                    fontWeight="700"
+                    fill="#f8f0e0"
+                    fontSize={p.length > 1 ? 12 : 14}
+                    fontWeight="800"
+                    style={{ textShadow: "0 1px 2px rgba(0,0,0,.6)" }}
                     transform={`rotate(${i * slice + slice / 2}, ${tx.toFixed(2)}, ${ty.toFixed(2)})`}
                   >
                     {p}
@@ -256,25 +333,34 @@ export function RouletteWheel({
                 </g>
               );
             })}
-            <circle cx="200" cy="200" r="62" fill="none" stroke="#c9a227" strokeWidth="3" />
+            <circle cx="220" cy="220" r="72" fill="none" stroke="#c9a227" strokeWidth="3.5" />
+            <circle cx="220" cy="220" r="68" fill="none" stroke="#e8d5a3" strokeWidth="1" opacity="0.4" />
           </svg>
         </div>
 
         <div className="rl-hub" aria-hidden>
-          <svg viewBox="0 0 400 400">
+          <svg viewBox="0 0 440 440">
             <defs>
-              <radialGradient id={`cap${uid}`} cx="40%" cy="35%" r="65%">
-                <stop offset="0%" stopColor="#3a2a1c" />
-                <stop offset="100%" stopColor="#120c08" />
+              <radialGradient id={`cap${uid}`} cx="38%" cy="32%" r="68%">
+                <stop offset="0%" stopColor="#4a3424" />
+                <stop offset="55%" stopColor="#1a120c" />
+                <stop offset="100%" stopColor="#080604" />
               </radialGradient>
+              <linearGradient id={`hubBrass${uid}`} x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#f0e0b0" />
+                <stop offset="50%" stopColor="#c9a227" />
+                <stop offset="100%" stopColor="#7a5a10" />
+              </linearGradient>
             </defs>
-            <circle cx="200" cy="200" r="56" fill={`url(#cap${uid})`} stroke="#c9a227" strokeWidth="3.5" />
-            <circle cx="200" cy="200" r="46" fill="none" stroke="#e8d5a3" strokeWidth="1" opacity="0.45" />
-            <text x="200" y="194" textAnchor="middle" fill="#c9a227" fontSize="16" letterSpacing="4" fontFamily="Palatino, Georgia, serif">
+            <circle cx="220" cy="220" r="64" fill={`url(#cap${uid})`} stroke={`url(#hubBrass${uid})`} strokeWidth="4.5" />
+            <circle cx="220" cy="220" r="52" fill="none" stroke="#e8d5a3" strokeWidth="1.2" opacity="0.5" />
+            <circle cx="220" cy="220" r="18" fill={`url(#hubBrass${uid})`} opacity="0.95" />
+            <circle cx="220" cy="220" r="10" fill="#1a120c" />
+            <text x="220" y="208" textAnchor="middle" fill="#c9a227" fontSize="18" letterSpacing="5" fontFamily="Palatino, Georgia, serif">
               PIT
             </text>
-            <text x="200" y="214" textAnchor="middle" fill="#e8d5a3" fontSize="10" letterSpacing="1.4">
-              00 / 0
+            <text x="220" y="228" textAnchor="middle" fill="#e8d5a3" fontSize="11" letterSpacing="1.6">
+              AMERICAN
             </text>
           </svg>
         </div>
@@ -286,7 +372,7 @@ export function RouletteWheel({
         )}
 
         <div className="rl-wheel-pointer" title="Pointer">
-          <svg viewBox="0 0 28 36" width="22" height="28">
+          <svg viewBox="0 0 28 36" width="24" height="30">
             <polygon points="14,34 2,4 26,4" fill="#e8d5a3" stroke="#8a6a12" strokeWidth="1.4" />
             <polygon points="14,28 8,8 20,8" fill="#c9a227" />
           </svg>
@@ -302,7 +388,7 @@ export function RouletteWheel({
         ) : spinning ? (
           <span className="muted">No more bets</span>
         ) : (
-          <span className="muted">American wheel</span>
+          <span className="muted">American · 0 / 00</span>
         )}
       </div>
     </div>
@@ -316,6 +402,7 @@ export default function RouletteCloth({
   lastNine,
   ghosts,
   locked,
+  hideLastNine,
 }: {
   onAdd: (b: ClothBet) => void;
   onAmount: (label: string) => number;
@@ -323,6 +410,7 @@ export default function RouletteCloth({
   lastNine?: string[];
   ghosts?: GhostChip[];
   locked?: boolean;
+  hideLastNine?: boolean;
 }) {
   const ghostOn = (label: string) => ghosts?.find((g) => g.label === label)?.cents ?? 0;
   const tap = (b: ClothBet) => {
@@ -332,7 +420,7 @@ export default function RouletteCloth({
 
   return (
     <div className={`rl-cloth${locked ? " locked" : ""}`} role="group" aria-label="American roulette layout">
-      <LastNine pockets={lastNine || []} />
+      {!hideLastNine && <LastNine pockets={lastNine || []} />}
       <div className="rl-grid">
         <button
           type="button"
@@ -377,7 +465,6 @@ export default function RouletteCloth({
             );
           }),
         )}
-
 
         {FELT_ROWS.map((row, ri) =>
           row.map((n, ci) => {
@@ -533,4 +620,4 @@ export default function RouletteCloth({
   );
 }
 
-export { money };
+export { money, LastNine };
