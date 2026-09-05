@@ -223,7 +223,7 @@ export default function CrapsPage() {
             : canRepeat
               ? "Repeat restacks the last round. Always last bet keeps doing that every roll."
               : "Drop a chip, then Roll. Repeat remembers that round."}>
-            <ChipRow amounts={[100, 500, 1000, 2500]} selected={chip} onSelect={setChip} />
+            <ChipRow amounts={[100, 500, 1000, 2500]} selected={chip} onSelect={setChip} minCents={100} maxCents={500_000} />
             <button className="btn" disabled={busy || !table?.canUndo} onClick={undo}>Undo</button>
             <button className="btn" disabled={busy || !canRepeat} onClick={repeat}>Repeat</button>
             <button className={`btn toggle${table?.alwaysRepeat ? " on" : ""}`} disabled={busy} onClick={toggleAlways}>

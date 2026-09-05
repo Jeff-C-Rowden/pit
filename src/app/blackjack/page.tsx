@@ -158,7 +158,7 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
         {err && <p className="err dock-err">{err}</p>}
         {betting && (
           <>
-            <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} />
+            <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} minCents={100} maxCents={500_000} />
             <button
               className="btn primary hero-act"
               disabled={busy || !canAfford}

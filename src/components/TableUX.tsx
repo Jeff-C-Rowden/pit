@@ -227,20 +227,116 @@ export function Chip({
   );
 }
 
+/** Parse a dollars string (optional cents) to integer cents, or null if incomplete/invalid. */
+export function parseDollarInput(raw: string): number | null {
+  const t = raw.trim();
+  if (!t || t.endsWith(".")) return null;
+  if (!/^\d+(\.\d{1,2})?$/.test(t)) return null;
+  const dollars = Number(t);
+  if (!Number.isFinite(dollars)) return null;
+  return Math.round(dollars * 100);
+}
+
+export function CustomWagerInput({
+  selected,
+  onSelect,
+  minCents = 25,
+  maxCents = 500_000,
+}: {
+  selected: number;
+  onSelect: (cents: number) => void;
+  minCents?: number;
+  maxCents?: number;
+}) {
+  const [draft, setDraft] = useState("");
+  const [hint, setHint] = useState<string | null>(null);
+  const [committed, setCommitted] = useState<number | null>(null);
+  const isSelected = committed != null && selected === committed;
+
+  function tryApply(raw: string, commitEmpty = false) {
+    const t = raw.trim();
+    if (!t) {
+      setHint(null);
+      if (commitEmpty) setCommitted(null);
+      return;
+    }
+    if (t.endsWith(".") || !/^\d*\.?\d{0,2}$/.test(t)) {
+      // still typing or invalid chars already filtered
+      if (!/^\d*\.?\d{0,2}$/.test(t)) setHint("Enter dollars (e.g. 7.50)");
+      return;
+    }
+    const cents = parseDollarInput(t);
+    if (cents == null) return; // incomplete (e.g. trailing ".")
+    if (cents < minCents) {
+      setHint(`Min ${money(minCents)}`);
+      return;
+    }
+    if (cents > maxCents) {
+      setHint(`Max ${money(maxCents)}`);
+      return;
+    }
+    setHint(null);
+    setCommitted(cents);
+    onSelect(cents);
+  }
+
+  return (
+    <label className={`custom-wager${isSelected ? " sel" : ""}`}>
+      <span className="custom-wager-label">Custom $</span>
+      <input
+        type="text"
+        inputMode="decimal"
+        className="custom-wager-input"
+        value={draft}
+        placeholder="0.00"
+        aria-label="Custom wager in dollars"
+        aria-invalid={hint ? true : undefined}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v === "" || /^\d*\.?\d{0,2}$/.test(v)) {
+            setDraft(v);
+            tryApply(v);
+          }
+        }}
+        onBlur={() => tryApply(draft, true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            tryApply(draft, true);
+          }
+        }}
+      />
+      {hint && <span className="custom-wager-hint" role="status">{hint}</span>}
+    </label>
+  );
+}
+
 export function ChipRow({
   amounts,
   selected,
   onSelect,
+  minCents,
+  maxCents,
 }: {
   amounts: number[];
   selected: number;
   onSelect: (n: number) => void;
+  minCents?: number;
+  maxCents?: number;
 }) {
+  const lo = minCents ?? Math.min(25, ...amounts);
+  const hi = maxCents ?? 500_000;
   return (
     <div className="chip-row">
       {amounts.map((c) => (
         <Chip key={c} cents={c} selected={selected === c} onClick={() => onSelect(c)} />
       ))}
+      <CustomWagerInput
+        selected={selected}
+        onSelect={onSelect}
+        minCents={lo}
+        maxCents={hi}
+      />
     </div>
   );
 }

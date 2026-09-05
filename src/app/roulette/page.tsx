@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import Shell from "@/components/Shell";
-import { ActionDock, Chip, OutcomeBanner } from "@/components/TableUX";
+import { ActionDock, ChipRow, OutcomeBanner } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 import RouletteCloth, {
@@ -180,9 +180,7 @@ export default function RoulettePage() {
           </div>
           <StandingRail youName={u.displayName} youStack={u.balanceCents} coinIn={stake} />
           <ActionDock hint={spinning ? "Ball in play — bots dropping chips." : bets.length ? "Spin the wheel." : "Pick a chip, drop it on a number, then Spin."}>
-            {[25, 100, 500, 1000, 2500].map((c) => (
-              <Chip key={c} cents={c} selected={chip === c} onClick={() => setChip(c)} />
-            ))}
+            <ChipRow amounts={[25, 100, 500, 1000, 2500]} selected={chip} onSelect={setChip} minCents={25} maxCents={500_000} />
             <button className="btn" onClick={() => setBets([])} disabled={busy || !bets.length}>Clear</button>
             <button className="btn" onClick={repeat} disabled={busy || !lastStake.length}>Repeat</button>
             <button className="btn primary hero-act" onClick={go} disabled={!bets.length || busy}>

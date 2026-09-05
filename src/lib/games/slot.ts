@@ -81,9 +81,13 @@ export function spinStops(): number[] {
   return REELS.map((strip) => randInt(strip.length));
 }
 
+/** Min/max coin size in cents (total bet = coin × LINE_COUNT). */
+export const MIN_COIN_CENTS = 25;
+export const MAX_COIN_CENTS = 5000;
+
 export function spinSlot(coinCents: number) {
-  if (![25, 50, 100, 250, 500].includes(coinCents)) {
-    throw new Error("coin size must be $0.25, $0.50, $1, $2.50, or $5");
+  if (!Number.isInteger(coinCents) || coinCents < MIN_COIN_CENTS || coinCents > MAX_COIN_CENTS) {
+    throw new Error("coin size must be an integer between $0.25 and $50.00");
   }
   const betCents = coinCents * LINE_COUNT;
   const stops = spinStops();
