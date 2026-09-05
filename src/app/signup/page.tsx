@@ -28,28 +28,30 @@ export default function Signup() {
   }
 
   return (
-    <div className="pit-shell" style={{ maxWidth: 480 }}>
-      <div className="hero" style={{ paddingBottom: 12 }}>
+    <div className="pit-shell auth-shell">
+      <div className="hero auth-hero">
         <Logo />
-        <h1 style={{ fontSize: 42 }}>Take a seat</h1>
+        <h1>Take a seat</h1>
+        <p className="muted">Create an account. Cage starts with sandbox credits.</p>
       </div>
-      <form className="panel" onSubmit={submit}>
-        <label>Display name</label>
-        <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
-        <label>Email</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <label>Password (8+)</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <label style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 16, textTransform: "none", letterSpacing: 0, fontSize: 14, color: "var(--ivory)" }}>
+      <form className="panel auth-panel" onSubmit={submit}>
+        <label htmlFor="su-name">Display name</label>
+        <input id="su-name" autoComplete="nickname" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
+        <label htmlFor="su-email">Email</label>
+        <input id="su-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <label htmlFor="su-pass">Password (8+)</label>
+        <input id="su-pass" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <label className="age-check">
           <input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} />
-          I confirm I am 21 years of age or older.
+          <span>I confirm I am 21 years of age or older.</span>
         </label>
         {err && <p className="err">{err}</p>}
-        <div className="btn-row" style={{ marginTop: 18 }}>
-          <button className="btn primary" disabled={busy}>Create account</button>
+        <div className="btn-row auth-actions">
+          <button type="submit" className="btn primary" disabled={busy}>{busy ? "Creating…" : "Create account"}</button>
           <a className="btn" href="/login">Sign in</a>
         </div>
       </form>
+      <p className="auth-foot muted"><a href="/">Age gate</a> · Sandbox wallet · No live charges</p>
     </div>
   );
 }

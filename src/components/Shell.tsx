@@ -46,8 +46,10 @@ export default function Shell({ children, requireAuth = true }: { children: Reac
   if (user === undefined) {
     return (
       <div className="pit-shell">
-        <div className="topbar"><div className="brand"><Logo /><div><div className="name">Pit</div><div className="tag">Private tables</div></div></div></div>
-        <p className="muted">Opening the floor…</p>
+        <div className="topbar">
+          <div className="brand"><Logo /><div><div className="name">Pit</div><div className="tag">Private tables</div></div></div>
+        </div>
+        <p className="muted shell-loading">Opening the floor…</p>
       </div>
     );
   }
@@ -79,24 +81,26 @@ export default function Shell({ children, requireAuth = true }: { children: Reac
             <div className="tag">Private tables</div>
           </div>
         </Link>
-        <nav className="nav">
+        <nav className="nav" aria-label="Main">
           {nav.map(([h, l]) => (
             <Link key={h} href={h} className={path === h || path.startsWith(h + "/") ? "active" : ""}>{l}</Link>
           ))}
         </nav>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div className="topbar-actions">
           {user && (
-            <Link href="/wallet" className="wallet-pill">
-              <span className="muted">{user.displayName}</span>
+            <Link href="/wallet" className="wallet-pill" title="Open the cage">
+              <span className="sandbox-chip">Sandbox</span>
+              <span className="wallet-name muted">{user.displayName}</span>
               <AnimatedBalance cents={user.balanceCents} />
             </Link>
           )}
-          {user && <button className="btn" onClick={logout}>Sign out</button>}
+          {user && <button type="button" className="btn btn-signout" onClick={logout}>Sign out</button>}
         </div>
       </header>
       {typeof children === "function" ? (user ? children(user) : null) : children}
       <footer className="footer">
-        Adults 21+ only. Sandbox wallet — no live charges. Operating a real-money casino requires a gambling license and licensed payments. Pit is a local product, not a licensed operator.
+        <p className="footer-line">Adults 21+ only. Sandbox wallet — no live charges.</p>
+        <p className="footer-line muted">Operating a real-money casino requires a gambling license and licensed payments. Pit is a local product, not a licensed operator.</p>
       </footer>
     </div>
   );

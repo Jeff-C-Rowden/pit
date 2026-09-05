@@ -155,7 +155,7 @@ export default function CrapsPage() {
   return (
     <Shell>
       {(u) => (
-        <div className="craps-page" style={{ paddingBottom: 180 }}>
+        <div className="craps-page">
           <div className="rail-label" style={{ marginTop: 18 }}>Craps · American · {table?.comeOut ? "COME-OUT" : `POINT ${table?.point}`}</div>
           {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
           {table?.lastRoll && (
@@ -228,7 +228,7 @@ export default function CrapsPage() {
           </div>
           <StandingRail youName={u.displayName} youStack={u.balanceCents} />
           {table?.log && <div className="panel log" style={{ marginTop: 12 }}>{table.log.slice().reverse().map((l: string, i: number) => <div key={i}>{l}</div>)}</div>}
-          <ActionDock hint={table?.alwaysRepeat
+          <ActionDock busy={busy} hint={table?.alwaysRepeat
             ? "Always last bet is on. Each roll puts the same chips back."
             : canRepeat
               ? "Repeat restacks the last round. Always last bet keeps doing that every roll."
@@ -239,7 +239,7 @@ export default function CrapsPage() {
             <button className={`btn toggle${table?.alwaysRepeat ? " on" : ""}`} disabled={busy} onClick={toggleAlways}>
               Always last bet {table?.alwaysRepeat ? "on" : "off"}
             </button>
-            <button className="btn primary hero-act" disabled={busy} onClick={roll}>Roll</button>
+            <button className="btn primary hero-act" disabled={busy} onClick={roll}>{busy ? "Rolling…" : "Roll"}</button>
           </ActionDock>
         </div>
       )}

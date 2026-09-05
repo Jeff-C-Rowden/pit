@@ -149,12 +149,12 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
           </div>
         </div>
       )}
-      <ActionDock hint={hint}>
+      <ActionDock hint={hint} busy={busy}>
         {betting && (
           <>
             <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} minCents={500} maxCents={500_000} />
             <button className="btn primary hero-act" disabled={busy} onClick={() => act("deal")}>
-              {game?.phase === "settled" ? "Next hand" : "Deal"}
+              {busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal"}
             </button>
           </>
         )}

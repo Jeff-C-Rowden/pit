@@ -149,7 +149,7 @@ export default function SlotPage() {
             </div>
           )}
 
-          <ActionDock hint={spinning ? "Reels in motion…" : "Pick a coin size, then Spin."}>
+          <ActionDock hint={spinning ? "Reels in motion…" : "Pick a coin size, then Spin."} busy={busy || spinning}>
             <ChipRow
               amounts={[25, 50, 100, 250, 500]}
               selected={coin}
@@ -158,7 +158,7 @@ export default function SlotPage() {
               maxCents={5000}
             />
             <button className="btn primary hero-act" disabled={busy || spinning} onClick={go}>
-              Spin · {money(coinIn)}
+              {spinning || busy ? "Spinning…" : `Spin · ${money(coinIn)}`}
             </button>
           </ActionDock>
         </div>

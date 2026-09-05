@@ -176,7 +176,7 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
           );
         })}
       </div>
-      <ActionDock hint={dealHint}>
+      <ActionDock hint={dealHint} busy={busy}>
         {err && <p className="err dock-err">{err}</p>}
         {betting && (
           <>
@@ -187,7 +187,7 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
               title={!canAfford ? "Cage needs funds first — open Cage and add test money." : undefined}
               onClick={() => act("deal")}
             >
-              {game?.phase === "settled" ? "Next hand" : "Deal"}
+              {busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal"}
             </button>
           </>
         )}

@@ -2,9 +2,9 @@
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { money } from "./useUser";
 
-export function ActionDock({ hint, children }: { hint?: string; children: ReactNode }) {
+export function ActionDock({ hint, children, busy }: { hint?: string; children: ReactNode; busy?: boolean }) {
   return (
-    <div className="action-dock">
+    <div className={`action-dock${busy ? " is-busy" : ""}`} aria-busy={busy || undefined}>
       <div className="action-dock-inner">
         {hint && <p className="table-hint">{hint}</p>}
         <div className="action-dock-row">{children}</div>

@@ -25,22 +25,24 @@ export default function Login() {
   }
 
   return (
-    <div className="pit-shell" style={{ maxWidth: 480 }}>
-      <div className="hero" style={{ paddingBottom: 12 }}>
+    <div className="pit-shell auth-shell">
+      <div className="hero auth-hero">
         <Logo />
-        <h1 style={{ fontSize: 42 }}>The door</h1>
+        <h1>The door</h1>
+        <p className="muted">Sign in to your sandbox seat.</p>
       </div>
-      <form className="panel" onSubmit={submit}>
-        <label>Email</label>
-        <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <label>Password</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+      <form className="panel auth-panel" onSubmit={submit}>
+        <label htmlFor="login-email">Email</label>
+        <input id="login-email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <label htmlFor="login-password">Password</label>
+        <input id="login-password" type="password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         {err && <p className="err">{err}</p>}
-        <div className="btn-row" style={{ marginTop: 18 }}>
-          <button className="btn primary" disabled={busy}>Sign in</button>
+        <div className="btn-row auth-actions">
+          <button type="submit" className="btn primary" disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
           <a className="btn" href="/signup">Create account</a>
         </div>
       </form>
+      <p className="auth-foot muted"><a href="/">Age gate</a> · Adults 21+ · Sandbox only</p>
     </div>
   );
 }

@@ -223,7 +223,7 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
         />
       )}
       {game?.log && <div className="panel log" style={{ marginTop: 16 }}>{game.log.map((l: string, i: number) => <div key={i}>{l}</div>)}</div>}
-      <ActionDock hint={hint}>
+      <ActionDock hint={hint} busy={busy}>
         {hole.length > 0 && (
           <div className="hero-hole in-dock">
             <div className="hand hole-fan">
@@ -236,7 +236,7 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
         )}
         {(!game || !live) && (
           <button className="btn primary hero-act" disabled={busy} onClick={() => act("deal")}>
-            {game && !live ? "Next hand" : "Deal"}
+            {busy ? "Dealing…" : game && !live ? "Next hand" : "Deal"}
           </button>
         )}
         {live && game.toAct === "house" && <span className="muted">House to act…</span>}

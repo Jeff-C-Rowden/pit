@@ -21,6 +21,7 @@ export default function WalletPage() {
   const [lossLim, setLossLim] = useState("");
   const [list, setList] = useState<unknown[]>([]);
   const [status, setStatus] = useState<WalletStatus | null>(null);
+  const [busyAmt, setBusyAmt] = useState<number | null>(null);
 
   useEffect(() => {
     api("/api/wallet/withdraw").then((d) => setList(d.withdrawals || [])).catch(() => null);
@@ -34,26 +35,32 @@ export default function WalletPage() {
 
   async function deposit(u: User, amountCents: number) {
     setErr(null); setMsg(null);
+    setBusyAmt(amountCents);
     try {
       const d = await api("/api/wallet/deposit", { method: "POST", body: JSON.stringify({ amountCents }) });
       if (d.user) setUser(d.user);
-      setMsg(`Sandbox deposit ${money(amountCents)} posted to the ledger.`);
+      setMsg(`+${money(amountCents)} posted. New balance ${money(d.user?.balanceCents ?? u.balanceCents + amountCents)}.`);
     } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
+    finally { setBusyAmt(null); }
   }
 
   return (
     <Shell>
       {(u) => (
-        <>
-          <div className="hero" style={{ paddingTop: 36 }}>
+        <div className="cage-page">
+          <div className="hero cage-hero">
             <p className="lede">The cage</p>
-            <h1 style={{ fontSize: 48 }}>Wallet</h1>
-            <p>Balance {money(u.balanceCents)}</p>
+            <h1>Wallet</h1>
+            <div className="cage-balance" aria-live="polite">
+              <span className="sandbox-chip">Sandbox</span>
+              <span className="cage-balance-amt">{money(u.balanceCents)}</span>
+            </div>
+            <p className="muted">Ledger balance · no card · no ACH</p>
           </div>
-          <div className="notice">
+          <div className="notice cage-notice">
             {status ? (
               <>
-                <strong>{isSandbox ? "Sandbox" : "Partner not connected"}</strong>
+                <strong>{isSandbox ? "Sandbox deposits" : "Partner not connected"}</strong>
                 {" — "}
                 {status.message}
                 {status.adapter && (
@@ -61,17 +68,26 @@ export default function WalletPage() {
                 )}
               </>
             ) : (
-              <>Sandbox only. “Add test funds” writes a ledger deposit. There is no Stripe, no card, no ACH. A payments adapter exists so a licensed processor can be wired later.</>
+              <>Sandbox only. “Add test funds” writes a ledger deposit. There is no Stripe, no card, no ACH.</>
             )}
           </div>
-          {msg && <p className="ok">{msg}</p>}
+          {msg && <p className="ok cage-flash" role="status">{msg}</p>}
           {err && <p className="err">{err}</p>}
           {isSandbox && (
-            <div className="panel">
+            <div className="panel cage-panel">
               <h3>Add test funds</h3>
-              <div className="btn-row">
+              <p className="muted cage-help">Tap an amount. Credits hit your stack immediately on the server ledger.</p>
+              <div className="btn-row cage-amts">
                 {AMTS.map((a) => (
-                  <button key={a} className="btn primary" onClick={() => deposit(u, a)}>{money(a)}</button>
+                  <button
+                    key={a}
+                    type="button"
+                    className="btn primary cage-amt"
+                    disabled={busyAmt != null}
+                    onClick={() => deposit(u, a)}
+                  >
+                    {busyAmt === a ? "Posting…" : money(a)}
+                  </button>
                 ))}
               </div>
             </div>
@@ -85,13 +101,13 @@ export default function WalletPage() {
               </p>
             </div>
           )}
-          <div className="panel" style={{ marginTop: 16 }}>
+          <div className="panel cage-panel">
             <h3>Withdrawal request</h3>
             <p className="muted">Marks funds pending. Nothing is sent to a bank.</p>
-            <label>Amount (cents)</label>
-            <input type="number" value={wd} onChange={(e) => setWd(Number(e.target.value))} />
-            <div className="btn-row" style={{ marginTop: 12 }}>
-              <button className="btn" onClick={async () => {
+            <label htmlFor="wd-cents">Amount (cents)</label>
+            <input id="wd-cents" type="number" value={wd} onChange={(e) => setWd(Number(e.target.value))} />
+            <div className="btn-row cage-actions">
+              <button type="button" className="btn" onClick={async () => {
                 setErr(null);
                 try {
                   const d = await api("/api/wallet/withdraw", { method: "POST", body: JSON.stringify({ amountCents: wd }) });
@@ -103,15 +119,15 @@ export default function WalletPage() {
             </div>
             {!!list.length && <pre className="log">{JSON.stringify(list, null, 2)}</pre>}
           </div>
-          <div className="panel" style={{ marginTop: 16 }}>
+          <div className="panel cage-panel">
             <h3>Responsible play</h3>
             <p className="muted">Optional limits. Leave blank for none. Enforced on the server.</p>
-            <label>Deposit limit (cents, lifetime in this sandbox)</label>
-            <input value={depLim} onChange={(e) => setDepLim(e.target.value)} placeholder={u.depositLimitCents == null ? "none" : String(u.depositLimitCents)} />
-            <label>Loss limit (cents)</label>
-            <input value={lossLim} onChange={(e) => setLossLim(e.target.value)} placeholder={u.lossLimitCents == null ? "none" : String(u.lossLimitCents)} />
-            <div className="btn-row" style={{ marginTop: 12 }}>
-              <button className="btn" onClick={async () => {
+            <label htmlFor="dep-lim">Deposit limit (cents, lifetime in this sandbox)</label>
+            <input id="dep-lim" value={depLim} onChange={(e) => setDepLim(e.target.value)} placeholder={u.depositLimitCents == null ? "none" : String(u.depositLimitCents)} />
+            <label htmlFor="loss-lim">Loss limit (cents)</label>
+            <input id="loss-lim" value={lossLim} onChange={(e) => setLossLim(e.target.value)} placeholder={u.lossLimitCents == null ? "none" : String(u.lossLimitCents)} />
+            <div className="btn-row cage-actions">
+              <button type="button" className="btn" onClick={async () => {
                 try {
                   await api("/api/wallet/limits", { method: "POST", body: JSON.stringify({
                     depositLimitCents: depLim === "" ? null : Number(depLim),
@@ -123,7 +139,7 @@ export default function WalletPage() {
               }}>Save limits</button>
             </div>
           </div>
-        </>
+        </div>
       )}
     </Shell>
   );
