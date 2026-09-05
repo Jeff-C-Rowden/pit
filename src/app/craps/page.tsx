@@ -166,12 +166,22 @@ export default function CrapsPage() {
             </p>
           )}
           {lastPay != null && lastPay > 0 && (
-            <OutcomeBanner win amountCents={lastPay} message={`You won ${money(lastPay)} — added to your stack`} />
+            <OutcomeBanner
+              win
+              title="YOU WIN"
+              amountCents={lastPay}
+              subtitle={`${money(lastPay)} added to your stack`}
+            />
           )}
           {lastPay === 0 && (
-            <OutcomeBanner message="Nothing paid on that roll." />
+            <OutcomeBanner
+              title="NOTHING PAID"
+              subtitle="Nothing paid on that roll."
+            />
           )}
-          {repeatNote && <OutcomeBanner push message={repeatNote} />}
+          {repeatNote && (
+            <OutcomeBanner push title="PUSH" subtitle={repeatNote} />
+          )}
           <div className="felt-table felt-rect craps-felt">
             <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6 }}>
               {[4,5,6,8,9,10].map((n) => (

@@ -13,38 +13,66 @@ export function ActionDock({ hint, children }: { hint?: string; children: ReactN
   );
 }
 
+export type HandResultTone = "win" | "loss" | "push";
+
 export function OutcomeBanner({
   win,
   push,
   amountCents,
   message,
+  title,
+  subtitle,
 }: {
   win?: boolean;
   push?: boolean;
   amountCents?: number | null;
   message?: string | null;
+  /** Big who-won headline (e.g. YOU WIN / DEALER WINS). */
+  title?: string | null;
+  /** Detail line under the headline. Falls back to `message` then defaults. */
+  subtitle?: string | null;
 }) {
-  if (!message && (amountCents == null || amountCents === undefined) && win == null && !push) return null;
-  if (push) {
-    return (
-      <div className="result-banner push" role="status">
-        {message || `Push — ${money(amountCents || 0)} returned to your stack`}
-      </div>
-    );
+  const hasAmount = amountCents != null && amountCents !== undefined;
+  if (!message && !title && !subtitle && !hasAmount && win == null && !push) return null;
+
+  const tone: HandResultTone = push ? "push" : win ? "win" : "loss";
+
+  let headline = (title || "").trim();
+  if (!headline) {
+    if (tone === "push") headline = "PUSH";
+    else if (tone === "win") headline = "YOU WIN";
+    else headline = "YOU LOSE";
   }
-  if (win) {
-    return (
-      <div className="result-banner win" role="status">
-        {message || `You won ${money(amountCents || 0)} — added to your stack`}
-      </div>
-    );
+
+  let detail = (subtitle ?? message ?? "").trim();
+  if (!detail) {
+    if (tone === "push") {
+      detail = hasAmount
+        ? `${money(amountCents || 0)} returned to your stack`
+        : "Stake returned to your stack";
+    } else if (tone === "win") {
+      detail = hasAmount
+        ? `${money(amountCents || 0)} added to your stack`
+        : "Payout added to your stack";
+    } else {
+      detail = "You lost this hand.";
+    }
   }
+
   return (
-    <div className="result-banner loss" role="status">
-      {message || "You lost this hand."}
+    <div
+      className={`result-banner hand-result ${tone}`}
+      role="status"
+      aria-live="polite"
+    >
+      <div className="result-banner-title">{headline}</div>
+      {detail ? <div className="result-banner-sub">{detail}</div> : null}
     </div>
   );
 }
+
+/** Alias for pages that prefer a HandResult name. */
+export const HandResult = OutcomeBanner;
 
 export type ChipTone = "white" | "red" | "green" | "black" | "purple" | "yellow";
 

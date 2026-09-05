@@ -89,12 +89,25 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
           {won && (
             <OutcomeBanner
               win
+              title="YOU WIN"
               amountCents={pay}
-              message={`You won ${money(pay)}${game.commissionCents ? ` (commission ${money(game.commissionCents)})` : ""} — added to your stack`}
+              subtitle={`You won ${money(pay)}${game.commissionCents ? ` (commission ${money(game.commissionCents)})` : ""} — added to your stack`}
             />
           )}
-          {push && !won && <OutcomeBanner push amountCents={pay} />}
-          {lost && <OutcomeBanner message={game.result || "You lost this hand."} />}
+          {push && !won && (
+            <OutcomeBanner
+              push
+              title="PUSH"
+              amountCents={pay}
+              subtitle={`${money(pay || 0)} returned to your stack`}
+            />
+          )}
+          {lost && (
+            <OutcomeBanner
+              title="HOUSE WINS"
+              subtitle={game.result || "You lost this hand."}
+            />
+          )}
         </TableHeart>
         {occupants.map((occ) => {
           const isYou = occ.kind === "you";

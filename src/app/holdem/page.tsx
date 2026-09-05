@@ -196,15 +196,30 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
         })}
       </div>
       {won && (
-        <OutcomeBanner win amountCents={game.payoutCents} message={`You won ${money(game.payoutCents)} — pot added to your stack`} />
+        <OutcomeBanner
+          win
+          title="YOU WIN"
+          amountCents={game.payoutCents}
+          subtitle={`${money(game.payoutCents)} — pot added to your stack`}
+        />
       )}
       {split && (
-        <OutcomeBanner push amountCents={game.payoutCents} message={`Split pot — ${money(game.payoutCents)} returned to your stack`} />
+        <OutcomeBanner
+          push
+          title="SPLIT"
+          amountCents={game.payoutCents}
+          subtitle={`Split pot — ${money(game.payoutCents)} returned to your stack`}
+        />
       )}
       {lost && (
         <OutcomeBanner
           win={false}
-          message={game.result === "You folded" ? "You folded. The house takes the pot." : (game.result || "House wins. You lost this hand.")}
+          title="HOUSE WINS"
+          subtitle={
+            game.result === "You folded"
+              ? "You folded. The house takes the pot."
+              : (game.result || "House takes the pot.")
+          }
         />
       )}
       {game?.log && <div className="panel log" style={{ marginTop: 16 }}>{game.log.map((l: string, i: number) => <div key={i}>{l}</div>)}</div>}

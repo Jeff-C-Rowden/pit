@@ -142,16 +142,23 @@ export default function RoulettePage() {
           {won && !spinning && (
             <OutcomeBanner
               win
+              title="YOU WIN"
               amountCents={net}
-              message={`You won ${money(net)} — added to your stack`}
+              subtitle={`${money(net)} added to your stack`}
             />
           )}
           {push && !spinning && (
-            <OutcomeBanner push amountCents={paid} message={`Even money. Stake came back.`} />
+            <OutcomeBanner
+              push
+              title="EVEN"
+              amountCents={paid}
+              subtitle="Even money. Stake came back."
+            />
           )}
           {lost && !spinning && (
             <OutcomeBanner
-              message={
+              title="YOU LOSE"
+              subtitle={
                 paid > 0
                   ? `Ball on ${spin.pocket}. Winning bets paid ${money(paid)} against ${money(spin.stakeCents || paid)} in. Net ${money(net)}.`
                   : `Ball on ${spin.pocket}. You lost this spin.`

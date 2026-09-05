@@ -115,11 +115,33 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
           {game?.phase === "insurance" && (
             <OutcomeBanner message="Dealer shows an Ace — insurance?" />
           )}
-          {isWin && <OutcomeBanner win amountCents={game.payoutCents} message={`You won ${money(game.payoutCents)} — added to your stack`} />}
-          {isPush && <OutcomeBanner push amountCents={game.payoutCents} />}
-          {isLoss && <OutcomeBanner message={result || "You lost this hand."} />}
+          {isWin && (
+            <OutcomeBanner
+              win
+              title="YOU WIN"
+              amountCents={game.payoutCents}
+              subtitle={`${money(game.payoutCents)} added to your stack`}
+            />
+          )}
+          {isPush && (
+            <OutcomeBanner
+              push
+              title="PUSH"
+              amountCents={game.payoutCents}
+              subtitle={`${money(game.payoutCents || 0)} returned to your stack`}
+            />
+          )}
+          {isLoss && (
+            <OutcomeBanner
+              title="DEALER WINS"
+              subtitle={result || "You lost this hand."}
+            />
+          )}
           {game?.phase === "settled" && result === "hand closed" && (
-            <OutcomeBanner message="Hand closed — bets already taken stay taken. Deal when ready." />
+            <OutcomeBanner
+              title="HAND CLOSED"
+              subtitle="Bets already taken stay taken. Deal when ready."
+            />
           )}
         </TableHeart>
         {occupants.map((occ) => {

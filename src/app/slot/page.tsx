@@ -108,12 +108,16 @@ export default function SlotPage() {
           {showOutcome && spin && spin.winCents > 0 && (
             <OutcomeBanner
               win
+              title="YOU WIN"
               amountCents={spin.winCents}
-              message={`You won ${money(spin.winCents)} — added to your stack`}
+              subtitle={`${money(spin.winCents)} added to your stack`}
             />
           )}
           {showOutcome && spin && spin.winCents === 0 && (
-            <OutcomeBanner message="No line. You lost this spin." />
+            <OutcomeBanner
+              title="NO LINE"
+              subtitle="You lose this spin."
+            />
           )}
 
           <StandingRail youName={u.displayName} youStack={u.balanceCents} coinIn={coinIn} />
