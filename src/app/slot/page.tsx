@@ -81,45 +81,45 @@ export default function SlotPage() {
   return (
     <Shell>
       {(u) => (
-        <>
-          <div className="hero" style={{ paddingTop: 28 }}>
+        <div className="slot-page">
+          <div className="slot-page-hero">
             <p className="lede">Video slot</p>
-            <h1 style={{ fontSize: 48 }}>Gilded Track</h1>
+            <h1>Gilded Track</h1>
             <p className="muted">9 lines · 5 reels · published RTP 94–96%</p>
           </div>
           {err && <p className="err">{err}</p>}
-          <div
-            className="felt-table felt-rect"
-            style={{ display: "grid", gridTemplateColumns: "1fr 88px", gap: 12, alignItems: "center" }}
-          >
+
+          <div className="slot-stage-wrap">
             <SlotMachine
               grid={grid}
               spinning={spinning}
               winCells={winCells}
               onSpinComplete={onSpinComplete}
             />
-            <div className="felt-spot">
-              <ChipStack cents={coinIn} size={34} winning={!!(showOutcome && spin && spin.winCents > 0)} />
+          </div>
+
+          <div className="slot-coin-meta">
+            <div className="felt-spot" style={{ minWidth: 72 }}>
+              <ChipStack cents={coinIn} size={32} winning={!!(showOutcome && spin && spin.winCents > 0)} />
               <div className="felt-spot-cap">Coin-in</div>
             </div>
-            {showOutcome && spin && spin.winCents > 0 && (
-              <div style={{ gridColumn: "1 / -1" }}>
-                <OutcomeBanner
-                  win
-                  amountCents={spin.winCents}
-                  message={`You won ${money(spin.winCents)} — added to your stack`}
-                />
-              </div>
-            )}
-            {showOutcome && spin && spin.winCents === 0 && (
-              <div style={{ gridColumn: "1 / -1" }}>
-                <OutcomeBanner message="No line. You lost this spin." />
-              </div>
-            )}
           </div>
+
+          {showOutcome && spin && spin.winCents > 0 && (
+            <OutcomeBanner
+              win
+              amountCents={spin.winCents}
+              message={`You won ${money(spin.winCents)} — added to your stack`}
+            />
+          )}
+          {showOutcome && spin && spin.winCents === 0 && (
+            <OutcomeBanner message="No line. You lost this spin." />
+          )}
+
           <StandingRail youName={u.displayName} youStack={u.balanceCents} coinIn={coinIn} />
+
           {info && (
-            <div className="panel" style={{ marginTop: 24 }}>
+            <div className="panel" style={{ marginTop: 20 }}>
               <h3>Paytable (per line, × coin)</h3>
               <table className="paytable">
                 <thead>
@@ -144,13 +144,20 @@ export default function SlotPage() {
               <p className="muted">{info.rtpPublished}</p>
             </div>
           )}
+
           <ActionDock hint={spinning ? "Reels in motion…" : "Pick a coin size, then Spin."}>
-            <ChipRow amounts={[25, 50, 100, 250, 500]} selected={coin} onSelect={setCoin} minCents={25} maxCents={5000} />
+            <ChipRow
+              amounts={[25, 50, 100, 250, 500]}
+              selected={coin}
+              onSelect={setCoin}
+              minCents={25}
+              maxCents={5000}
+            />
             <button className="btn primary hero-act" disabled={busy || spinning} onClick={go}>
               Spin · {money(coinIn)}
             </button>
           </ActionDock>
-        </>
+        </div>
       )}
     </Shell>
   );
