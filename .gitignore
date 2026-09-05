@@ -1,0 +1,11 @@
+node_modules/
+.next/
+data/*
+!data/.gitkeep
+*.sqlite
+*.sqlite-*
+.env
+.env.local
+*.log
+tsconfig.tsbuildinfo
+.DS_Store
