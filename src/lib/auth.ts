@@ -82,6 +82,8 @@ export function loginUser(email: string, password: string): { user: UserRow; tok
 }
 
 export function sessionCookieOptions(token: string) {
+  const secure =
+    process.env.NODE_ENV === "production" || process.env.PIT_COOKIE_SECURE === "1";
   return {
     name: SESSION_COOKIE,
     value: token,
@@ -89,6 +91,7 @@ export function sessionCookieOptions(token: string) {
     sameSite: "lax" as const,
     path: "/",
     maxAge: SESSION_DAYS * 86400,
+    secure,
   };
 }
 

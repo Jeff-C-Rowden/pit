@@ -60,9 +60,22 @@ export function getDb(): Database.Database {
   if (singleton) return singleton;
   const dbPath = process.env.PIT_DB_PATH || path.join(process.cwd(), "data", "pit.sqlite");
   if (dbPath !== ":memory:") {
-    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+    try {
+      fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      throw new Error(`unable to create database directory for PIT_DB_PATH=${dbPath}: ${msg}`);
+    }
   }
-  const db = new Database(dbPath);
+  let db: Database.Database;
+  try {
+    db = new Database(dbPath);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(
+      `unable to open database file at PIT_DB_PATH=${dbPath} (ensure the directory is writable by the app user): ${msg}`
+    );
+  }
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   db.exec(SCHEMA);
