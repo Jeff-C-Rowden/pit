@@ -1662,3 +1662,137 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
   .game-card, .btn { transition: none; }
   .game-card:hover { transform: none; }
 }
+
+
+/* —— Thumb-first dock + Progressive card badge —— */
+.game-card {
+  /* Reserve top-right for Progressive / status badges without crowding title */
+  padding-top: 28px;
+  padding-right: 22px;
+}
+.game-card .card-badge,
+.game-card .progressive-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100% - 28px);
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #1a1406;
+  background: linear-gradient(180deg, #f0d98a, #c9a227);
+  border: 1px solid rgba(255,246,216,.35);
+  box-shadow: 0 4px 12px rgba(0,0,0,.35);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.game-card .gname { padding-right: 4px; max-width: calc(100% - 4px); }
+
+/* Quieter table chrome so OutcomeBanner titles read first */
+.rail-label {
+  opacity: .72;
+  font-size: 10px;
+  letter-spacing: .24em;
+}
+.rl-chrome {
+  opacity: .92;
+}
+.rl-chrome-mark { opacity: .85; }
+.slot-page-hero .lede,
+.slot-page-hero .muted { opacity: .8; }
+.result-banner, .result-banner.hand-result {
+  z-index: 28;
+  box-shadow: 0 14px 36px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.06);
+}
+
+/* Thumb-first ActionDock: chips ≥48px, primary owns the bottom row */
+.action-dock .action-dock-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.action-dock .chip-row {
+  flex: 1 1 100%;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 8px;
+  row-gap: 8px;
+}
+.action-dock .clay-chip-btn {
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+  touch-action: manipulation;
+}
+.action-dock .clay-chip-btn .clay-face {
+  width: 52px !important;
+  height: auto !important;
+  max-width: none;
+}
+.action-dock .custom-wager {
+  min-height: 48px;
+  padding: 6px 10px;
+}
+.action-dock .btn.hero-act {
+  order: 20;
+  flex: 1 1 100%;
+  width: 100%;
+  max-width: 420px;
+  min-height: 56px;
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  touch-action: manipulation;
+}
+.action-dock .btn:not(.hero-act) {
+  min-height: 44px;
+  touch-action: manipulation;
+}
+.action-dock.is-busy {
+  pointer-events: none;
+}
+.action-dock.is-busy .btn.primary.hero-act {
+  pointer-events: none;
+  opacity: .9;
+}
+
+@media (max-width: 820px) {
+  .rail-label { margin-top: 10px !important; margin-bottom: 4px; opacity: .65; }
+  .rl-chrome { margin: 8px 0 4px; padding: 8px 12px; }
+  .slot-page-hero { padding: 10px 4px 6px; }
+  .slot-page-hero h1 { margin: 2px 0 4px; }
+  .action-dock .clay-chip-btn .clay-face {
+    width: 48px !important;
+  }
+  .action-dock .btn.hero-act {
+    min-height: 58px;
+    font-size: 16px;
+    margin-top: 2px;
+  }
+  .table-hint { font-size: 11px; letter-spacing: .12em; opacity: .9; }
+  .result-banner, .result-banner.hand-result {
+    margin-top: 8px;
+    margin-bottom: 4px;
+  }
+}
+
+@media (min-width: 821px) {
+  .action-dock .btn.hero-act {
+    flex: 0 1 auto;
+    width: auto;
+    min-width: 240px;
+  }
+  .action-dock .chip-row { flex: 0 1 auto; }
+}
+
