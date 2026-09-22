@@ -411,6 +411,37 @@ h1,h2,h3,.display {
 .reel.is-spinning .reel-strip {
   filter: blur(2.6px) brightness(1.12) saturate(1.15);
 }
+.reel.reel-tap-stop {
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: inset 0 0 0 1px rgba(232, 213, 163, 0.35);
+}
+.reel.reel-tap-stop:hover,
+.reel.reel-tap-stop:focus-visible {
+  box-shadow: inset 0 0 0 2px rgba(232, 213, 163, 0.7);
+  outline: none;
+}
+.reel-tap-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 6px;
+  transform: translateX(-50%);
+  z-index: 3;
+  pointer-events: none;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: rgba(232, 213, 163, 0.85);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  opacity: .75;
+  animation: reel-tap-pulse 1.4s ease-in-out infinite;
+}
+@keyframes reel-tap-pulse {
+  0%, 100% { opacity: .45; }
+  50% { opacity: .9; }
+}
 .reel-strip {
   will-change: transform;
   display: flex;

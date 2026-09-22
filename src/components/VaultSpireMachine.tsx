@@ -257,7 +257,10 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: 
   const [offset, setOffset] = useState(0);
   const [blur, setBlur] = useState(false);
   const [transitionMs, setTransitionMs] = useState(0);
+  const [landed, setLanded] = useState(true);
+  const [earlyTick, setEarlyTick] = useState(0);
   const stoppedForGen = useRef(-1);
+  const wantEarly = useRef(false);
   const cycleRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const onStoppedRef = useRef(onStopped);
   onStoppedRef.current = onStopped;
@@ -269,8 +272,22 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: 
     }
   };
 
+  const markLanded = (syms: VsSymbol[]) => {
+    if (stoppedForGen.current === spinGen) return;
+    clearCycle();
+    setBlur(false);
+    setStrip(syms);
+    setOffset(0);
+    setTransitionMs(0);
+    stoppedForGen.current = spinGen;
+    setLanded(true);
+    onStoppedRef.current(index);
+  };
+
   useEffect(() => {
     if (spinning) return;
+    wantEarly.current = false;
+    setLanded(true);
     if (final && final.length === 3) {
       setStrip(final);
       setOffset(0);
@@ -284,7 +301,9 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: 
       clearCycle();
       return;
     }
+    wantEarly.current = false;
     stoppedForGen.current = -1;
+    setLanded(false);
     setBlur(true);
     setTransitionMs(0);
     setStrip(fillerStrip(FILLER_LEN));
@@ -299,6 +318,13 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: 
   useEffect(() => {
     if (!spinning || !final || final.length !== 3) return;
     if (stoppedForGen.current === spinGen) return;
+
+    if (wantEarly.current) {
+      wantEarly.current = false;
+      markLanded(final);
+      return;
+    }
+
     clearCycle();
     const lead = fillerStrip(FILLER_LEN);
     const next = [...lead, ...final];
@@ -316,22 +342,48 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: 
       });
     });
     const t = window.setTimeout(() => {
-      setBlur(false);
-      setStrip(final);
-      setOffset(0);
-      setTransitionMs(0);
-      stoppedForGen.current = spinGen;
-      onStoppedRef.current(index);
+      markLanded(final);
     }, duration + 48);
     return () => {
       cancelAnimationFrame(raf1);
       cancelAnimationFrame(raf2);
       clearTimeout(t);
     };
-  }, [spinning, final, index, spinGen, SYM_H]);
+    // earlyTick re-runs this effect so a mid-anim tap can snap immediately
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- markLanded closes over spinGen/index
+  }, [spinning, final, index, spinGen, SYM_H, earlyTick]);
+
+  const interactive = spinning && !landed;
+
+  const requestEarlyStop = () => {
+    if (!interactive) return;
+    wantEarly.current = true;
+    setEarlyTick((n) => n + 1);
+  };
 
   return (
-    <div className={`reel${blur ? " is-spinning" : ""}`}>
+    <div
+      className={`reel${blur ? " is-spinning" : ""}${interactive ? " reel-tap-stop" : ""}`}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={
+        interactive
+          ? `Reel ${index + 1}, tap to stop`
+          : `Reel ${index + 1}`
+      }
+      title={interactive ? "Tap to stop" : undefined}
+      onClick={interactive ? requestEarlyStop : undefined}
+      onKeyDown={
+        interactive
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                requestEarlyStop();
+              }
+            }
+          : undefined
+      }
+    >
       <div
         className="reel-strip"
         style={{
@@ -346,6 +398,11 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: 
           );
         })}
       </div>
+      {interactive && (
+        <span className="reel-tap-hint" aria-hidden>
+          Tap
+        </span>
+      )}
     </div>
   );
 }

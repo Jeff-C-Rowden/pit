@@ -358,7 +358,7 @@ export default function VaultPage() {
             busy={busy || spinning}
             hint={
               spinning
-                ? "Reels in motion…"
+                ? "Tap a reel to stop early · reels in motion…"
                 : u.balanceCents < coinIn
                   ? `Cage needs funds — spin costs ${money(coinIn)} (coin × 9).`
                   : "All bets qualify. Pick a coin, then Spin."

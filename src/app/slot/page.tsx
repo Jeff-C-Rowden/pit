@@ -149,7 +149,7 @@ export default function SlotPage() {
             </div>
           )}
 
-          <ActionDock hint={spinning ? "Reels in motion…" : "Pick a coin size, then Spin."} busy={busy || spinning}>
+          <ActionDock hint={spinning ? "Tap a reel to stop early · reels in motion…" : "Pick a coin size, then Spin."} busy={busy || spinning}>
             <ChipRow
               amounts={[25, 50, 100, 250, 500]}
               selected={coin}
