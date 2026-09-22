@@ -69,7 +69,7 @@ function Gate() {
         {[
           ["Blackjack", "Six-deck · S17 · 3:2"],
           ["Gilded Track", "Five-reel video slot"],
-          ["Vault Spire", "4-tier progressive slot"],
+          ["Canopy Spire", "Jungle 4-tier progressive"],
           ["Hold'em", "Heads-up vs the house"],
           ["Roulette", "American 0 / 00"],
           ["Craps", "Pass, odds, place, field"],

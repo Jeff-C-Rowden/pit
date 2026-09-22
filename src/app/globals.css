@@ -1831,34 +1831,34 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 }
 
 
-/* —— Vault Spire progressive cabinet —— */
-.sym.tone-jackpot .sym-face {
-  background: linear-gradient(145deg, #fff4c0, #f0b428 45%, #8a5010);
-  color: #1a1004;
+/* —— Canopy Spire progressive cabinet (jungle) —— */
+.sym.tone-monkey .sym-face {
+  background: linear-gradient(145deg, #e8c090, #8a5830 48%, #3a2010);
+  color: #fff4e0;
 }
-.sym.tone-key .sym-face {
-  background: linear-gradient(145deg, #f8edd0, #c9a050 50%, #6a4818);
-  color: #1a1206;
+.sym.tone-parrot .sym-face {
+  background: linear-gradient(145deg, #9effb0, #1a8848 48%, #0a4028);
+  color: #e8ffe8;
 }
-.sym.tone-ingot .sym-face {
-  background: linear-gradient(145deg, #fff0b8, #d4a018 48%, #6a4810);
-  color: #241808;
-}
-.sym.tone-safe .sym-face {
-  background: linear-gradient(145deg, #d0d8e0, #586878 50%, #1a2430);
-  color: #e8f0f8;
-}
-.sym.tone-gem .sym-face {
-  background: linear-gradient(145deg, #e8fff8, #38c8a0 48%, #0a4838);
-  color: #eafff8;
-}
-.sym.tone-coin .sym-face {
-  background: linear-gradient(145deg, #fff2b8, #c89820 50%, #5a3810);
+.sym.tone-jaguar .sym-face {
+  background: linear-gradient(145deg, #ffe090, #c88820 48%, #5a3810);
   color: #2a1808;
 }
-.sym.tone-lock .sym-face {
-  background: linear-gradient(145deg, #d8dce0, #505860 50%, #1a2028);
-  color: #f0f2f4;
+.sym.tone-toucan .sym-face {
+  background: linear-gradient(145deg, #606870, #303840 45%, #101418);
+  color: #ffe8a0;
+}
+.sym.tone-banana .sym-face {
+  background: linear-gradient(145deg, #fff6a8, #f0c028 48%, #8a6810);
+  color: #2a2008;
+}
+.sym.tone-coconut .sym-face {
+  background: linear-gradient(145deg, #d8b890, #6a4830 50%, #2a1810);
+  color: #f8ecd8;
+}
+.sym.tone-vine .sym-face {
+  background: linear-gradient(145deg, #c8f090, #3a9840 48%, #144820);
+  color: #e8ffe0;
 }
 
 .vault-page {
@@ -1911,9 +1911,23 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 }
 .vault-cabinet {
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(80, 140, 200, .12), transparent 55%),
-    linear-gradient(180deg, #1a2430 0%, #0c1018 55%, #080a0e 100%);
-  border-color: rgba(160, 190, 220, .35);
+    radial-gradient(ellipse at 50% 0%, rgba(60, 180, 90, .18), transparent 55%),
+    radial-gradient(ellipse at 20% 80%, rgba(201, 162, 39, .1), transparent 45%),
+    linear-gradient(180deg, #1a3020 0%, #0c1810 55%, #08100a 100%);
+  border-color: rgba(120, 180, 90, .4);
+}
+.vault-cabinet .slot-marquee {
+  background:
+    linear-gradient(180deg, rgba(40, 80, 40, .55), rgba(12, 28, 14, .9)),
+    linear-gradient(90deg, #2a4a20, #1a3018);
+  border-color: rgba(201, 162, 39, .45);
+}
+.vault-cabinet .slot-pillar-shaft {
+  background: linear-gradient(90deg, #2a1a0c, #5a3a18 40%, #3a2810 70%, #1a1008);
+}
+.vault-cabinet .slot-window {
+  border-color: rgba(201, 162, 39, .35);
+  box-shadow: inset 0 0 24px rgba(20, 60, 30, .35);
 }
 
 /* Progressive meter strip */
@@ -1928,7 +1942,7 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
   border: 1px solid rgba(201,162,39,.28);
   border-radius: 8px;
   padding: 8px 6px 6px;
-  background: linear-gradient(180deg, rgba(20,28,36,.95), rgba(8,10,14,.98));
+  background: linear-gradient(180deg, rgba(16,36,24,.95), rgba(8,14,10,.98));
   color: inherit;
   cursor: pointer;
   text-align: center;
@@ -2155,8 +2169,8 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 .game-card.progressive-card {
   background:
     radial-gradient(ellipse at 85% 12%, rgba(255,200,80,.16), transparent 42%),
-    linear-gradient(145deg, rgba(80,140,200,.1) 0%, transparent 42%),
-    linear-gradient(180deg, rgba(12,40,58,.5), rgba(7,8,7,.82)),
+    linear-gradient(145deg, rgba(60,160,80,.14) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(12,48,28,.55), rgba(7,10,7,.82)),
     repeating-linear-gradient(135deg, rgba(201,162,39,.045) 0 2px, transparent 2px 10px);
   min-height: 260px;
   padding-bottom: 52px;

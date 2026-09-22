@@ -10,7 +10,7 @@ import {
 } from "../src/lib/games/slotProgressive";
 import { applyProgressiveSpin, ensureAllTiers, publicMeters, rollTriggerCents } from "../src/lib/progressive";
 
-describe("vault spire progressive model", () => {
+describe("canopy spire progressive model", () => {
   it("has 4 tiers totaling 300 bps with target seeds/ceilings", () => {
     expect(VS_TIERS).toHaveLength(4);
     expect(VS_TOTAL_CONTRIBUTION_BPS).toBe(300);
@@ -37,11 +37,11 @@ describe("vault spire progressive model", () => {
 
   it("evaluate pays 5 WILD on center line", () => {
     const grid = [
-      ["LOCK", "WILD", "LOCK"],
-      ["COIN", "WILD", "COIN"],
-      ["GEM", "WILD", "GEM"],
-      ["SAFE", "WILD", "SAFE"],
-      ["KEY", "WILD", "KEY"],
+      ["VINE", "WILD", "VINE"],
+      ["COCONUT", "WILD", "COCONUT"],
+      ["BANANA", "WILD", "BANANA"],
+      ["TOUCAN", "WILD", "TOUCAN"],
+      ["PARROT", "WILD", "PARROT"],
     ] as any;
     const ev = evaluateVsGrid(grid, 1);
     const line0 = ev.lines.find((l) => l.line === 0);

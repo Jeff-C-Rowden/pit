@@ -15,8 +15,8 @@ export default function Rules() {
         <p className="muted">6-deck shoe. Dealer stands on soft 17. Blackjack pays 3:2. Insurance 2:1. Hit, stand, double, split once. House edge roughly 0.5% with basic strategy.</p>
         <h3>Gilded Track (slot)</h3>
         <p className="muted">5 reels, 3 rows, 9 paylines. Left-to-right. WILD substitutes. Theoretical RTP is enumerated from the published 20-stop strips and kept in the 94–96% band (see tests).</p>
-        <h3>Vault Spire (progressive slot)</h3>
-        <p className="muted">Separate 5-reel video slot with four shared progressive meters (Mini / Minor / Major / Grand). Seeds $10 / $50 / $250 / $2,500. Must-hit-by ceilings on Mini / Minor / Major ($30 / $150 / $1,000); Grand is a rare mystery (~1/35k). Each spin contributes 3.00% (300 bps: 100/70/50/80) of coin-in from the same bet debit. All sandbox bets qualify. Hits reseed. Demo chips only — not a licensed casino jackpot. Main-game line RTP targets ~93–95% excluding progressive awards.</p>
+        <h3>Canopy Spire (progressive slot)</h3>
+        <p className="muted">Jungle-themed 5-reel video slot with four shared progressive meters (Mini / Minor / Major / Grand). Seeds $10 / $50 / $250 / $2,500. Must-hit-by ceilings on Mini / Minor / Major ($30 / $150 / $1,000); Grand is a rare mystery (~1/35k). Each spin contributes 3.00% (300 bps: 100/70/50/80) of coin-in from the same bet debit. All sandbox bets qualify. Hits reseed. Demo chips only — not a licensed casino jackpot. Main-game line RTP targets ~93–95% excluding progressive awards.</p>
         <h3>Texas Hold&apos;em</h3>
         <p className="muted">Heads-up no-limit vs the house bot. Blinds $1/$2. Standard ranking. Button posts the small blind.</p>
         <h3>Roulette</h3>

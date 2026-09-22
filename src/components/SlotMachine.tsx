@@ -4,8 +4,8 @@ import { createContext, useCallback, useContext, useEffect, useId, useMemo, useR
 import { SYMBOLS, type Symbol } from "@/lib/games/slot";
 
 const VISIBLE = 3;
-const FILLER_LEN = 22;
-const STOP_MS = [1200, 1400, 1600, 1800, 2000] as const;
+const FILLER_LEN = 28;
+const STOP_MS = [2400, 3000, 3600, 4200, 4800] as const;
 
 /** Tile height must match CSS `.reel` / `.sym` — keep JS spin math in sync. */
 function useSymHeight() {
@@ -352,7 +352,7 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: 
     cycleRef.current = setInterval(() => {
       setStrip(fillerStrip(FILLER_LEN));
       setOffset(-(Math.floor(Math.random() * 5) * SYM_H));
-    }, 70);
+    }, 85);
 
     return clearCycle;
   }, [spinning, spinGen, SYM_H]);
@@ -376,7 +376,7 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: 
     setTransitionMs(0);
 
     const target = -((next.length - VISIBLE) * SYM_H);
-    const duration = STOP_MS[index] ?? 2000;
+    const duration = STOP_MS[index] ?? 4800;
 
     let raf2 = 0;
     const raf1 = requestAnimationFrame(() => {

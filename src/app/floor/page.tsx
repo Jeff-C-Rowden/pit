@@ -15,9 +15,9 @@ const GAMES = [
   { href: "/slot", name: "Gilded Track", meta: "5 reels · 9 lines · published 94–96% RTP", line: "A video slot with a real paytable.", accent: "slot" },
   {
     href: "/vault",
-    name: "Vault Spire",
+    name: "Canopy Spire",
     meta: "5 reels · 9 lines · 4-tier progressive",
-    line: "Mini · Minor · Major · Grand — all bets qualify.",
+    line: "Jungle canopy progressive — Mini · Minor · Major · Grand.",
     accent: "vault",
     progressive: true,
   },

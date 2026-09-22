@@ -1,7 +1,8 @@
 import { randInt, newId } from "../rng";
 
 /**
- * Vault Spire — 5-reel progressive video slot (separate from Gilded Track).
+ * Canopy Spire — jungle-themed 5-reel progressive video slot (separate from Gilded Track).
+ * Route remains /vault; progressive family/tier ids stay vault-* for meter continuity.
  *
  * Progressive (Jackpot Desk v1):
  * - Four shared meters: Mini / Minor / Major / Grand.
@@ -14,13 +15,13 @@ import { randInt, newId } from "../rng";
 
 export const VS_SYMBOLS = [
   "WILD",
-  "JACKPOT",
-  "KEY",
-  "INGOT",
-  "SAFE",
-  "GEM",
-  "COIN",
-  "LOCK",
+  "MONKEY",
+  "PARROT",
+  "JAGUAR",
+  "TOUCAN",
+  "BANANA",
+  "COCONUT",
+  "VINE",
 ] as const;
 export type VsSymbol = (typeof VS_SYMBOLS)[number];
 
@@ -38,21 +39,21 @@ export const VS_PAYLINES: number[][] = [
 
 export const VS_PAYTABLE: Record<VsSymbol, [number, number, number]> = {
   WILD: [50, 200, 800],
-  JACKPOT: [40, 160, 500],
-  KEY: [28, 100, 400],
-  INGOT: [20, 80, 240],
-  SAFE: [14, 48, 140],
-  GEM: [10, 28, 80],
-  COIN: [8, 20, 48],
-  LOCK: [5, 12, 28],
+  MONKEY: [40, 160, 500],
+  PARROT: [28, 100, 400],
+  JAGUAR: [20, 80, 240],
+  TOUCAN: [14, 48, 140],
+  BANANA: [10, 28, 80],
+  COCONUT: [8, 20, 48],
+  VINE: [5, 12, 28],
 };
 
 export const VS_REELS: VsSymbol[][] = [
-  ["LOCK","COIN","SAFE","LOCK","GEM","KEY","LOCK","COIN","INGOT","LOCK","GEM","SAFE","LOCK","COIN","KEY","LOCK","SAFE","GEM","LOCK","WILD"],
-  ["COIN","LOCK","GEM","SAFE","LOCK","COIN","KEY","LOCK","GEM","INGOT","LOCK","COIN","SAFE","LOCK","GEM","KEY","LOCK","SAFE","COIN","JACKPOT"],
-  ["LOCK","SAFE","COIN","LOCK","GEM","KEY","LOCK","COIN","SAFE","INGOT","LOCK","GEM","COIN","LOCK","KEY","SAFE","LOCK","GEM","COIN","WILD"],
-  ["COIN","LOCK","SAFE","GEM","LOCK","COIN","KEY","LOCK","INGOT","GEM","LOCK","COIN","SAFE","LOCK","KEY","GEM","LOCK","SAFE","COIN","JACKPOT"],
-  ["LOCK","COIN","GEM","LOCK","SAFE","COIN","LOCK","KEY","GEM","LOCK","INGOT","COIN","LOCK","SAFE","GEM","KEY","LOCK","SAFE","COIN","WILD"],
+  ["VINE","COCONUT","TOUCAN","VINE","BANANA","PARROT","VINE","COCONUT","JAGUAR","VINE","BANANA","TOUCAN","VINE","COCONUT","PARROT","VINE","TOUCAN","BANANA","VINE","WILD"],
+  ["COCONUT","VINE","BANANA","TOUCAN","VINE","COCONUT","PARROT","VINE","BANANA","JAGUAR","VINE","COCONUT","TOUCAN","VINE","BANANA","PARROT","VINE","TOUCAN","COCONUT","MONKEY"],
+  ["VINE","TOUCAN","COCONUT","VINE","BANANA","PARROT","VINE","COCONUT","TOUCAN","JAGUAR","VINE","BANANA","COCONUT","VINE","PARROT","TOUCAN","VINE","BANANA","COCONUT","WILD"],
+  ["COCONUT","VINE","TOUCAN","BANANA","VINE","COCONUT","PARROT","VINE","JAGUAR","BANANA","VINE","COCONUT","TOUCAN","VINE","PARROT","BANANA","VINE","TOUCAN","COCONUT","MONKEY"],
+  ["VINE","COCONUT","BANANA","VINE","TOUCAN","COCONUT","VINE","PARROT","BANANA","VINE","JAGUAR","COCONUT","VINE","TOUCAN","BANANA","PARROT","VINE","TOUCAN","COCONUT","WILD"],
 ];
 
 export const VS_REEL_LEN = 20;
@@ -215,7 +216,7 @@ export function exactVsLineRtp(): number {
 }
 
 export const VAULT_SPIRE_INFO = {
-  name: "Vault Spire",
+  name: "Canopy Spire",
   reels: 5,
   rows: 3,
   lines: VS_LINE_COUNT,

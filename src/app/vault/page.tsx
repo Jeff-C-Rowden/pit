@@ -126,7 +126,7 @@ export default function VaultPage() {
       setSpinning(false);
       setBusy(false);
       setErr("Spin timed out — try again");
-    }, 8000);
+    }, 14000);
     return () => window.clearTimeout(t);
   }, [spinning]);
 
@@ -192,8 +192,8 @@ export default function VaultPage() {
         <div className="vault-page">
           <div className="vault-topbar">
             <div className="vault-title-block">
-              <p className="lede">Progressive video slot</p>
-              <h1>Vault Spire</h1>
+              <p className="lede">Jungle progressive video slot</p>
+              <h1>Canopy Spire</h1>
             </div>
             <div className="vault-badges">
               <span className="sandbox-chip">Sandbox</span>
@@ -308,7 +308,7 @@ export default function VaultPage() {
               <div className="vault-sheet panel" role="dialog" onClick={(e) => e.stopPropagation()}>
                 {infoSheet === "game" ? (
                   <>
-                    <h3>Vault Spire</h3>
+                    <h3>Canopy Spire</h3>
                     <p className="muted">{info?.rtpPublished || info?.info?.rtpNote}</p>
                     <h4>Paytable (× coin)</h4>
                     <table className="paytable">
