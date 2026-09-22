@@ -52,6 +52,16 @@ CREATE TABLE IF NOT EXISTS game_states (
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_games_user ON game_states(user_id, game, status);
+CREATE TABLE IF NOT EXISTS progressive_meters (
+  id TEXT PRIMARY KEY,
+  amount_cents INTEGER NOT NULL,
+  seed_cents INTEGER NOT NULL,
+  contribution_bps INTEGER NOT NULL,
+  ceiling_cents INTEGER,
+  trigger_cents INTEGER,
+  last_hit_at TEXT,
+  updated_at TEXT NOT NULL
+);
 `;
 
 let singleton: Database.Database | null = null;
