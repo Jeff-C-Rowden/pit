@@ -406,6 +406,20 @@ export default function VaultSpireMachine({
     stopped.current = new Set();
   }, [spinning]);
 
+  // Guarantee onSpinComplete even if a reel stop callback is missed
+  useEffect(() => {
+    if (!spinning || spinGen === 0) return;
+    const g = spinGen;
+    const ms = grid ? 4500 : 8500;
+    const t = window.setTimeout(() => {
+      if (completedGen.current === g) return;
+      completedGen.current = g;
+      setSettled(true);
+      queueMicrotask(() => completeRef.current?.());
+    }, ms);
+    return () => window.clearTimeout(t);
+  }, [spinning, spinGen, grid]);
+
   const onStopped = useCallback((index: number) => {
     stopped.current.add(index);
     if (stopped.current.size < 5) return;

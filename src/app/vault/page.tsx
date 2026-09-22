@@ -52,7 +52,7 @@ function CountUp({ cents, active }: { cents: number; active: boolean }) {
 }
 
 export default function VaultPage() {
-  const { user, setUser } = useUser();
+  const { setUser } = useUser();
   const [info, setInfo] = useState<any>(null);
   const [meters, setMeters] = useState<MeterPublic[]>([]);
   const [spin, setSpin] = useState<any>(null);
@@ -71,6 +71,7 @@ export default function VaultPage() {
 
   const spinRef = useRef<any>(null);
   spinRef.current = spin;
+  const balRef = useRef(0);
 
   const coinIn = coin * 9;
   const contribPreview = Math.floor((coinIn * VS_TOTAL_CONTRIBUTION_BPS) / 10_000);
@@ -118,8 +119,26 @@ export default function VaultPage() {
     }
   }, []);
 
+  // Failsafe: if reels never call onSpinComplete, unstick the dock
+  useEffect(() => {
+    if (!spinning) return;
+    const t = window.setTimeout(() => {
+      setSpinning(false);
+      setBusy(false);
+      setErr("Spin timed out — try again");
+    }, 8000);
+    return () => window.clearTimeout(t);
+  }, [spinning]);
+
   async function go() {
     if (busy || spinning) return;
+    const bal = balRef.current;
+    if (bal < coinIn) {
+      setErr(
+        `Cage needs funds first — this spin costs ${money(coinIn)} (coin × 9). Open Cage and add test money.`,
+      );
+      return;
+    }
     setErr(null);
     setBusy(true);
     setShowOutcome(false);
@@ -161,14 +180,15 @@ export default function VaultPage() {
     setMaxArmed(false);
   }
 
-  const balance = user?.balanceCents ?? 0;
   const hits = (spin?.progressiveHits as ProgHit[] | undefined) ?? [];
   const hasJackpot = showOutcome && hits.length > 0;
   const lineOnlyWin = showOutcome && !hasJackpot && lastWinCents > 0;
 
   return (
     <Shell>
-      {(u) => (
+      {(u) => {
+        balRef.current = u.balanceCents;
+        return (
         <div className="vault-page">
           <div className="vault-topbar">
             <div className="vault-title-block">
@@ -336,12 +356,25 @@ export default function VaultPage() {
 
           <ActionDock
             busy={busy || spinning}
-            hint={spinning ? "Reels in motion…" : "All bets qualify. Pick a coin, then Spin."}
+            hint={
+              spinning
+                ? "Reels in motion…"
+                : u.balanceCents < coinIn
+                  ? `Cage needs funds — spin costs ${money(coinIn)} (coin × 9).`
+                  : "All bets qualify. Pick a coin, then Spin."
+            }
           >
             <div className="vault-dock">
+              {(err || u.balanceCents < coinIn) && (
+                <p className="err dock-err">
+                  {err ||
+                    `Cage needs funds first — this spin costs ${money(coinIn)} (coin × 9). Open Cage and add test money.`}
+                </p>
+              )}
               <div className="vault-dock-bet">
                 <div className="vault-total-bet">
                   Total bet <strong>{money(coinIn)}</strong>
+                  <span className="muted"> · coin {money(coin)} × 9 lines</span>
                 </div>
                 <ChipRow
                   amounts={[25, 50, 100, 250, 500]}
@@ -362,15 +395,16 @@ export default function VaultPage() {
               <button
                 type="button"
                 className="btn primary hero-act vault-spin"
-                disabled={busy || spinning || balance < coinIn}
+                disabled={busy || spinning}
                 onClick={go}
               >
-                Spin · {money(coinIn)}
+                {spinning ? "Spinning…" : `Spin · ${money(coinIn)}`}
               </button>
             </div>
           </ActionDock>
         </div>
-      )}
+        );
+      }}
     </Shell>
   );
 }

@@ -1759,11 +1759,14 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
   min-height: 44px;
   touch-action: manipulation;
 }
-.action-dock.is-busy {
+/* Soft busy: don't brick the whole dock if busy/spinning sticks.
+   Primary Spin uses button[disabled]; only mute non-primary controls. */
+.action-dock.is-busy .chip-row,
+.action-dock.is-busy .btn:not(.hero-act),
+.action-dock.is-busy .clay-chip-btn {
   pointer-events: none;
 }
-.action-dock.is-busy .btn.primary.hero-act {
-  pointer-events: none;
+.action-dock.is-busy .btn.primary.hero-act:disabled {
   opacity: .9;
 }
 
