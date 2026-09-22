@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { SYMBOLS, type Symbol } from "@/lib/games/slot";
 
 const VISIBLE = 3;
@@ -288,10 +288,11 @@ type ReelProps = {
   settled: boolean;
   winRows: Set<number>;
   spinGen: number;
+  stopAllTick: number;
   onStopped: (index: number) => void;
 };
 
-function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: ReelProps) {
+function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, onStopped }: ReelProps) {
   const SYM_H = useContext(SymHCtx);
   const [strip, setStrip] = useState<Symbol[]>(() => ["BAR", "CHIP", "LAMP"]);
   const [offset, setOffset] = useState(0);
@@ -356,6 +357,17 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: 
 
     return clearCycle;
   }, [spinning, spinGen, SYM_H]);
+
+  // Stop-all / Stop button: same path as tap-to-stop (queue until grid, then snap).
+  // Only react to stopAllTick changes — do not re-fire on spinGen or a leftover tick would
+  // instantly stop the next spin.
+  useEffect(() => {
+    if (stopAllTick === 0) return;
+    if (!spinning || stoppedForGen.current === spinGen) return;
+    wantEarly.current = true;
+    setEarlyTick((n) => n + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: stopAllTick only
+  }, [stopAllTick]);
 
   useEffect(() => {
     if (!spinning || !final || final.length !== 3) return;
@@ -470,26 +482,33 @@ const IDLE: Symbol[][] = [
   ["CHIP", "LAMP", "CROWN"],
 ];
 
-export default function SlotMachine({
-  grid,
-  spinning,
-  winCells,
-  onSpinComplete,
-}: {
-  grid: Symbol[][] | null;
-  spinning: boolean;
-  winCells?: WinCell[];
-  onSpinComplete?: () => void;
-}) {
+export type SlotMachineHandle = {
+  stopAll: () => void;
+};
+
+const SlotMachine = forwardRef<
+  SlotMachineHandle,
+  {
+    grid: Symbol[][] | null;
+    spinning: boolean;
+    winCells?: WinCell[];
+    onSpinComplete?: () => void;
+  }
+>(function SlotMachine({ grid, spinning, winCells, onSpinComplete }, ref) {
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
   const [settled, setSettled] = useState(true);
+  const [stopAllTick, setStopAllTick] = useState(0);
   const stopped = useRef<Set<number>>(new Set());
   const completedGen = useRef(-1);
   const completeRef = useRef(onSpinComplete);
   completeRef.current = onSpinComplete;
   const genRef = useRef(spinGen);
   genRef.current = spinGen;
+
+  useImperativeHandle(ref, () => ({
+    stopAll: () => setStopAllTick((n) => n + 1),
+  }), []);
 
   useEffect(() => {
     if (!spinning) return;
@@ -561,6 +580,7 @@ export default function SlotMachine({
                   settled={settled}
                   winRows={winByReel[r]!}
                   spinGen={spinGen}
+                  stopAllTick={stopAllTick}
                   onStopped={onStopped}
                 />
               );
@@ -589,4 +609,6 @@ export default function SlotMachine({
     </div>
     </SymHCtx.Provider>
   );
-}
+});
+
+export default SlotMachine;

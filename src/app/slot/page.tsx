@@ -1,7 +1,7 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
-import SlotMachine, { type WinCell } from "@/components/SlotMachine";
+import SlotMachine, { type SlotMachineHandle, type WinCell } from "@/components/SlotMachine";
 import { ActionDock, ChipRow, ChipStack, OutcomeBanner } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
@@ -38,6 +38,7 @@ export default function SlotPage() {
   const [busy, setBusy] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [showOutcome, setShowOutcome] = useState(false);
+  const machineRef = useRef<SlotMachineHandle>(null);
 
   useEffect(() => {
     api("/api/games/slot").then(setInfo).catch((e) => setErr(e.message));
@@ -76,6 +77,14 @@ export default function SlotPage() {
     }
   }
 
+  function onPrimary() {
+    if (spinning) {
+      machineRef.current?.stopAll();
+      return;
+    }
+    void go();
+  }
+
   const coinIn = coin * 9;
 
   return (
@@ -91,6 +100,7 @@ export default function SlotPage() {
 
           <div className="slot-stage-wrap">
             <SlotMachine
+              ref={machineRef}
               grid={grid}
               spinning={spinning}
               winCells={winCells}
@@ -149,7 +159,7 @@ export default function SlotPage() {
             </div>
           )}
 
-          <ActionDock hint={spinning ? "Tap a reel to stop early · reels in motion…" : "Pick a coin size, then Spin."} busy={busy || spinning}>
+          <ActionDock hint={spinning ? "Stop · or tap a reel · reels in motion…" : "Pick a coin size, then Spin."} busy={busy || spinning}>
             <ChipRow
               amounts={[25, 50, 100, 250, 500]}
               selected={coin}
@@ -157,8 +167,14 @@ export default function SlotPage() {
               minCents={25}
               maxCents={5000}
             />
-            <button className="btn primary hero-act" disabled={busy || spinning} onClick={go}>
-              {spinning || busy ? "Spinning…" : `Spin · ${money(coinIn)}`}
+            <button
+              type="button"
+              className="btn primary hero-act"
+              disabled={busy && !spinning}
+              onClick={onPrimary}
+              aria-label={spinning ? "Stop reels" : `Spin for ${money(coinIn)}`}
+            >
+              {spinning ? "Stop" : `Spin · ${money(coinIn)}`}
             </button>
           </ActionDock>
         </div>

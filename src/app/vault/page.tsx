@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
-import VaultSpireMachine, { type WinCell } from "@/components/VaultSpireMachine";
+import VaultSpireMachine, { type VaultSpireMachineHandle, type WinCell } from "@/components/VaultSpireMachine";
 import ProgressiveMeterStrip, { type MeterPublic } from "@/components/ProgressiveMeter";
 import { ActionDock, ChipRow, OutcomeBanner } from "@/components/TableUX";
 import { api, money, useUser } from "@/components/useUser";
@@ -72,6 +72,7 @@ export default function VaultPage() {
   const spinRef = useRef<any>(null);
   spinRef.current = spin;
   const balRef = useRef(0);
+  const machineRef = useRef<VaultSpireMachineHandle>(null);
 
   const coinIn = coin * 9;
   const contribPreview = Math.floor((coinIn * VS_TOTAL_CONTRIBUTION_BPS) / 10_000);
@@ -166,6 +167,14 @@ export default function VaultPage() {
     }
   }
 
+  function onPrimary() {
+    if (spinning) {
+      machineRef.current?.stopAll();
+      return;
+    }
+    void go();
+  }
+
   function setCoinAndClear(n: number) {
     setCoin(n);
     setMaxArmed(false);
@@ -215,6 +224,7 @@ export default function VaultPage() {
 
             <div className="vault-stage-wrap">
               <VaultSpireMachine
+                ref={machineRef}
                 grid={grid}
                 spinning={spinning}
                 winCells={winCells}
@@ -358,7 +368,7 @@ export default function VaultPage() {
             busy={busy || spinning}
             hint={
               spinning
-                ? "Tap a reel to stop early · reels in motion…"
+                ? "Stop · or tap a reel · reels in motion…"
                 : u.balanceCents < coinIn
                   ? `Cage needs funds — spin costs ${money(coinIn)} (coin × 9).`
                   : "All bets qualify. Pick a coin, then Spin."
@@ -395,10 +405,11 @@ export default function VaultPage() {
               <button
                 type="button"
                 className="btn primary hero-act vault-spin"
-                disabled={busy || spinning}
-                onClick={go}
+                disabled={busy && !spinning}
+                onClick={onPrimary}
+                aria-label={spinning ? "Stop reels" : `Spin for ${money(coinIn)}`}
               >
-                {spinning ? "Spinning…" : `Spin · ${money(coinIn)}`}
+                {spinning ? "Stop" : `Spin · ${money(coinIn)}`}
               </button>
             </div>
           </ActionDock>

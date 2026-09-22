@@ -2,10 +2,12 @@
 
 import {
   createContext,
+  forwardRef,
   useCallback,
   useContext,
   useEffect,
   useId,
+  useImperativeHandle,
   useMemo,
   useRef,
   useState,
@@ -291,10 +293,11 @@ type ReelProps = {
   settled: boolean;
   winRows: Set<number>;
   spinGen: number;
+  stopAllTick: number;
   onStopped: (index: number) => void;
 };
 
-function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: ReelProps) {
+function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, onStopped }: ReelProps) {
   const SYM_H = useContext(SymHCtx);
   const [strip, setStrip] = useState<VsSymbol[]>(() => ["VINE", "COCONUT", "BANANA"]);
   const [offset, setOffset] = useState(0);
@@ -357,6 +360,16 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, onStopped }: 
     }, 85);
     return clearCycle;
   }, [spinning, spinGen, SYM_H]);
+
+  // Stop-all / Stop button: same path as tap-to-stop (queue until grid, then snap).
+  // Only react to stopAllTick changes — do not re-fire on spinGen.
+  useEffect(() => {
+    if (stopAllTick === 0) return;
+    if (!spinning || stoppedForGen.current === spinGen) return;
+    wantEarly.current = true;
+    setEarlyTick((n) => n + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: stopAllTick only
+  }, [stopAllTick]);
 
   useEffect(() => {
     if (!spinning || !final || final.length !== 3) return;
@@ -475,29 +488,35 @@ const DEFAULT_THEME: Required<VaultTheme> = {
  * Canopy Spire cabinet (jungle progressive). Extension point: `theme` props for redesign
  * without forking spin math.
  */
-export default function VaultSpireMachine({
-  grid,
-  spinning,
-  winCells,
-  onSpinComplete,
-  theme,
-}: {
-  grid: VsSymbol[][] | null;
-  spinning: boolean;
-  winCells?: WinCell[];
-  onSpinComplete?: () => void;
-  theme?: VaultTheme;
-}) {
+export type VaultSpireMachineHandle = {
+  stopAll: () => void;
+};
+
+const VaultSpireMachine = forwardRef<
+  VaultSpireMachineHandle,
+  {
+    grid: VsSymbol[][] | null;
+    spinning: boolean;
+    winCells?: WinCell[];
+    onSpinComplete?: () => void;
+    theme?: VaultTheme;
+  }
+>(function VaultSpireMachine({ grid, spinning, winCells, onSpinComplete, theme }, ref) {
   const t = { ...DEFAULT_THEME, ...theme, kickLabels: theme?.kickLabels ?? DEFAULT_THEME.kickLabels };
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
   const [settled, setSettled] = useState(true);
+  const [stopAllTick, setStopAllTick] = useState(0);
   const stopped = useRef<Set<number>>(new Set());
   const completedGen = useRef(-1);
   const completeRef = useRef(onSpinComplete);
   completeRef.current = onSpinComplete;
   const genRef = useRef(spinGen);
   genRef.current = spinGen;
+
+  useImperativeHandle(ref, () => ({
+    stopAll: () => setStopAllTick((n) => n + 1),
+  }), []);
 
   useEffect(() => {
     if (!spinning) return;
@@ -579,6 +598,7 @@ export default function VaultSpireMachine({
                     settled={settled}
                     winRows={winByReel[r]!}
                     spinGen={spinGen}
+                    stopAllTick={stopAllTick}
                     onStopped={onStopped}
                   />
                 );
@@ -605,4 +625,6 @@ export default function VaultSpireMachine({
       </div>
     </SymHCtx.Provider>
   );
-}
+});
+
+export default VaultSpireMachine;

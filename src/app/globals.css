@@ -1791,11 +1791,15 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
   touch-action: manipulation;
 }
 /* Soft busy: don't brick the whole dock if busy/spinning sticks.
-   Primary Spin uses button[disabled]; only mute non-primary controls. */
+   Primary Spin/Stop uses button[disabled] only when idle-busy; Stop stays clickable. */
 .action-dock.is-busy .chip-row,
 .action-dock.is-busy .btn:not(.hero-act),
 .action-dock.is-busy .clay-chip-btn {
   pointer-events: none;
+}
+.action-dock.is-busy .btn.primary.hero-act:not(:disabled) {
+  pointer-events: auto;
+  cursor: pointer;
 }
 .action-dock.is-busy .btn.primary.hero-act:disabled {
   opacity: .9;
