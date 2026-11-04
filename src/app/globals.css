@@ -2276,3 +2276,56 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 .rl-odds td.num, .rl-odds th.num { text-align:right; }
 .rl-sandbox-tag { display:inline-block; font-size:11px; letter-spacing:.08em; text-transform:uppercase; padding:2px 8px; border:1px solid rgba(232,213,163,.5); border-radius:999px; }
 @media (max-width: 640px) { .rl-odds { font-size:12px; } }
+
+/* Physics ball layer (stator frame, above rotor + diamonds) */
+.rl-ball-layer { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
+
+/* Phone: stand the roulette layout on end so it fits without sideways scroll. */
+@media (max-width: 600px) {
+  .rl-cloth { overflow-x: visible; }
+  .rl-grid {
+    min-width: 0;
+    grid-template-columns: 40px 44px repeat(3, minmax(0, 1fr));
+    grid-template-rows: 48px 34px repeat(12, 42px) 40px;
+    gap: 3px; padding: 4px;
+  }
+  .rl-cell.zero0 { grid-column: 3 / 5; grid-row: 1; }
+  .rl-cell.zero00 { grid-column: 5; grid-row: 1; }
+  .rl-cell.basket { grid-column: 3 / 6; grid-row: 2; writing-mode: horizontal-tb; transform: none; }
+  .rl-cell.n.r0, .rl-hitpad.r0 { grid-column: 5; }
+  .rl-cell.n.r1, .rl-hitpad.r1 { grid-column: 4; }
+  .rl-cell.n.r2, .rl-hitpad.r2 { grid-column: 3; }
+  .rl-cell.n.c0, .rl-hitpad.c0 { grid-row: 3; }
+  .rl-cell.n.c1, .rl-hitpad.c1 { grid-row: 4; }
+  .rl-cell.n.c2, .rl-hitpad.c2 { grid-row: 5; }
+  .rl-cell.n.c3, .rl-hitpad.c3 { grid-row: 6; }
+  .rl-cell.n.c4, .rl-hitpad.c4 { grid-row: 7; }
+  .rl-cell.n.c5, .rl-hitpad.c5 { grid-row: 8; }
+  .rl-cell.n.c6, .rl-hitpad.c6 { grid-row: 9; }
+  .rl-cell.n.c7, .rl-hitpad.c7 { grid-row: 10; }
+  .rl-cell.n.c8, .rl-hitpad.c8 { grid-row: 11; }
+  .rl-cell.n.c9, .rl-hitpad.c9 { grid-row: 12; }
+  .rl-cell.n.c10, .rl-hitpad.c10 { grid-row: 13; }
+  .rl-cell.n.c11, .rl-hitpad.c11 { grid-row: 14; }
+  .rl-cell.col-r0 { grid-column: 5; grid-row: 15; }
+  .rl-cell.col-r1 { grid-column: 4; grid-row: 15; }
+  .rl-cell.col-r2 { grid-column: 3; grid-row: 15; }
+  .rl-cell.dozen { writing-mode: vertical-rl; }
+  .rl-cell.dozen.d1 { grid-column: 1; grid-row: 3 / 7; }
+  .rl-cell.dozen.d2 { grid-column: 1; grid-row: 7 / 11; }
+  .rl-cell.dozen.d3 { grid-column: 1; grid-row: 11 / 15; }
+  .rl-cell.outside[class*="e-"] { writing-mode: vertical-rl; font-size: 11px; }
+  .rl-cell.e-low { grid-column: 2; grid-row: 3 / 5; }
+  .rl-cell.e-even { grid-column: 2; grid-row: 5 / 7; }
+  .rl-cell.e-red { grid-column: 2; grid-row: 7 / 9; }
+  .rl-cell.e-black { grid-column: 2; grid-row: 9 / 11; }
+  .rl-cell.e-odd { grid-column: 2; grid-row: 11 / 13; }
+  .rl-cell.e-high { grid-column: 2; grid-row: 13 / 15; }
+  /* Spots move with the transpose: "next in row" is now below, "next row down" is to the left. */
+  .rl-spot.split-h { right: auto; top: auto; left: 50%; bottom: -16px; transform: translateX(-50%); width: 40px; height: 32px; }
+  .rl-spot.split-v { bottom: auto; left: -16px; top: 50%; transform: translateY(-50%); width: 32px; height: 34px; }
+  .rl-spot.corner { right: auto; left: -16px; bottom: -16px; width: 32px; height: 32px; z-index: 9; }
+  .rl-spot.street { left: 0; bottom: auto; top: 50%; transform: translate(-50%, -50%); width: 32px; height: 34px; }
+  .rl-spot.sixline { right: auto; left: 0; bottom: 0; transform: translate(-50%, 50%); width: 32px; height: 32px; z-index: 10; }
+}
+@media (max-width: 600px) { .rl-bowl { width: min(420px, 100%); } }

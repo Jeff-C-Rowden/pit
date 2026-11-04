@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { pocketColor } from "@/lib/games/rouletteFelt";
+import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
 import { ActionDock, ChipRow, OutcomeBanner } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
@@ -8,15 +9,12 @@ import { api, money, useUser } from "@/components/useUser";
 import RouletteCloth, {
   PIT_ROULETTE_BOTS,
   RouletteBots,
-  RouletteStats,
   RouletteWheel,
   type ClothBet,
   type GhostChip,
 } from "@/components/RouletteCloth";
 
 const TURBO_KEY = "pit-rl-turbo";
-const NORMAL_MS = 4200;
-const TURBO_MS = 1300;
 const HISTORY_N = 20;
 
 const ODDS: [string, string, number, number][] = [
@@ -105,7 +103,8 @@ export default function RoulettePage() {
   const [history, setHistory] = useState<string[]>([]);
   const [ghosts, setGhosts] = useState<GhostChip[]>([]);
   const [hydrated, setHydrated] = useState(false);
-  const [spinId, setSpinId] = useState(0);
+  const [plan, setPlan] = useState<SpinPlan | null>(null);
+  const rotorRef = useRef(0);
 
   const [turbo, setTurbo] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -124,8 +123,6 @@ export default function RoulettePage() {
     if (!hydrated) return;
     try { localStorage.setItem(TURBO_KEY, turbo ? "1" : "0"); } catch { /* ignore */ }
   }, [turbo, hydrated]);
-
-  const spinMs = reduced ? 0 : turbo ? TURBO_MS : NORMAL_MS;
 
   function waitSpin(ms: number) {
     return new Promise<void>((resolve) => {
@@ -180,9 +177,11 @@ export default function RoulettePage() {
       setGhosts(pickGhosts());
       setLivePocket(d.spin.pocket);
       setSkipped(false);
-      setSpinId((n) => n + 1);
+      const p = planSpin(d.spin.pocket, rotorRef.current, { turbo });
+      rotorRef.current = p.frames[p.frames.length - 1]!.rotor % 360;
+      setPlan(p);
       setSpinning(true);
-      await waitSpin(spinMs);
+      await waitSpin(reduced ? 0 : p.durationMs);
       setSpinning(false);
       setSpin(d.spin);
       setHistory(Array.isArray(d.history) ? d.history : (h) => [d.spin.pocket, ...h].slice(0, HISTORY_N));
@@ -237,7 +236,7 @@ export default function RoulettePage() {
           )}
           <div className="rl-stage">
             <div className="rl-star">
-              <RouletteWheel pocket={displayPocket} spinning={spinning} spinId={spinId} durationMs={spinMs || 1} instant={reduced || skipped} />
+              <RouletteWheel pocket={displayPocket} spinning={spinning} plan={plan} instant={reduced || skipped} />
               <div className="rl-tools">
                 <label><input type="checkbox" checked={turbo} onChange={(e) => setTurbo(e.target.checked)} /> Turbo spin</label>
                 {spinning && <button className="btn" onClick={() => skipRef.current?.()}>Skip animation</button>}
@@ -248,7 +247,6 @@ export default function RoulettePage() {
                 <HistoryStrip pockets={history} />
                 <HotCold pockets={history} />
               </div>
-              <RouletteStats pockets={history} />
               <RouletteBots active={spinning} flashes={spinning || ghosts.length ? botFlashes : []} />
             </div>
             <RouletteCloth

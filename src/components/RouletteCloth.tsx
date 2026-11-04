@@ -3,6 +3,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChipStack } from "./TableUX";
 import { SeatAvatar } from "./Seating";
 import { money } from "./useUser";
+import { DIAMONDS, FPS, R_DEFLECT, type Frame, type SpinPlan } from "@/lib/games/rouletteBall";
 import { RED, WHEEL_ORDER as WHEEL, FELT_ROWS, pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
 export { RED, FELT_ROWS, pocketColor, WHEEL };
 
@@ -49,25 +50,6 @@ function sectorPath(cx: number, cy: number, r0: number, r1: number, a0deg: numbe
   const [x1o, y1o] = p(r1, a1);
   const large = a1deg - a0deg > 180 ? 1 : 0;
   return `M ${x0i.toFixed(2)} ${y0i.toFixed(2)} L ${x0o.toFixed(2)} ${y0o.toFixed(2)} A ${r1} ${r1} 0 ${large} 1 ${x1o.toFixed(2)} ${y1o.toFixed(2)} L ${x1i.toFixed(2)} ${y1i.toFixed(2)} A ${r0} ${r0} 0 ${large} 0 ${x0i.toFixed(2)} ${y0i.toFixed(2)} Z`;
-}
-
-function pocketAngle(pocket: string) {
-  const slice = 360 / WHEEL.length;
-  const idx = WHEEL.indexOf(pocket as (typeof WHEEL)[number]);
-  if (idx < 0) return 0;
-  return -(idx * slice) - slice / 2;
-}
-
-function nextRotation(current: number, pocket: string) {
-  const land = pocketAngle(pocket);
-  const landNorm = ((land % 360) + 360) % 360;
-  const turns = 3 + (pocket.length % 2);
-  let target = current - 360 * turns;
-  const targetNorm = ((target % 360) + 360) % 360;
-  let adj = landNorm - targetNorm;
-  target += adj;
-  if (target > current - 360 * 2) target -= 360;
-  return target;
 }
 
 function LastNine({ pockets }: { pockets: string[] }) {
@@ -190,47 +172,65 @@ export function RouletteBots({
 export function RouletteWheel({
   pocket,
   spinning,
-  spinId = 0,
-  durationMs = SPIN_MS,
+  plan,
   instant = false,
 }: {
   pocket?: string | null;
   spinning?: boolean;
-  spinId?: number;
-  /** Spin length; the ball and cylinder both finish at this time with the server's pocket under the pointer. */
-  durationMs?: number;
-  /** Skip / reduced motion: jump straight to the landed state. */
+  /** Precomputed physics run that ends in the server's pocket. */
+  plan?: SpinPlan | null;
+  /** Skip / reduced motion: jump straight to the settled frame. */
   instant?: boolean;
 }) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const n = WHEEL.length;
   const slice = 360 / n;
-  const rotRef = useRef(0);
-  const applied = useRef(0);
-  const [rot, setRot] = useState(0);
-  const [orbitKey, setOrbitKey] = useState(0);
+  const cylRef = useRef<HTMLDivElement | null>(null);
+  const ballRef = useRef<SVGCircleElement | null>(null);
+  const shadowRef = useRef<SVGCircleElement | null>(null);
   const cx = 220;
   const cy = 220;
   const r0 = 72;
   const r1 = 188;
 
   useEffect(() => {
-    if (!spinning || !pocket || !spinId) return;
-    if (applied.current === spinId) return;
-    applied.current = spinId;
-    const next = nextRotation(rotRef.current, pocket);
-    rotRef.current = next;
-    setRot(next);
-    setOrbitKey((k) => k + 1);
-  }, [spinning, pocket, spinId]);
+    if (!plan) return;
+    const draw = (f: Frame) => {
+      if (cylRef.current) cylRef.current.style.transform = `rotate(${f.rotor.toFixed(3)}deg)`;
+      const a = (f.ball * Math.PI) / 180;
+      const x = cx + f.r * Math.sin(a);
+      const y = cy - f.r * Math.cos(a);
+      const lift = Math.min(f.lift, 14);
+      if (ballRef.current) {
+        ballRef.current.setAttribute("cx", x.toFixed(2));
+        ballRef.current.setAttribute("cy", (y - lift * 0.6).toFixed(2));
+        ballRef.current.setAttribute("r", (7 + lift * 0.08).toFixed(2));
+      }
+      if (shadowRef.current) {
+        shadowRef.current.setAttribute("cx", (x + 1.5 + lift * 0.3).toFixed(2));
+        shadowRef.current.setAttribute("cy", (y + 2 + lift * 0.3).toFixed(2));
+        shadowRef.current.setAttribute("opacity", (0.5 - lift * 0.02).toFixed(2));
+      }
+    };
+    const frames = plan.frames;
+    if (instant || !spinning) { draw(frames[frames.length - 1]!); return; }
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const i = Math.min(frames.length - 1, Math.floor(((now - t0) / 1000) * FPS));
+      draw(frames[i]!);
+      if (i < frames.length - 1) raf = requestAnimationFrame(tick);
+    };
+    draw(frames[0]!);
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [plan, instant, spinning]);
 
   const settled = !spinning && !!pocket;
-  const showMarble = settled || !!spinning;
 
   return (
     <div
       className={`rl-wheel-scene ${spinning ? "spinning" : ""} ${settled ? "settled" : ""} ${instant ? "instant" : ""}`}
-      style={{ ["--rl-spin-ms" as string]: `${Math.max(1, durationMs)}ms` }}
     >
       <div className="rl-bowl">
         <svg viewBox="0 0 440 440" className="rl-bowl-svg" aria-hidden>
@@ -273,10 +273,7 @@ export function RouletteWheel({
 
         <div
           className="rl-cylinder"
-          style={{
-            transform: `rotate(${rot}deg)`,
-            transition: instant ? "none" : `transform ${durationMs}ms cubic-bezier(0.08, 0.72, 0.12, 1)`,
-          }}
+          ref={cylRef}
         >
           <svg viewBox="0 0 440 440" className="rl-wheel" aria-hidden>
             <defs>
@@ -361,6 +358,21 @@ export function RouletteWheel({
                 <stop offset="100%" stopColor="#7a5a10" />
               </linearGradient>
             </defs>
+            {DIAMONDS.map((d) => {
+              const a = (d * Math.PI) / 180;
+              const x = 220 + R_DEFLECT * Math.sin(a);
+              const y = 220 - R_DEFLECT * Math.cos(a);
+              return (
+                <polygon
+                  key={d}
+                  points="0,-7 3.2,0 0,7 -3.2,0"
+                  transform={`translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${d})`}
+                  fill={`url(#hubBrass${uid})`}
+                  stroke="#5a400c"
+                  strokeWidth="0.8"
+                />
+              );
+            })}
             <circle cx="220" cy="220" r="64" fill={`url(#cap${uid})`} stroke={`url(#hubBrass${uid})`} strokeWidth="4.5" />
             <circle cx="220" cy="220" r="52" fill="none" stroke="#e8d5a3" strokeWidth="1.2" opacity="0.5" />
             <circle cx="220" cy="220" r="18" fill={`url(#hubBrass${uid})`} opacity="0.95" />
@@ -374,11 +386,17 @@ export function RouletteWheel({
           </svg>
         </div>
 
-        {showMarble && (
-          <div key={orbitKey} className={`rl-ball-orbit ${spinning ? "run" : "rest"}`} aria-hidden>
-            <span className="rl-ball" />
-          </div>
-        )}
+        <svg viewBox="0 0 440 440" className="rl-ball-layer" aria-hidden style={{ visibility: plan ? "visible" : "hidden" }}>
+          <defs>
+            <radialGradient id={`ivory${uid}`} cx="34%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="45%" stopColor="#ece4d6" />
+              <stop offset="100%" stopColor="#8f877c" />
+            </radialGradient>
+          </defs>
+          <circle ref={shadowRef} cx="220" cy="25" r="7" fill="#000" opacity="0.45" />
+          <circle ref={ballRef} cx="220" cy="23" r="7" fill={`url(#ivory${uid})`} />
+        </svg>
 
         <div className="rl-wheel-pointer" title="Pointer">
           <svg viewBox="0 0 28 36" width="24" height="30">
