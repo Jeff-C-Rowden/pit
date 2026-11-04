@@ -512,6 +512,7 @@ onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "
                 className={`rl-cell ${col} n n-${n} r${ri} c${ci} ${hit === label ? "hit" : ""}${cv(label)}`}
                 aria-label={`${n} ${col}, straight up pays 35 to 1${onAmount(label) ? `, your bet ${money(onAmount(label))}` : ""}`}
                 {...hov({ kind: "straight", numbers: [label], label })}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.(label); }}
           onClick={() => tap({ kind: "straight", numbers: [label], label })}
               >
                 {n}
