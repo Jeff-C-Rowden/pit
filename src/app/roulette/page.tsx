@@ -46,8 +46,8 @@ function HotCold({ pockets }: { pockets: string[] }) {
   if (!pockets.length) return null;
   return (
     <div className="rl-hotcold">
-      <div>Most seen: {hot.map(([p, n]) => <span key={p} className={`rl-hpip ${pocketColor(p)}`} title={`${n}×`} style={{ display: "inline-grid", placeItems: "center", margin: "0 2px", borderRadius: 4 }}>{p}<sub>{n}</sub></span>)}
-        {" · "}Not seen: {cold.map((p) => <span key={p} className={`rl-hpip ${pocketColor(p)}`} style={{ display: "inline-grid", placeItems: "center", margin: "0 2px", borderRadius: 4 }}>{p}</span>)}</div>
+      <div className="rl-hc-row"><span className="rl-hc-lab">Most seen</span>{hot.map(([p, n]) => <span key={p} className={`rl-hpip ${pocketColor(p)}`} title={`${n}×`}>{p}<sub>×{n}</sub></span>)}</div>
+      <div className="rl-hc-row"><span className="rl-hc-lab">Not seen</span>{cold.map((p) => <span key={p} className={`rl-hpip ${pocketColor(p)}`}>{p}</span>)}</div>
       <div className="rl-hotcold-note">Counts from your last {pockets.length} real spins. Past results don't predict anything; every spin is independent.</div>
     </div>
   );
@@ -352,7 +352,7 @@ export default function RoulettePage() {
                     onClick={() => { setCustomOpen((o) => !o); setCustomVal((chip / 100).toString()); }}
                     aria-expanded={customOpen}
                     aria-label="Custom chip amount"
-                  >{!CHIPS.includes(chip) ? money(chip).replace(".00", "") : "$ ?"}<span>Custom</span></button>
+                  >{!CHIPS.includes(chip) ? money(chip).replace(".00", "") : "Custom"}<span>{!CHIPS.includes(chip) ? "Custom" : "any $"}</span></button>
                 </div>
                 {customOpen && (
                   <form
