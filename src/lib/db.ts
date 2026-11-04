@@ -65,9 +65,55 @@ CREATE TABLE IF NOT EXISTS progressive_meters (
 `;
 
 let singleton: Database.Database | null = null;
+let dirty = false;
+
+/** True when a write ran since the last clearDirty(). Used by the Blob snapshot sync. */
+export function isDirty(): boolean { return dirty; }
+export function clearDirty(): void { dirty = false; }
+
+function instrument(db: Database.Database): Database.Database {
+  const prepare = db.prepare.bind(db);
+  (db as unknown as { prepare: unknown }).prepare = (sql: string) => {
+    const stmt = prepare(sql);
+    if (!/^\s*(select|pragma)\b/i.test(sql)) {
+      const run = stmt.run.bind(stmt);
+      (stmt as unknown as { run: unknown }).run = (...args: unknown[]) => {
+        dirty = true;
+        return (run as (...a: unknown[]) => Database.RunResult)(...args);
+      };
+    }
+    return stmt;
+  };
+  return db;
+}
+
+function finish(db: Database.Database, wal: boolean): Database.Database {
+  if (wal) db.pragma("journal_mode = WAL");
+  db.pragma("foreign_keys = ON");
+  db.exec(SCHEMA);
+  return instrument(db);
+}
+
+/** Replace the in-process DB with one loaded from a serialized SQLite image (or a fresh one). */
+export function loadDbFromImage(image: Buffer | null): Database.Database {
+  if (singleton) {
+    try { singleton.close(); } catch { /* ignore */ }
+  }
+  singleton = finish(image ? new Database(image) : new Database(":memory:"), false);
+  dirty = false;
+  return singleton;
+}
+
+export function serializeDb(): Buffer {
+  return getDb().serialize();
+}
 
 export function getDb(): Database.Database {
   if (singleton) return singleton;
+  if (process.env.BLOB_READ_WRITE_TOKEN && !process.env.PIT_DB_PATH) {
+    // Vercel: in-memory DB, snapshotted to Vercel Blob by withDbSync().
+    return loadDbFromImage(null);
+  }
   const dbPath = process.env.PIT_DB_PATH || path.join(process.cwd(), "data", "pit.sqlite");
   if (dbPath !== ":memory:") {
     try {
@@ -86,11 +132,8 @@ export function getDb(): Database.Database {
       `unable to open database file at PIT_DB_PATH=${dbPath} (ensure the directory is writable by the app user): ${msg}`
     );
   }
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
-  db.exec(SCHEMA);
-  singleton = db;
-  return db;
+  singleton = finish(db, true);
+  return singleton;
 }
 
 export function resetDbForTests(dbPath = ":memory:"): Database.Database {

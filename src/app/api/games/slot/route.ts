@@ -1,3 +1,4 @@
+import { withDbSync } from "@/lib/dbSync";
 import { withUser, json } from "@/lib/http";
 import { debitBet, creditPayout, getBalance } from "@/lib/ledger";
 import { toPublic } from "@/lib/auth";
@@ -5,7 +6,7 @@ import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
 import { spinSlot, publicSpin, SLOT_INFO, PAYTABLE, PAYLINES, exactRtp } from "@/lib/games/slot";
 
-export async function GET() {
+async function _GET() {
   return json({
     info: SLOT_INFO,
     paytable: PAYTABLE,
@@ -14,7 +15,7 @@ export async function GET() {
   });
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
     const coinCents = Number(body.coinCents);
@@ -29,3 +30,7 @@ export async function POST(req: Request) {
     return json({ user: toPublic(u), spin: publicSpin(spin), balanceCents: getBalance(user.id) });
   });
 }
+
+export const GET = withDbSync(_GET);
+export const POST = withDbSync(_POST);
+export const dynamic = "force-dynamic";

@@ -1,9 +1,10 @@
+import { withDbSync } from "@/lib/dbSync";
 import { cookies } from "next/headers";
 import { getUserByToken, SESSION_COOKIE, toPublic } from "@/lib/auth";
 import { json } from "@/lib/http";
 import { getDb } from "@/lib/db";
 
-export async function GET() {
+async function _GET() {
   getDb();
   const token = cookies().get(SESSION_COOKIE)?.value;
   const user = getUserByToken(token);
@@ -11,7 +12,7 @@ export async function GET() {
   return json({ user: toPublic(user) });
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   if (body.age === 21 || body.age === "21") {
     const secure =
@@ -28,3 +29,7 @@ export async function POST(req: Request) {
   }
   return json({ error: "you must be 21 or older to enter Pit" }, 403);
 }
+
+export const GET = withDbSync(_GET);
+export const POST = withDbSync(_POST);
+export const dynamic = "force-dynamic";

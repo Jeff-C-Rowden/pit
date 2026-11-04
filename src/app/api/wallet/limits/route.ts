@@ -1,8 +1,9 @@
+import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { getDb } from "@/lib/db";
 import { toPublic } from "@/lib/auth";
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
     let deposit = body.depositLimitCents;
@@ -16,3 +17,6 @@ export async function POST(req: Request) {
     return json({ user: toPublic(fresh) });
   });
 }
+
+export const POST = withDbSync(_POST);
+export const dynamic = "force-dynamic";

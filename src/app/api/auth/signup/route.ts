@@ -1,10 +1,11 @@
+import { withDbSync } from "@/lib/dbSync";
 import { createUser, loginUser, sessionCookieOptions } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { err, json } from "@/lib/http";
 import { toPublic } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   try {
     const body = await req.json();
     const age = cookies().get("pit_age")?.value;
@@ -25,3 +26,6 @@ export async function POST(req: Request) {
     return err(msg);
   }
 }
+
+export const POST = withDbSync(_POST);
+export const dynamic = "force-dynamic";

@@ -1,3 +1,4 @@
+import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { debitBet, loadGame, loadOpenGame, getBalance } from "@/lib/ledger";
 import { persistHoldem, holdemDone } from "@/lib/holdemPersist";
@@ -10,7 +11,7 @@ function freshUser(id: string) {
   return getDb().prepare("SELECT * FROM users WHERE id = ?").get(id);
 }
 
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   return withUser(req, async (user) => {
     const open = loadOpenGame<HoldemState>(user.id, "holdem");
     if (open && holdemDone(open.state)) {
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
   });
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
     const action = String(body.action || "");
@@ -65,3 +66,7 @@ export async function POST(req: Request) {
     return json({ user: toPublic(u), game: publicHoldem(loaded.state), balanceCents: getBalance(user.id) });
   });
 }
+
+export const GET = withDbSync(_GET);
+export const POST = withDbSync(_POST);
+export const dynamic = "force-dynamic";

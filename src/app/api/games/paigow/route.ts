@@ -1,3 +1,4 @@
+import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { debitBet, creditPayout, saveGame, loadGame, loadOpenGame, getBalance } from "@/lib/ledger";
 import { toPublic } from "@/lib/auth";
@@ -5,7 +6,7 @@ import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
 import { startPaiGow, setHands, setHouseWayPlayer, publicPaiGow, type PaiGowState } from "@/lib/games/paigow";
 
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   return withUser(req, async (user) => {
     const open = loadOpenGame<PaiGowState>(user.id, "paigow");
     return json({
@@ -16,7 +17,7 @@ export async function GET(req: Request) {
   });
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
     const action = String(body.action || "");
@@ -46,3 +47,7 @@ export async function POST(req: Request) {
     return json({ user: toPublic(u), game: publicPaiGow(state), balanceCents: getBalance(user.id) });
   });
 }
+
+export const GET = withDbSync(_GET);
+export const POST = withDbSync(_POST);
+export const dynamic = "force-dynamic";

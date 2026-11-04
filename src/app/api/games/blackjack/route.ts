@@ -1,3 +1,4 @@
+import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { debitBet, creditPayout, saveGame, loadGame, loadOpenGame, getBalance } from "@/lib/ledger";
 import { toPublic } from "@/lib/auth";
@@ -11,7 +12,7 @@ function freshUser(id: string) {
   return getDb().prepare("SELECT * FROM users WHERE id = ?").get(id);
 }
 
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   return withUser(req, async (user) => {
     const open = loadOpenGame<BjState>(user.id, "blackjack");
     return json({
@@ -30,7 +31,7 @@ export async function GET(req: Request) {
   });
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
     const action = String(body.action || "");
@@ -87,3 +88,7 @@ export async function POST(req: Request) {
     return json({ user: toPublic(u), game: publicBlackjack(state, done), balanceCents: getBalance(user.id) });
   });
 }
+
+export const GET = withDbSync(_GET);
+export const POST = withDbSync(_POST);
+export const dynamic = "force-dynamic";

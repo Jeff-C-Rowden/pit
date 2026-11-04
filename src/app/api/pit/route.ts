@@ -1,7 +1,8 @@
+import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { getDb } from "@/lib/db";
 
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   return withUser(req, async (user) => {
     if (!user.is_operator) return err("pit boss only", 403);
     const db = getDb();
@@ -18,3 +19,6 @@ export async function GET(req: Request) {
     return json({ users, ledger, openBets, withdrawals });
   });
 }
+
+export const GET = withDbSync(_GET);
+export const dynamic = "force-dynamic";

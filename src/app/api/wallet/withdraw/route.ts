@@ -1,3 +1,4 @@
+import { withDbSync } from "@/lib/dbSync";
 import { applyLedger, getBalance } from "@/lib/ledger";
 import { getPaymentsAdapter } from "@/lib/payments";
 import { withUser, json, err } from "@/lib/http";
@@ -5,7 +6,7 @@ import { toPublic } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
     const amountCents = Number(body.amountCents);
@@ -35,9 +36,13 @@ export async function POST(req: Request) {
   });
 }
 
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   return withUser(req, async (user) => {
     const rows = getDb().prepare("SELECT * FROM withdrawals WHERE user_id = ? ORDER BY created_at DESC LIMIT 50").all(user.id);
     return json({ withdrawals: rows });
   });
 }
+
+export const POST = withDbSync(_POST);
+export const GET = withDbSync(_GET);
+export const dynamic = "force-dynamic";

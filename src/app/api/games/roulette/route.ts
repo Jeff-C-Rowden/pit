@@ -1,3 +1,4 @@
+import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { debitBet, creditPayout, getBalance } from "@/lib/ledger";
 import { toPublic } from "@/lib/auth";
@@ -8,11 +9,11 @@ import {
   type RouletteBet,
 } from "@/lib/games/roulette";
 
-export async function GET() {
+async function _GET() {
   return json(publicWheel());
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
     type IncomingBet = RouletteBet & { which?: number };
@@ -47,3 +48,7 @@ export async function POST(req: Request) {
     });
   });
 }
+
+export const GET = withDbSync(_GET);
+export const POST = withDbSync(_POST);
+export const dynamic = "force-dynamic";

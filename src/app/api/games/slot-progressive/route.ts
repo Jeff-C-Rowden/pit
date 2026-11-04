@@ -1,3 +1,4 @@
+import { withDbSync } from "@/lib/dbSync";
 import { withUser, json } from "@/lib/http";
 import { debitBet, creditPayout, getBalance } from "@/lib/ledger";
 import { toPublic } from "@/lib/auth";
@@ -12,7 +13,7 @@ import {
 } from "@/lib/games/slotProgressive";
 import { applyProgressiveSpin, getAllProgressives, publicMeters } from "@/lib/progressive";
 
-export async function GET() {
+async function _GET() {
   const meters = getAllProgressives();
   return json({
     info: VAULT_SPIRE_INFO,
@@ -23,7 +24,7 @@ export async function GET() {
   });
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
     const coinCents = Number(body.coinCents);
@@ -79,3 +80,7 @@ export async function POST(req: Request) {
     });
   });
 }
+
+export const GET = withDbSync(_GET);
+export const POST = withDbSync(_POST);
+export const dynamic = "force-dynamic";

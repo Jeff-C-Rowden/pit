@@ -1,3 +1,4 @@
+import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { debitBet, creditPayout, applyLedger, saveGame, loadOpenGame, getBalance } from "@/lib/ledger";
 import { toPublic } from "@/lib/auth";
@@ -58,14 +59,14 @@ function applyRepeat(
   return { placed, placedCents };
 }
 
-export async function GET(req: Request) {
+async function _GET(req: Request) {
   return withUser(req, async (user) => {
     const t = table(user.id);
     return json({ user: toPublic(user), table: publicCraps(t.state) });
   });
 }
 
-export async function POST(req: Request) {
+async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
     const t = table(user.id);
@@ -140,3 +141,7 @@ export async function POST(req: Request) {
     return err("unknown action");
   });
 }
+
+export const GET = withDbSync(_GET);
+export const POST = withDbSync(_POST);
+export const dynamic = "force-dynamic";
