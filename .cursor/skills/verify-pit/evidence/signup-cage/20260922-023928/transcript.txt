@@ -1,0 +1,5 @@
+age ok
+signup verify-1790062768482-n3ov4w@pit.test bal=0
+deposit 10000 bal=10000
+age ok
+signup verify-1790062768935-dv9o4t@pit.test bal=0

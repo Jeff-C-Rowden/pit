@@ -1,0 +1,10 @@
+{
+  "status": 200,
+  "data": {
+    "adapter": "sandbox",
+    "mode": "sandbox",
+    "live": false,
+    "message": "Sandbox Cage — test funds only. No cards, no ACH, no live partner wallet."
+  },
+  "text": "{\"adapter\":\"sandbox\",\"mode\":\"sandbox\",\"live\":false,\"message\":\"Sandbox Cage — test funds only. No cards, no ACH, no live partner wallet.\"}"
+}

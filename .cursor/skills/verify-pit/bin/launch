@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+# Start Pit for verification on :3000 with a disposable SQLite DB.
+# Refuses if :3000 is already bound (cannot double-drive).
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../../../.." && pwd)"
+SKILL="$(cd "$(dirname "$0")/.." && pwd)"
+RUN_DIR="${VERIFY_PIT_RUN_DIR:-$SKILL/run}"
+STATE="$RUN_DIR/state.env"
+LOG="$RUN_DIR/next.log"
+PORT="${VERIFY_PIT_PORT:-3000}"
+BASE="http://127.0.0.1:${PORT}"
+
+mkdir -p "$RUN_DIR"
+
+if [[ -f "$STATE" ]]; then
+  # shellcheck disable=SC1090
+  source "$STATE" || true
+  if [[ -n "${VERIFY_PIT_PID:-}" ]] && kill -0 "$VERIFY_PIT_PID" 2>/dev/null; then
+    echo "verify-pit: already launched (pid=$VERIFY_PIT_PID). Refuse double-drive." >&2
+    echo "Run: $SKILL/bin/cleanup   then relaunch." >&2
+    exit 2
+  fi
+fi
+
+if command -v ss >/dev/null 2>&1; then
+  if ss -ltn "( sport = :$PORT )" 2>/dev/null | grep -q ":$PORT"; then
+    echo "verify-pit: port $PORT already in use. Refuse double-drive (Next binds fixed :3000)." >&2
+    echo "Stop the other process yourself, or use cleanup only if you started it via verify-pit." >&2
+    exit 2
+  fi
+elif command -v lsof >/dev/null 2>&1; then
+  if lsof -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; then
+    echo "verify-pit: port $PORT already in use. Refuse double-drive." >&2
+    exit 2
+  fi
+fi
+
+RUN_ID="${VERIFY_PIT_RUN_ID:-$(date +%Y%m%d-%H%M%S)-$$}"
+DB_DIR="$RUN_DIR/db-$RUN_ID"
+mkdir -p "$DB_DIR"
+DB_PATH="$DB_DIR/pit.sqlite"
+
+export PIT_DB_PATH="$DB_PATH"
+export PIT_PAYMENTS="${PIT_PAYMENTS:-sandbox}"
+export SESSION_SECRET="${SESSION_SECRET:-verify-pit-local-only}"
+export OPERATOR_EMAIL="${OPERATOR_EMAIL:-pitboss@pit.local}"
+export NODE_ENV="${NODE_ENV:-development}"
+
+cd "$ROOT"
+: > "$LOG"
+
+# New session so cleanup can signal the whole tree (npm → next → next-server).
+setsid bash -c "npm run dev >>\"$LOG\" 2>&1" &
+PID=$!
+# setsid child is the session leader; its PGID equals its PID.
+PGID="$PID"
+
+cat > "$STATE" <<STATE
+VERIFY_PIT_PID=$PID
+VERIFY_PIT_PGID=$PGID
+VERIFY_PIT_PORT=$PORT
+VERIFY_PIT_BASE=$BASE
+VERIFY_PIT_DB_PATH=$DB_PATH
+VERIFY_PIT_RUN_ID=$RUN_ID
+VERIFY_PIT_LOG=$LOG
+VERIFY_PIT_PAYMENTS=$PIT_PAYMENTS
+VERIFY_PIT_STARTED_AT=$(date -Iseconds)
+STATE
+
+ready=0
+for i in $(seq 1 60); do
+  if ! kill -0 "$PID" 2>/dev/null; then
+    echo "verify-pit: next process exited early. Tail of log:" >&2
+    tail -n 40 "$LOG" >&2 || true
+    rm -f "$STATE"
+    exit 1
+  fi
+  if curl -sf -o /dev/null "$BASE/" 2>/dev/null || curl -sf -o /dev/null "$BASE/api/wallet/status" 2>/dev/null; then
+    ready=1
+    break
+  fi
+  sleep 0.5
+done
+
+if [[ "$ready" -ne 1 ]]; then
+  echo "verify-pit: timed out waiting for $BASE (pid=$PID). Log: $LOG" >&2
+  kill -- "-$PGID" 2>/dev/null || kill "$PID" 2>/dev/null || true
+  rm -f "$STATE"
+  exit 1
+fi
+
+echo "verify-pit: launched pid=$PID pgid=$PGID base=$BASE db=$DB_PATH payments=$PIT_PAYMENTS"
+echo "state: $STATE"

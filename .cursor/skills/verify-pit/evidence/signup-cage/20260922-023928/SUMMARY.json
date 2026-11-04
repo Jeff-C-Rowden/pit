@@ -1,0 +1,15 @@
+{
+  "feature": "signup-cage",
+  "base": "http://127.0.0.1:3000",
+  "ok": true,
+  "email": "verify-1790062768482-n3ov4w@pit.test",
+  "balanceCents": 10000,
+  "steps": [
+    "age-gate",
+    "signup",
+    "wallet-status",
+    "deposit",
+    "me-confirm",
+    "isolation"
+  ]
+}

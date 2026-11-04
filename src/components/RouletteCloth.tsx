@@ -1,4 +1,6 @@
 "use client";
+import { shouldSwallowClick } from "@/lib/tapGuard";
+import type React from "react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChipStack } from "./TableUX";
 import { SeatAvatar } from "./Seating";
@@ -22,10 +24,10 @@ export type GhostChip = { label: string; cents: number; bot?: string };
 /** House bots that linger at the American table — Pit names only. */
 export const PIT_ROULETTE_BOTS = ["Mara", "Vince", "Delia", "Otto", "June"] as const;
 
-function OnChip({ cents, ghost }: { cents: number; ghost?: boolean }) {
+function OnChip({ cents, ghost, paid }: { cents: number; ghost?: boolean; paid?: boolean | null }) {
   if (cents <= 0) return null;
   return (
-    <span className={`chip-on-num${ghost ? " rl-bot-chip" : ""}`}>
+    <span key={cents} className={`chip-on-num${ghost ? " rl-bot-chip" : " rl-mine"}${paid === true ? " paid" : paid === false ? " lost" : ""}`}>
       <ChipStack cents={cents} size={ghost ? 22 : 26} maxChips={ghost ? 2 : 4} showTotal={false} />
       {!ghost && <span className="rl-bet-amt">{money(cents)}</span>}
     </span>
@@ -433,8 +435,11 @@ export default function RouletteCloth({
   hideLastNine,
   removeMode,
   onRemove,
+  paidOf = () => null,
 }: {
   removeMode?: boolean;
+  /** After a settled spin: which bet labels paid (true) or lost (false). Display only. */
+  paidOf?: (label: string) => boolean | null;
   /** Take the last chip off a spot (remove mode tap, or long-press). */
   onRemove?: (label: string) => void;
   onAdd: (b: ClothBet) => void;
@@ -464,41 +469,70 @@ export default function RouletteCloth({
     onBlur: () => setCover(new Set()),
   });
   const cv = (p: string) => (cover.has(p) ? " covered" : "");
+  const press = useRef<{ t: ReturnType<typeof setTimeout>; x: number; y: number } | null>(null);
+  const suppress = useRef(false);
+  const lastLP = useRef(0);
+  const endPress = () => { if (press.current) clearTimeout(press.current.t); press.current = null; };
+  const onPointerDown = (e: React.PointerEvent) => {
+    suppress.current = false; // a fresh press never inherits a stale long-press swallow
+    if (locked || e.pointerType === "mouse") return;
+    const el = (e.target as HTMLElement).closest("[data-bet]") as HTMLElement | null;
+    const label = el?.dataset.bet;
+    if (!label || onAmount(label) <= 0) return;
+    endPress();
+    press.current = {
+      x: e.clientX, y: e.clientY,
+      t: setTimeout(() => { suppress.current = true; lastLP.current = Date.now(); press.current = null; onRemove?.(label); try { navigator.vibrate?.([8, 40, 8]); } catch { /* ignore */ } }, 480),
+    };
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    const p0 = press.current; if (p0 && Math.hypot(e.clientX - p0.x, e.clientY - p0.y) > 10) endPress();
+  };
 
   return (
     <div className={`rl-cloth${locked ? " locked" : ""}${removeMode ? " remove-mode" : ""}`} role="group" aria-label="American roulette layout">
       {!hideLastNine && <LastNine pockets={lastNine || []} />}
-      <div className="rl-grid">
+      <div
+        className="rl-grid"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endPress}
+        onPointerCancel={endPress}
+        onClickCapture={(e) => { const swallow = shouldSwallowClick(suppress.current, lastLP.current, Date.now()); suppress.current = false; if (swallow) { e.stopPropagation(); e.preventDefault(); } }}
+      >
         <button
           type="button"
           className={`rl-cell green zero00 ${hit === "00" ? "hit" : ""}${cv("00")}`}
           {...hov({ kind: "straight", numbers: ["00"], label: "00" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("00"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("00"); }}
+          data-bet={"00"}
 onClick={() => tap({ kind: "straight", numbers: ["00"], label: "00" })}
         >
           00
-          <OnChip cents={onAmount("00")} />
+          <OnChip cents={onAmount("00")} paid={paidOf("00")} />
         </button>
         <button
           type="button"
           className={`rl-cell green zero0 ${hit === "0" ? "hit" : ""}${cv("0")}`}
           {...hov({ kind: "straight", numbers: ["0"], label: "0" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("0"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("0"); }}
+          data-bet={"0"}
 onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
         >
           0
-          <OnChip cents={onAmount("0")} />
+          <OnChip cents={onAmount("0")} paid={paidOf("0")} />
         </button>
         <button
           type="button"
           className="rl-cell green basket"
           {...hov({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "five-number" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("five-number"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("five-number"); }}
+          data-bet={"five-number"}
 onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "five-number" })}
           title="Five-number 0-00-1-2-3 · 6:1"
         >
           0-00
-          <OnChip cents={onAmount("five-number")} />
+          <OnChip cents={onAmount("five-number")} paid={paidOf("five-number")} />
         </button>
 
         {FELT_ROWS.map((row, ri) =>
@@ -512,11 +546,12 @@ onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "
                 className={`rl-cell ${col} n n-${n} r${ri} c${ci} ${hit === label ? "hit" : ""}${cv(label)}`}
                 aria-label={`${n} ${col}, straight up pays 35 to 1${onAmount(label) ? `, your bet ${money(onAmount(label))}` : ""}`}
                 {...hov({ kind: "straight", numbers: [label], label })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.(label); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.(label); }}
+          data-bet={label}
           onClick={() => tap({ kind: "straight", numbers: [label], label })}
               >
                 {n}
-                <OnChip cents={onAmount(label)} />
+                <OnChip cents={onAmount(label)} paid={paidOf(label)} />
               </button>
             );
           }),
@@ -550,7 +585,7 @@ onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "
                       tap({ kind: "split", numbers: nums.map(String), label: `split ${nums.join("-")}` });
                     }}
                   >
-                    <OnChip cents={onAmount(`split ${[n, right].sort((a, b) => a - b).join("-")}`)} />
+                    <OnChip cents={onAmount(`split ${[n, right].sort((a, b) => a - b).join("-")}`)} paid={paidOf(`split ${[n, right].sort((a, b) => a - b).join("-")}`)} />
                   </button>
                 )}
                 {splitV && (
@@ -565,7 +600,7 @@ onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "
                       tap({ kind: "split", numbers: nums.map(String), label: `split ${nums.join("-")}` });
                     }}
                   >
-                    <OnChip cents={onAmount(`split ${[n, below].sort((a, b) => a - b).join("-")}`)} />
+                    <OnChip cents={onAmount(`split ${[n, below].sort((a, b) => a - b).join("-")}`)} paid={paidOf(`split ${[n, below].sort((a, b) => a - b).join("-")}`)} />
                   </button>
                 )}
                 {corner && (
@@ -580,7 +615,7 @@ onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "
                       tap({ kind: "corner", numbers: nums.map(String), label: `corner ${nums.join("-")}` });
                     }}
                   >
-                    <OnChip cents={onAmount(`corner ${[n, right, below, belowRight].sort((a, b) => a - b).join("-")}`)} />
+                    <OnChip cents={onAmount(`corner ${[n, right, below, belowRight].sort((a, b) => a - b).join("-")}`)} paid={paidOf(`corner ${[n, right, below, belowRight].sort((a, b) => a - b).join("-")}`)} />
                   </button>
                 )}
                 {street && (
@@ -594,7 +629,7 @@ onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "
                       tap({ kind: "street", numbers: streetNums.map(String), label: `street ${streetNums.join("-")}` });
                     }}
                   >
-                    <OnChip cents={onAmount(`street ${streetNums.join("-")}`)} />
+                    <OnChip cents={onAmount(`street ${streetNums.join("-")}`)} paid={paidOf(`street ${streetNums.join("-")}`)} />
                   </button>
                 )}
                 {six && (
@@ -609,7 +644,7 @@ onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "
                       tap({ kind: "six", numbers: nums.map(String), label: `six ${nums[0]}-${nums[nums.length - 1]}` });
                     }}
                   >
-                    <OnChip cents={onAmount(`six ${streetNums[0]}-${nextStreet[nextStreet.length - 1]}`)} />
+                    <OnChip cents={onAmount(`six ${streetNums[0]}-${nextStreet[nextStreet.length - 1]}`)} paid={paidOf(`six ${streetNums[0]}-${nextStreet[nextStreet.length - 1]}`)} />
                   </button>
                 )}
               </div>
@@ -623,77 +658,87 @@ onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "
             key={`col${which}`}
             className={`rl-cell outside col21 col-r${i}`}
             {...hov({ kind: "column", which, label: "" })}
-            onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.(`col ${which}`); }}
+            onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.(`col ${which}`); }}
+          data-bet={`col ${which}`}
 onClick={() => tap({ kind: "column", which, label: `col ${which}` })}
           >
             2:1
-            <OnChip cents={onAmount(`col ${which}`)} />
+            <OnChip cents={onAmount(`col ${which}`)} paid={paidOf(`col ${which}`)} />
             <OnChip cents={ghostOn(`col ${which}`)} ghost />
           </button>
         ))}
 
         <button type="button" className="rl-cell outside dozen d1" {...hov({ kind: "dozen", which: 1, label: "1st 12" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("1st 12"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("1st 12"); }}
+          data-bet={"1st 12"}
 onClick={() => tap({ kind: "dozen", which: 1, label: "1st 12" })}>
           1st 12
-          <OnChip cents={onAmount("1st 12")} />
+          <OnChip cents={onAmount("1st 12")} paid={paidOf("1st 12")} />
           <OnChip cents={ghostOn("1st 12")} ghost />
         </button>
         <button type="button" className="rl-cell outside dozen d2" {...hov({ kind: "dozen", which: 2, label: "2nd 12" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("2nd 12"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("2nd 12"); }}
+          data-bet={"2nd 12"}
 onClick={() => tap({ kind: "dozen", which: 2, label: "2nd 12" })}>
           2nd 12
-          <OnChip cents={onAmount("2nd 12")} />
+          <OnChip cents={onAmount("2nd 12")} paid={paidOf("2nd 12")} />
           <OnChip cents={ghostOn("2nd 12")} ghost />
         </button>
         <button type="button" className="rl-cell outside dozen d3" {...hov({ kind: "dozen", which: 3, label: "3rd 12" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("3rd 12"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("3rd 12"); }}
+          data-bet={"3rd 12"}
 onClick={() => tap({ kind: "dozen", which: 3, label: "3rd 12" })}>
           3rd 12
-          <OnChip cents={onAmount("3rd 12")} />
+          <OnChip cents={onAmount("3rd 12")} paid={paidOf("3rd 12")} />
           <OnChip cents={ghostOn("3rd 12")} ghost />
         </button>
 
         <button type="button" className="rl-cell outside even-money e-low" {...hov({ kind: "low", numbers: [], label: "1-18" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("1-18"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("1-18"); }}
+          data-bet={"1-18"}
 onClick={() => tap({ kind: "low", numbers: [], label: "1-18" })}>
           1 to 18
-          <OnChip cents={onAmount("1-18")} />
+          <OnChip cents={onAmount("1-18")} paid={paidOf("1-18")} />
           <OnChip cents={ghostOn("1-18")} ghost />
         </button>
         <button type="button" className="rl-cell outside even-money e-even" {...hov({ kind: "even", numbers: [], label: "even" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("even"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("even"); }}
+          data-bet={"even"}
 onClick={() => tap({ kind: "even", numbers: [], label: "even" })}>
           Even
-          <OnChip cents={onAmount("even")} />
+          <OnChip cents={onAmount("even")} paid={paidOf("even")} />
           <OnChip cents={ghostOn("even")} ghost />
         </button>
         <button type="button" className="rl-cell outside even-money e-red" {...hov({ kind: "red", numbers: [], label: "red" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("red"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("red"); }}
+          data-bet={"red"}
 onClick={() => tap({ kind: "red", numbers: [], label: "red" })}>
           <Diamond color="red" /> Red
-          <OnChip cents={onAmount("red")} />
+          <OnChip cents={onAmount("red")} paid={paidOf("red")} />
           <OnChip cents={ghostOn("red")} ghost />
         </button>
         <button type="button" className="rl-cell outside even-money e-black" {...hov({ kind: "black", numbers: [], label: "black" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("black"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("black"); }}
+          data-bet={"black"}
 onClick={() => tap({ kind: "black", numbers: [], label: "black" })}>
           <Diamond color="black" /> Black
-          <OnChip cents={onAmount("black")} />
+          <OnChip cents={onAmount("black")} paid={paidOf("black")} />
           <OnChip cents={ghostOn("black")} ghost />
         </button>
         <button type="button" className="rl-cell outside even-money e-odd" {...hov({ kind: "odd", numbers: [], label: "odd" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("odd"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("odd"); }}
+          data-bet={"odd"}
 onClick={() => tap({ kind: "odd", numbers: [], label: "odd" })}>
           Odd
-          <OnChip cents={onAmount("odd")} />
+          <OnChip cents={onAmount("odd")} paid={paidOf("odd")} />
           <OnChip cents={ghostOn("odd")} ghost />
         </button>
         <button type="button" className="rl-cell outside even-money e-high" {...hov({ kind: "high", numbers: [], label: "19-36" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("19-36"); }}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("19-36"); }}
+          data-bet={"19-36"}
 onClick={() => tap({ kind: "high", numbers: [], label: "19-36" })}>
           19 to 36
-          <OnChip cents={onAmount("19-36")} />
+          <OnChip cents={onAmount("19-36")} paid={paidOf("19-36")} />
           <OnChip cents={ghostOn("19-36")} ghost />
         </button>
       </div>

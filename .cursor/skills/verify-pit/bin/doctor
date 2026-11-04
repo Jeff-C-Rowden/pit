@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Read-only health check for the verify-pit instance.
+set -euo pipefail
+
+SKILL="$(cd "$(dirname "$0")/.." && pwd)"
+RUN_DIR="${VERIFY_PIT_RUN_DIR:-$SKILL/run}"
+STATE="$RUN_DIR/state.env"
+
+if [[ ! -f "$STATE" ]]; then
+  echo "doctor: FAIL — no state file at $STATE (run bin/launch first)" >&2
+  exit 1
+fi
+# shellcheck disable=SC1090
+source "$STATE"
+
+ok=1
+fail() { echo "doctor: FAIL — $1" >&2; ok=0; }
+
+if [[ -z "${VERIFY_PIT_PID:-}" ]] || ! kill -0 "$VERIFY_PIT_PID" 2>/dev/null; then
+  fail "process VERIFY_PIT_PID=${VERIFY_PIT_PID:-unset} is not running"
+else
+  echo "doctor: pid $VERIFY_PIT_PID alive"
+fi
+
+BASE="${VERIFY_PIT_BASE:-http://127.0.0.1:3000}"
+PORT="${VERIFY_PIT_PORT:-3000}"
+
+if command -v ss >/dev/null 2>&1; then
+  if ss -ltn "( sport = :$PORT )" 2>/dev/null | grep -q ":$PORT"; then
+    echo "doctor: port $PORT listening"
+    # Best-effort ownership check (ss -p may lack permission)
+    if ss -ltnp 2>/dev/null | grep -E ":$PORT\b" | grep -q "$VERIFY_PIT_PID"; then
+      echo "doctor: port $PORT owned by pid $VERIFY_PIT_PID"
+    fi
+  else
+    fail "port $PORT not listening"
+  fi
+fi
+
+status_json="$(curl -sf "$BASE/api/wallet/status" || true)"
+if [[ -z "$status_json" ]]; then
+  fail "GET $BASE/api/wallet/status failed"
+else
+  echo "doctor: wallet/status => $status_json"
+  if ! echo "$status_json" | grep -q '"mode":"sandbox"'; then
+    fail "expected PIT_PAYMENTS sandbox mode; got: $status_json"
+  fi
+fi
+
+me_json="$(curl -sf "$BASE/api/auth/me" || true)"
+if [[ -z "$me_json" ]]; then
+  fail "GET $BASE/api/auth/me failed"
+else
+  echo "doctor: auth/me reachable => $me_json"
+fi
+
+home="$(curl -sf -o /dev/null -w '%{http_code}' "$BASE/" || echo 000)"
+if [[ "$home" != "200" ]]; then
+  fail "GET $BASE/ returned HTTP $home (want 200)"
+else
+  echo "doctor: GET / => 200"
+fi
+
+echo "doctor: db=${VERIFY_PIT_DB_PATH:-unknown}"
+echo "doctor: run_id=${VERIFY_PIT_RUN_ID:-unknown}"
+echo "doctor: payments=${VERIFY_PIT_PAYMENTS:-unknown}"
+
+if [[ "$ok" -ne 1 ]]; then
+  echo "doctor: NOT READY" >&2
+  exit 1
+fi
+echo "doctor: OK"

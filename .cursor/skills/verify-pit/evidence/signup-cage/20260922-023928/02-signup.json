@@ -1,0 +1,14 @@
+{
+  "email": "verify-1790062768482-n3ov4w@pit.test",
+  "user": {
+    "id": "3e450189148cf8ad65bce5a86bc25df6",
+    "email": "verify-1790062768482-n3ov4w@pit.test",
+    "displayName": "Verify",
+    "ageConfirmed": true,
+    "isOperator": false,
+    "balanceCents": 0,
+    "depositLimitCents": null,
+    "lossLimitCents": null
+  },
+  "status": 200
+}

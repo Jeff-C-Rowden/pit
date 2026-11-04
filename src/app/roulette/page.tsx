@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { pocketColor } from "@/lib/games/rouletteFelt";
+import { pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
 import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
 import { Chip } from "@/components/TableUX";
@@ -111,6 +111,8 @@ export default function RoulettePage() {
   const [removeMode, setRemoveMode] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customVal, setCustomVal] = useState("");
 
   const [turbo, setTurbo] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -161,7 +163,15 @@ export default function RoulettePage() {
   }
 
   const stake = bets.reduce((a, b) => a + b.amountCents, 0);
-  const on = (label: string) => bets.filter((b) => b.label === label).reduce((s, b) => s + b.amountCents, 0);
+  // After a settled spin, keep the last stake visible so you can see which stacks paid.
+  const showSettled = !bets.length && !!spin && !spinning;
+  const view = bets.length ? bets : showSettled ? lastStake : [];
+  const on = (label: string) => view.filter((b) => b.label === label).reduce((s, b) => s + b.amountCents, 0);
+  const paidOf = (label: string): boolean | null => {
+    if (!showSettled) return null;
+    const b = lastStake.find((x) => x.label === label);
+    return b ? coveredBy(b).includes(spin.pocket) : null;
+  };
 
   const botFlashes = useMemo(
     () => ghosts.filter((g) => g.bot).map((g) => ({ bot: g.bot!, label: g.label })),
@@ -172,6 +182,7 @@ export default function RoulettePage() {
     if (busy) return;
     setGhosts([]);
     setBets((x) => [...x, { ...b, amountCents: chip }]);
+    try { navigator.vibrate?.(10); } catch { /* ignore */ }
     if (showHint) dismissHint();
   }
 
@@ -198,6 +209,7 @@ export default function RoulettePage() {
     setRemoveMode(false);
     // Bring the wheel fully into view; the dock collapses while the ball is live.
     wheelRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+    setCustomOpen(false);
     try {
       const pattern = bets.map((b) => ({ ...b }));
       const d = await api("/api/games/roulette", {
@@ -265,7 +277,22 @@ export default function RoulettePage() {
 
           <div className="rl-stage">
             <div className="rl-star" ref={wheelRef}>
-              <RouletteWheel pocket={displayPocket} spinning={spinning} plan={plan} instant={reduced || skipped} />
+              <div className="rl-wheel-wrap">
+                <RouletteWheel pocket={displayPocket} spinning={spinning} plan={plan} instant={reduced || skipped} />
+                {spin && !spinning && tone && (
+                  <div className={`rl-result rl-result-ov ${tone}`} role="status" aria-live="polite">
+                    <span className={`rl-pocket-pip ${pocketColor(spin.pocket)}`}>{spin.pocket}</span>
+                    <div>
+                      <div className="rl-result-h">
+                        {tone === "win" ? `You won ${money(net)}` : tone === "push" ? "You broke even" : `You lost ${money(-net)}`}
+                      </div>
+                      <div className="rl-result-d">
+                        Ball landed on {spin.pocket} {colorName(spin.pocket)}. You bet {money(staked)}, got back {money(paid)}.
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="rl-tools">
                 <label className="rl-toggle"><input type="checkbox" checked={turbo} onChange={(e) => setTurbo(e.target.checked)} /> Turbo spin</label>
                 {reduced && <span className="muted">Reduced motion: results show instantly</span>}
@@ -284,6 +311,7 @@ export default function RoulettePage() {
                 onRemove={remove}
                 removeMode={removeMode}
                 onAmount={on}
+                paidOf={paidOf}
                 hit={spinning ? null : spin?.pocket}
                 lastNine={history}
                 ghosts={ghosts}
@@ -305,25 +333,36 @@ export default function RoulettePage() {
               </div>
             ) : (
               <>
-          {spin && !spinning && tone && (
-                  <div className={`rl-result in-dock ${tone}`} role="status" aria-live="polite">
-                    <span className={`rl-pocket-pip ${pocketColor(spin.pocket)}`}>{spin.pocket}</span>
-                    <div>
-                      <div className="rl-result-h">
-                        {tone === "win" ? `You won ${money(net)}` : tone === "push" ? "You broke even" : `You lost ${money(-net)}`}
-                      </div>
-                      <div className="rl-result-d">
-                        Ball landed on {spin.pocket} {colorName(spin.pocket)}. You bet {money(staked)}, got back {money(paid)}.
-                      </div>
-                    </div>
-                  </div>
-                )}
                 <div className="rl-dock-chips" role="group" aria-label="Chip value">
                   <span className="rl-dock-lab">Chip<b>{money(chip)}</b></span>
                   {CHIPS.map((c) => (
-                    <Chip key={c} cents={c} size={46} selected={chip === c} onClick={() => { setChip(c); setRemoveMode(false); }} label={`Chip value ${money(c)}`} />
+                    <Chip key={c} cents={c} size={44} selected={chip === c} onClick={() => { setChip(c); setRemoveMode(false); setCustomOpen(false); }} label={`Chip value ${money(c)}`} />
                   ))}
+                  <button
+                    className={`rl-custom-btn${!CHIPS.includes(chip) ? " sel" : ""}`}
+                    onClick={() => { setCustomOpen((o) => !o); setCustomVal((chip / 100).toString()); }}
+                    aria-expanded={customOpen}
+                    aria-label="Custom chip amount"
+                  >{!CHIPS.includes(chip) ? money(chip).replace(".00", "") : "$ ?"}<span>Custom</span></button>
                 </div>
+                {customOpen && (
+                  <form
+                    className="rl-custom-row"
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      const c = Math.round(Number(customVal) * 100);
+                      if (!Number.isFinite(c) || c < 25 || c > 500_000) { flash("Chip must be $0.25 to $5,000"); return; }
+                      setChip(c); setCustomOpen(false); setRemoveMode(false);
+                    }}
+                  >
+                    <label htmlFor="rl-custom-in">Chip $</label>
+                    <input id="rl-custom-in" inputMode="decimal" autoFocus value={customVal} onChange={(e) => setCustomVal(e.target.value.replace(/[^0-9.]/g, ""))} />
+                    {[2, 50, 100].map((d) => (
+                      <button type="button" key={d} className="btn rl-btn rl-quick" onClick={() => { setChip(d * 100); setCustomOpen(false); }}>${d}</button>
+                    ))}
+                    <button className="btn primary rl-btn rl-quick" type="submit">Set</button>
+                  </form>
+                )}
                 <div className="rl-dock-actions">
                   <div className="rl-dock-sec" role="group" aria-label="Bet tools">
                     <button className="btn rl-btn" onClick={undo} disabled={busy || !bets.length} aria-label="Undo last chip">↶<span>Undo</span></button>

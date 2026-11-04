@@ -1,0 +1,16 @@
+{
+  "status": 200,
+  "data": {
+    "user": {
+      "id": "4d5ccdc2d53b4c3ff04e7004664d5b29",
+      "email": "verify-1790062733024-mkdnon@pit.test",
+      "displayName": "Verify",
+      "ageConfirmed": true,
+      "isOperator": false,
+      "balanceCents": 10000,
+      "depositLimitCents": null,
+      "lossLimitCents": null
+    }
+  },
+  "text": "{\"user\":{\"id\":\"4d5ccdc2d53b4c3ff04e7004664d5b29\",\"email\":\"verify-1790062733024-mkdnon@pit.test\",\"displayName\":\"Verify\",\"ageConfirmed\":true,\"isOperator\":false,\"balanceCents\":10000,\"depositLimitCents\":null,\"lossLimitCents\":null}}"
+}
