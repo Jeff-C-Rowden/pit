@@ -4,6 +4,7 @@ import Link from "next/link";
 import Shell from "@/components/Shell";
 import Onboarding from "@/components/Onboarding";
 import { api, money } from "@/components/useUser";
+import { filterGames, readRecent } from "@/lib/lobby";
 
 type MeterPublic = {
   id: string;
@@ -67,7 +68,26 @@ function VaultLobbyMeters() {
   );
 }
 
+function RecentlyPlayed() {
+  const [recent, setRecent] = useState<string[]>([]);
+  useEffect(() => setRecent(readRecent()), []);
+  const items = recent.map((h) => GAMES.find((g) => g.href === h)).filter(Boolean) as typeof GAMES;
+  if (!items.length) return null;
+  return (
+    <nav className="floor-recent" aria-label="Recently played">
+      <span className="floor-recent-lab">Recently played</span>
+      {items.map((g) => (
+        <Link key={g.href} href={g.href} className={`floor-recent-chip accent-${g.accent}`}>
+          {g.name}
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 export default function Floor() {
+  const [q, setQ] = useState("");
+  const shown = filterGames(GAMES, q);
   return (
     <Shell>
       {(u) => (
@@ -89,8 +109,28 @@ export default function Floor() {
               21+
             </span>
           </div>
+          <div className="floor-tools">
+            <RecentlyPlayed />
+            <label className="floor-search">
+              <span className="sr-only">Search games</span>
+              <input
+                type="search"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search tables — try “wheel” or “progressive”"
+                aria-label="Search games"
+                autoComplete="off"
+                enterKeyHint="search"
+              />
+            </label>
+          </div>
+          {!shown.length && (
+            <p className="muted floor-empty" role="status">
+              No table matches “{q}”. <button type="button" className="linkish" onClick={() => setQ("")}>Show all games</button>
+            </p>
+          )}
           <div className="grid-games">
-            {GAMES.map((g: any) => (
+            {shown.map((g: any) => (
               <Link
                 key={g.href}
                 href={g.href}

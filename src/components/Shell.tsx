@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { api, money, useUser, type User } from "./useUser";
+import { recordRecent } from "@/lib/lobby";
 
 function AnimatedBalance({ cents }: { cents: number }) {
   const prev = useRef<number | null>(null);
@@ -42,6 +43,9 @@ export default function Shell({ children, requireAuth = true }: { children: Reac
   const { user, refresh } = useUser();
   const path = usePathname();
   const router = useRouter();
+  useEffect(() => {
+    if (user && path) recordRecent(path);
+  }, [user, path]);
 
   if (user === undefined) {
     return (

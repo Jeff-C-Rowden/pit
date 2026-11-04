@@ -2584,3 +2584,49 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 .rl-dock-sec .rl-btn:disabled { opacity: .35; }
 .rl-tools { justify-content: center; opacity: .85; margin: 6px 0 2px; }
 .rl-dock-hint { font-size: 13px; color: #cfc4ad; }
+/* round 8: premium calm polish */
+.rl-cloth .rl-cell { font-family: Palatino, "Palatino Linotype", Georgia, serif; font-weight: 600; letter-spacing: .02em; border-color: #e9dcb426 !important; box-shadow: inset 0 1px 0 #ffffff12, inset 0 -1px 0 #00000040; transition: filter .15s, box-shadow .15s; }
+.rl-cloth .rl-cell.red { background: linear-gradient(180deg,#a3262c,#861d23) !important; }
+.rl-cloth .rl-cell.black { background: linear-gradient(180deg,#1f2124,#141517) !important; }
+.rl-cloth .rl-cell.green { background: linear-gradient(180deg,#17704a,#105a3a) !important; }
+.rl-cloth .rl-cell.outside { background: transparent; color: #eadfbe; }
+.rl-cloth .rl-cell:active { filter: brightness(1.12); }
+.rl-felt-wrap { border-radius: 18px; background: radial-gradient(120% 80% at 50% 0%, #1c5a41 0%, #0f3a2a 55%, #0a2a1e 100%); box-shadow: inset 0 0 0 1px #d9c48a33, inset 0 0 40px #00000066, 0 10px 30px #00000055; padding: 10px; }
+.rl-wheel-wrap { filter: drop-shadow(0 18px 28px #00000080); }
+.rl-chrome-title { font-family: Palatino, Georgia, serif; font-weight: 400; letter-spacing: .28em; color: #efe3bf; }
+.rl-chrome-meta { color: #bfb393; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; }
+.rl-status { font-variant-numeric: tabular-nums; }
+.rl-status strong { font-family: Palatino, Georgia, serif; font-weight: 500; letter-spacing: .02em; }
+.rl-result-ov { backdrop-filter: blur(6px); background: #0b1a14e6 !important; border-radius: 16px; }
+.rl-result-h { font-family: Palatino, Georgia, serif; font-weight: 500; letter-spacing: .01em; }
+.rl-spin { font-family: Palatino, Georgia, serif; letter-spacing: .2em; background: linear-gradient(180deg,#e8c869,#c19a3a) !important; color: #1b1406 !important; box-shadow: 0 6px 18px #c19a3a40, inset 0 1px 0 #fff6; border-radius: 14px; }
+.rl-spin:disabled { background: #3a3424 !important; color: #8d8468 !important; box-shadow: none; }
+.rl-dock-live { background: linear-gradient(180deg,#0e1a15f2,#08110df7); backdrop-filter: blur(10px); border-top: 1px solid #d9c48a2e; }
+.rl-dock-lab b { font-family: Palatino, Georgia, serif; font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { .rl-cloth .rl-cell { transition: none; } }
+
+/* Lobby: search + recently played (popup-free) */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.floor-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin: 4px 0 14px; }
+.floor-recent { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+.floor-recent-lab { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ivory-dim); }
+.floor-recent-chip {
+  display: inline-flex; align-items: center; min-height: 34px; padding: 6px 14px; border-radius: 999px;
+  border: 1px solid rgba(232, 213, 163, .35); background: rgba(7, 31, 24, .72); color: var(--ivory);
+  font-size: 13px; letter-spacing: .04em; text-decoration: none; transition: border-color .15s, background .15s;
+}
+.floor-recent-chip:hover, .floor-recent-chip:focus-visible { border-color: var(--gold); background: rgba(201, 162, 39, .16); color: #fff6d8; }
+.floor-search { flex: 1 1 260px; max-width: 420px; margin-left: auto; }
+.floor-search input {
+  width: 100%; min-height: 42px; padding: 10px 16px; border-radius: 999px; font-size: 15px;
+  border: 1px solid rgba(232, 213, 163, .3); background: rgba(7, 31, 24, .8); color: var(--ivory);
+}
+.floor-search input::placeholder { color: var(--ivory-dim); opacity: .75; }
+.floor-search input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201, 162, 39, .22); }
+.floor-empty { margin: 8px 0 16px; }
+.linkish { background: none; border: 0; padding: 0; color: var(--gold-hi); text-decoration: underline; cursor: pointer; font: inherit; }
+@media (max-width: 640px) {
+  .floor-search { max-width: none; margin-left: 0; flex-basis: 100%; order: -1; }
+  .floor-search input { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .floor-recent-chip { transition: none; } }

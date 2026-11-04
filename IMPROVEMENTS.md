@@ -22,6 +22,6 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 1. Live Canopy Spire jackpot meter in lobby + real last-won history
 2. Daily free sandbox-chip claim (once/day, no playthrough, no popups)
 3. Win animations scaled to real win size; sound + mute; turbo/skip
-4. Popup-free lobby with search + recently played
+4. Popup-free lobby with search + recently played — SHIPPED 2026-11-04 (floor search box + last-3 recently played chips, localStorage only)
 5. Hold & win / stacking multipliers / cascade bonus with visible odds; bonus resumes after refresh
 Avoid: popup spam, fake or near-miss wins, hourly pressure timers, bot tournaments.
