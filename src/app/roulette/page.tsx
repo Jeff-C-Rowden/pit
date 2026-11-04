@@ -238,7 +238,8 @@ export default function RoulettePage() {
   const net = spin ? (spin.netCents ?? (spin.payoutCents - (spin.stakeCents ?? 0))) : 0;
   const paid = spin?.payoutCents ?? 0;
   const staked = spin?.stakeCents ?? 0;
-  const paidCount = showSettled ? lastStake.filter((b) => coveredBy(b).includes(spin!.pocket)).length : 0;
+  const spots = showSettled ? [...new Map(lastStake.map((b) => [b.label, b])).values()] : [];
+  const paidCount = spots.filter((b) => coveredBy(b).includes(spin!.pocket)).length;
   const tone = !spin ? null : net > 0 ? "win" : net === 0 ? "push" : "loss";
   const shownWin = useCountUp(tone === "win" && !spinning ? net : 0, reduced || skipped);
   const displayPocket = spinning ? livePocket : (spin?.pocket ?? livePocket);
@@ -294,7 +295,7 @@ export default function RoulettePage() {
                       </div>
                       {showSettled && lastStake.length > 0 && (
                         <button type="button" className="rl-result-see" onClick={() => feltRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" })}>
-                          {paidCount} of {lastStake.length} bet{lastStake.length === 1 ? "" : "s"} paid · see table ↓
+                          {paidCount} of {spots.length} spot{spots.length === 1 ? "" : "s"} paid · see table ↓
                         </button>
                       )}
                     </div>
