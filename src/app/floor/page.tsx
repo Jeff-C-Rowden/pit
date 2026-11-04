@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Shell from "@/components/Shell";
+import Onboarding from "@/components/Onboarding";
 import { api, money } from "@/components/useUser";
 
 type MeterPublic = {
@@ -71,6 +72,7 @@ export default function Floor() {
     <Shell>
       {(u) => (
         <>
+          <Onboarding user={u} />
           <div className="hero floor-hero">
             <p className="lede">Good evening, {u.displayName}</p>
             <h1>The floor</h1>

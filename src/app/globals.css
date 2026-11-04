@@ -2231,3 +2231,23 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
   .prog-tier-tag { display: none; }
   .vault-qualify-badge { font-size: 9px; }
 }
+
+/* First-visit onboarding (mobile-first bottom sheet, centered card on wider screens) */
+.onb-backdrop{position:fixed;inset:0;z-index:100;background:rgba(4,5,4,.78);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;padding:0;animation:onbFade .25s ease}
+.onb-card{width:100%;max-width:440px;background:linear-gradient(180deg,#14201a,#0b110d);border:1px solid rgba(212,175,95,.45);border-radius:20px 20px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:12px;box-shadow:0 -10px 40px rgba(0,0,0,.6);animation:onbUp .3s ease}
+.onb-card h2{margin:0;font-size:1.4rem;color:#e9cf8f}
+.onb-card p{margin:0;line-height:1.5}
+.onb-dots{display:flex;gap:6px}
+.onb-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.2)}
+.onb-dot.on{background:#d4af5f;width:20px;border-radius:4px}
+.onb-actions{display:flex;flex-direction:column;gap:8px}
+.onb-actions .btn{min-height:48px;width:100%}
+.onb-skip{background:none;border:0;color:rgba(255,255,255,.55);text-decoration:underline;padding:8px;cursor:pointer;align-self:center}
+.onb-chip-stack{display:flex;justify-content:center;gap:0;height:56px;align-items:center}
+.onb-chip-stack span{width:48px;height:48px;border-radius:50%;margin:0 -8px;background:radial-gradient(circle,#d4af5f 30%,#8a6a28 31%,#8a6a28 44%,#e9cf8f 45%,#e9cf8f 52%,#1d5a3a 53%);border:2px dashed rgba(255,255,255,.6);animation:onbChip .6s ease both}
+.onb-chip-stack span:nth-child(2){animation-delay:.1s}.onb-chip-stack span:nth-child(3){animation-delay:.2s}
+@media (min-width:640px){.onb-backdrop{align-items:center;padding:20px}.onb-card{border-radius:20px}.onb-actions{flex-direction:row}}
+@keyframes onbFade{from{opacity:0}to{opacity:1}}
+@keyframes onbUp{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+@keyframes onbChip{from{transform:translateY(-20px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.onb-backdrop,.onb-card,.onb-chip-stack span{animation:none}}
