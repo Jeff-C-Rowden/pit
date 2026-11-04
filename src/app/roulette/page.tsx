@@ -271,7 +271,7 @@ export default function RoulettePage() {
                   <li>Tap a number or area on the table to place it. Tap again to add more.</li>
                   <li>Press <b>Spin</b>. The server picks the number; the wheel just shows it.</li>
                 </ol>
-                <p>To take a chip back, press and hold it, or use <b>Remove</b>.</p>
+                <p>To take a chip back, press and hold it, or tap <b>Undo</b>.</p>
               </div>
               <button className="btn rl-hint-x" onClick={dismissHint} aria-label="Dismiss how to play">Got it</button>
             </div>
@@ -306,15 +306,8 @@ export default function RoulettePage() {
                 <label className="rl-toggle"><input type="checkbox" checked={turbo} onChange={(e) => setTurbo(e.target.checked)} /> Turbo spin</label>
                 {reduced && <span className="muted">Reduced motion: results show instantly</span>}
               </div>
-              <div className="rl-last9-wrap">
-                <div className="rl-last9-lab">Last {HISTORY_N} numbers (newest first)</div>
-                <HistoryStrip pockets={history} />
-                <HotCold pockets={history} />
-              </div>
-              <RouletteBots active={spinning} flashes={spinning || ghosts.length ? botFlashes : []} />
             </div>
             <div className="rl-felt-wrap" ref={feltRef}>
-              {removeMode && <div className="rl-remove-banner">Remove mode: tap a chip on the table to take it back.</div>}
               <RouletteCloth
                 onAdd={add}
                 onRemove={remove}
@@ -328,6 +321,14 @@ export default function RoulettePage() {
                 hideLastNine
               />
             </div>
+            <details className="rl-recent panel">
+              <summary>Recent numbers{history[0] ? <span className={`rl-recent-last ${pocketColor(history[0])}`}>{history[0]}</span> : <span className="muted"> · none yet</span>}</summary>
+              <div className="rl-last9-wrap">
+                <HistoryStrip pockets={history} />
+                <HotCold pockets={history} />
+              </div>
+            </details>
+            <RouletteBots active={spinning} flashes={spinning || ghosts.length ? botFlashes : []} />
           </div>
           <OddsPanel />
           <StandingRail youName={u.displayName} youStack={u.balanceCents} coinIn={stake} />
@@ -375,10 +376,10 @@ export default function RoulettePage() {
                 <div className="rl-dock-actions">
                   <div className="rl-dock-sec" role="group" aria-label="Bet tools">
                     <button className="btn rl-btn" onClick={undo} disabled={busy || !bets.length} aria-label="Undo last chip">↶<span>Undo</span></button>
-                    <button className={`btn rl-btn${removeMode ? " on" : ""}`} onClick={() => setRemoveMode((m) => !m)} disabled={busy || !bets.length} aria-pressed={removeMode} aria-label="Remove mode">✕<span>Remove</span></button>
-                    <button className="btn rl-btn" onClick={() => { setBets([]); setRemoveMode(false); }} disabled={busy || !bets.length} aria-label="Clear all bets">⌫<span>Clear</span></button>
-                    <button className="btn rl-btn" onClick={repeat} disabled={busy || !lastStake.length || bets.length > 0} aria-label="Repeat last bets">↻<span>Repeat</span></button>
-                    <button className="btn rl-btn" onClick={double} disabled={busy || !bets.length} aria-label="Double all bets">×2<span>Double</span></button>
+                    <button className="btn rl-btn" onClick={() => { setBets([]); setRemoveMode(false); }} disabled={busy || !bets.length} aria-label="Clear all bets">✕<span>Clear</span></button>
+                    {bets.length > 0
+                      ? <button className="btn rl-btn" onClick={double} disabled={busy} aria-label="Double all bets">×2<span>Double</span></button>
+                      : <button className="btn rl-btn" onClick={repeat} disabled={busy || !lastStake.length} aria-label="Repeat last bets">↻<span>Repeat</span></button>}
                   </div>
                   <button className="btn primary rl-spin" onClick={go} disabled={!bets.length || busy} aria-describedby="rl-spin-hint">
                     {busy ? "Spinning…" : "Spin"}
