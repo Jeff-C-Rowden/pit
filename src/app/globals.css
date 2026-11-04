@@ -2487,3 +2487,17 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 .rl-ux .rl-cell.black { background: linear-gradient(180deg, #262626, #0b0b0b); }
 .rl-status strong { font-size: 19px; }
 .rl-status > div { padding: 7px 10px; }
+
+/* ---- Roulette round 3 ---- */
+.rl-dock { background: #080807; }
+.rl-result-see { margin-top: 6px; background: none; border: 0; padding: 4px 0; color: #ffd76a; font: inherit; font-size: 13px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; min-height: 32px; }
+.rl-result-ov.win { box-shadow: 0 0 0 2px #ffd76a, 0 0 28px rgba(255,215,106,.55); animation: rlWinGlow 1.6s ease-out 1; }
+@keyframes rlWinGlow { 0% { transform: translateY(6px) scale(.96); box-shadow: 0 0 0 2px #ffd76a, 0 0 0 rgba(255,215,106,0); } 40% { transform: none; box-shadow: 0 0 0 2px #ffd76a, 0 0 46px rgba(255,215,106,.8); } 100% { box-shadow: 0 0 0 2px #ffd76a, 0 0 28px rgba(255,215,106,.45); } }
+.chip-on-num.paid .rl-bet-amt { background: #ffd76a; color: #1a1200; }
+.chip-on-num.lost { opacity: .45; filter: grayscale(.7); }
+/* Outside-bet chips sit at the cell edge so the label (RED, ODD, 1ST 12...) stays readable */
+.rl-cell.outside { position: relative; }
+.rl-cloth .rl-cell.outside .chip-on-num { position: absolute; inset: auto 3px 3px auto; transform: scale(.8); transform-origin: bottom right; }
+@media (prefers-reduced-motion: reduce) { .rl-result-ov.win { animation: none; } }
+.rl-cloth .rl-cell.outside .chip-on-num { inset: auto 0 2px 0; margin: 0 auto; width: max-content; transform: scale(.78); transform-origin: bottom center; }
+.rl-cloth .rl-cell.outside:has(.chip-on-num) { padding-bottom: 44px; }

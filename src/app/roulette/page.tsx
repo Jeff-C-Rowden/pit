@@ -111,6 +111,7 @@ export default function RoulettePage() {
   const [removeMode, setRemoveMode] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const feltRef = useRef<HTMLDivElement | null>(null);
   const [customOpen, setCustomOpen] = useState(false);
   const [customVal, setCustomVal] = useState("");
 
@@ -237,7 +238,9 @@ export default function RoulettePage() {
   const net = spin ? (spin.netCents ?? (spin.payoutCents - (spin.stakeCents ?? 0))) : 0;
   const paid = spin?.payoutCents ?? 0;
   const staked = spin?.stakeCents ?? 0;
+  const paidCount = showSettled ? lastStake.filter((b) => coveredBy(b).includes(spin!.pocket)).length : 0;
   const tone = !spin ? null : net > 0 ? "win" : net === 0 ? "push" : "loss";
+  const shownWin = useCountUp(tone === "win" && !spinning ? net : 0, reduced || skipped);
   const displayPocket = spinning ? livePocket : (spin?.pocket ?? livePocket);
   const lastWin = spin && !spinning ? net : null;
   const colorName = (p: string) => (pocketColor(p) === "green" ? "green" : pocketColor(p));
@@ -284,11 +287,16 @@ export default function RoulettePage() {
                     <span className={`rl-pocket-pip ${pocketColor(spin.pocket)}`}>{spin.pocket}</span>
                     <div>
                       <div className="rl-result-h">
-                        {tone === "win" ? `You won ${money(net)}` : tone === "push" ? "You broke even" : `You lost ${money(-net)}`}
+                        {tone === "win" ? `You won ${money(shownWin)}` : tone === "push" ? "You broke even" : `You lost ${money(-net)}`}
                       </div>
                       <div className="rl-result-d">
                         Ball landed on {spin.pocket} {colorName(spin.pocket)}. You bet {money(staked)}, got back {money(paid)}.
                       </div>
+                      {showSettled && lastStake.length > 0 && (
+                        <button type="button" className="rl-result-see" onClick={() => feltRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" })}>
+                          {paidCount} of {lastStake.length} bet{lastStake.length === 1 ? "" : "s"} paid · see table ↓
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -304,7 +312,7 @@ export default function RoulettePage() {
               </div>
               <RouletteBots active={spinning} flashes={spinning || ghosts.length ? botFlashes : []} />
             </div>
-            <div className="rl-felt-wrap">
+            <div className="rl-felt-wrap" ref={feltRef}>
               {removeMode && <div className="rl-remove-banner">Remove mode: tap a chip on the table to take it back.</div>}
               <RouletteCloth
                 onAdd={add}
@@ -356,7 +364,7 @@ export default function RoulettePage() {
                     }}
                   >
                     <label htmlFor="rl-custom-in">Chip $</label>
-                    <input id="rl-custom-in" inputMode="decimal" autoFocus value={customVal} onChange={(e) => setCustomVal(e.target.value.replace(/[^0-9.]/g, ""))} />
+                    <input id="rl-custom-in" inputMode="decimal" enterKeyHint="done" autoFocus onFocus={(e) => e.currentTarget.select()} value={customVal} onChange={(e) => setCustomVal(e.target.value.replace(/[^0-9.]/g, ""))} />
                     {[2, 50, 100].map((d) => (
                       <button type="button" key={d} className="btn rl-btn rl-quick" onClick={() => { setChip(d * 100); setCustomOpen(false); }}>${d}</button>
                     ))}
@@ -388,4 +396,17 @@ export default function RoulettePage() {
       )}
     </Shell>
   );
+}
+
+/** Counts up to the real, already-settled win amount (display only; final value is exact). */
+function useCountUp(target: number, instant: boolean): number {
+  const [v, setV] = useState(target);
+  useEffect(() => {
+    if (instant || target <= 0) { setV(target); return; }
+    let raf = 0; const t0 = performance.now(); const dur = 700;
+    const step = (t: number) => { const k = Math.min(1, (t - t0) / dur); setV(Math.round(target * (1 - Math.pow(1 - k, 3)))); if (k < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, instant]);
+  return v;
 }

@@ -579,7 +579,7 @@ onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "
                     type="button"
                     className="rl-spot split-h"
                     {...hov({ kind: "split", numbers: [String(n), String(right)], label: "" })}
-                    title={`Split ${n}-${right} · 17:1`}
+                    title={`Split ${Math.min(n, right)}-${Math.max(n, right)} · 17:1`}
                     onClick={(e) => {
                       e.stopPropagation();
                       const nums = [n, right].sort((a, b) => a - b);
@@ -594,7 +594,7 @@ onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "
                     type="button"
                     className="rl-spot split-v"
                     {...hov({ kind: "split", numbers: [String(n), String(below)], label: "" })}
-                    title={`Split ${n}-${below} · 17:1`}
+                    title={`Split ${Math.min(n, below)}-${Math.max(n, below)} · 17:1`}
                     onClick={(e) => {
                       e.stopPropagation();
                       const nums = [n, below].sort((a, b) => a - b);
