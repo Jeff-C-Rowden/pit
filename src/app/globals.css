@@ -2521,3 +2521,28 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
   .rl-cloth .rl-cell.outside:has(.chip-on-num) { padding-bottom: 0; padding-right: 44px; }
   .rl-cloth .rl-cell.outside .chip-on-num { inset: 50% 4px auto auto; margin: 0; transform: translateY(-50%) scale(.72); transform-origin: right center; }
 }
+/* ---- Roulette round 5 (phone): straight-up chip sits top-right as a compact row,
+   clear of the split/corner tap targets on the left and bottom edges ---- */
+@media (max-width: 600px) {
+  .rl-cloth .rl-cell.n:has(.chip-on-num) { place-items: center start; padding-left: 20px; }
+  .rl-cloth .rl-cell.n > .chip-on-num {
+    left: auto; right: 3px; top: 3px; bottom: auto; transform: none;
+    display: flex; flex-direction: row-reverse; align-items: center; gap: 2px;
+  }
+  .rl-cloth .rl-cell.n > .chip-on-num > :first-child { transform: scale(.62); transform-origin: right center; margin-left: -8px; }
+  .rl-cloth .rl-cell.n > .chip-on-num .rl-bet-amt { position: static; transform: none; font-size: 10px; padding: 1px 4px; }
+}
+@keyframes rlPopPlain { from { opacity: 0; scale: .6; } to { opacity: 1; scale: 1; } }
+@media (max-width: 600px) {
+  .rl-cloth .rl-cell.n > .chip-on-num { animation: rlPopPlain .18s ease-out; transform: none !important; }
+}
+@media (prefers-reduced-motion: reduce) { .rl-cloth .rl-cell.n > .chip-on-num { animation: none; } }
+@media (max-width: 600px) {
+  .rl-cloth .rl-cell.n > .chip-on-num > :first-child { transform: none; margin-left: 0; zoom: .62; }
+}
+.rl-bet-amt .amt-short { display: none; }
+@media (max-width: 600px) {
+  .rl-cloth .rl-cell.n:has(.chip-on-num) { padding-left: 10px; }
+  .rl-cloth .rl-cell.n > .chip-on-num .amt-full { display: none; }
+  .rl-cloth .rl-cell.n > .chip-on-num .amt-short { display: inline; }
+}

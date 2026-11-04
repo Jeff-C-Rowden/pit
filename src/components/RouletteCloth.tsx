@@ -29,7 +29,7 @@ function OnChip({ cents, ghost, paid }: { cents: number; ghost?: boolean; paid?:
   return (
     <span key={cents} className={`chip-on-num${ghost ? " rl-bot-chip" : " rl-mine"}${paid === true ? " paid" : paid === false ? " lost" : ""}`}>
       <ChipStack cents={cents} size={ghost ? 22 : 26} maxChips={ghost ? 2 : 4} showTotal={false} />
-      {!ghost && <span className="rl-bet-amt">{money(cents)}</span>}
+      {!ghost && <span className="rl-bet-amt"><span className="amt-full">{money(cents)}</span><span className="amt-short">{money(cents).replace(/\.00$/, "")}</span></span>}
     </span>
   );
 }
