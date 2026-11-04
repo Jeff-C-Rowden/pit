@@ -198,7 +198,8 @@ export function RouletteWheel({
 
   useEffect(() => {
     if (!plan) return;
-    const draw = (f: Frame) => {
+    const draw = (f: Frame | undefined) => {
+      if (!f) return;
       if (cylRef.current) cylRef.current.style.transform = `rotate(${f.rotor.toFixed(3)}deg)`;
       const a = (f.ball * Math.PI) / 180;
       const x = cx + f.r * Math.sin(a);
