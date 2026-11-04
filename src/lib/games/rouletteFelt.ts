@@ -25,3 +25,19 @@ export function pocketColor(p: string): "red" | "black" | "green" {
   if (BLACK.has(n)) return "black";
   throw new Error(`unknown pocket ${p}`);
 }
+
+/** Pockets a felt bet covers (for highlights). Mirrors the server's bet definitions. */
+export function coveredBy(b: { kind: string; numbers?: string[]; which?: number }): string[] {
+  const r = (a: number, z: number) => Array.from({ length: z - a + 1 }, (_, i) => String(a + i));
+  switch (b.kind) {
+    case "red": return RED_NUMS.map(String);
+    case "black": return BLACK_NUMS.map(String);
+    case "even": return r(1, 36).filter((x) => Number(x) % 2 === 0);
+    case "odd": return r(1, 36).filter((x) => Number(x) % 2 === 1);
+    case "low": return r(1, 18);
+    case "high": return r(19, 36);
+    case "dozen": { const w = b.which ?? 1; return r((w - 1) * 12 + 1, w * 12); }
+    case "column": { const w = b.which ?? 1; return r(1, 36).filter((x) => (Number(x) - w) % 3 === 0); }
+    default: return b.numbers ?? [];
+  }
+}

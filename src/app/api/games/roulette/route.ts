@@ -5,7 +5,7 @@ import { toPublic } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
 import {
-  spinAmerican, settleRoulette, validateBet, publicWheel, dozen, column,
+  spinAmerican, settleRoulette, recordSpin, recentSpins, validateBet, publicWheel, dozen, column,
   type RouletteBet,
 } from "@/lib/games/roulette";
 
@@ -40,11 +40,13 @@ async function _POST(req: Request) {
     if (settled.payoutCents > 0) {
       creditPayout(user.id, settled.payoutCents, "roulette", id, `rl-pay-${id}`);
     }
+    recordSpin(getDb(), { id, userId: user.id, pocket, stakeCents: stake, payoutCents: settled.payoutCents });
     const u = getDb().prepare("SELECT * FROM users WHERE id = ?").get(user.id) as typeof user;
     return json({
       user: toPublic(u),
       spin: { id, ...settled, stakeCents: stake, netCents: settled.payoutCents - stake },
       balanceCents: getBalance(user.id),
+      history: recentSpins(getDb(), user.id),
     });
   });
 }

@@ -3,7 +3,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { ChipStack } from "./TableUX";
 import { SeatAvatar } from "./Seating";
 import { money } from "./useUser";
-import { RED, WHEEL_ORDER as WHEEL, FELT_ROWS, pocketColor } from "@/lib/games/rouletteFelt";
+import { RED, WHEEL_ORDER as WHEEL, FELT_ROWS, pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
 export { RED, FELT_ROWS, pocketColor, WHEEL };
 
 /** Smooth casino spin — ball arcs then settles with the cylinder. */
@@ -191,10 +191,16 @@ export function RouletteWheel({
   pocket,
   spinning,
   spinId = 0,
+  durationMs = SPIN_MS,
+  instant = false,
 }: {
   pocket?: string | null;
   spinning?: boolean;
   spinId?: number;
+  /** Spin length; the ball and cylinder both finish at this time with the server's pocket under the pointer. */
+  durationMs?: number;
+  /** Skip / reduced motion: jump straight to the landed state. */
+  instant?: boolean;
 }) {
   const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const n = WHEEL.length;
@@ -222,7 +228,10 @@ export function RouletteWheel({
   const showMarble = settled || !!spinning;
 
   return (
-    <div className={`rl-wheel-scene ${spinning ? "spinning" : ""} ${settled ? "settled" : ""}`}>
+    <div
+      className={`rl-wheel-scene ${spinning ? "spinning" : ""} ${settled ? "settled" : ""} ${instant ? "instant" : ""}`}
+      style={{ ["--rl-spin-ms" as string]: `${Math.max(1, durationMs)}ms` }}
+    >
       <div className="rl-bowl">
         <svg viewBox="0 0 440 440" className="rl-bowl-svg" aria-hidden>
           <defs>
@@ -266,7 +275,7 @@ export function RouletteWheel({
           className="rl-cylinder"
           style={{
             transform: `rotate(${rot}deg)`,
-            transition: `transform ${SPIN_MS}ms cubic-bezier(0.08, 0.72, 0.12, 1)`,
+            transition: instant ? "none" : `transform ${durationMs}ms cubic-bezier(0.08, 0.72, 0.12, 1)`,
           }}
         >
           <svg viewBox="0 0 440 440" className="rl-wheel" aria-hidden>
@@ -413,10 +422,23 @@ export default function RouletteCloth({
   hideLastNine?: boolean;
 }) {
   const ghostOn = (label: string) => ghosts?.find((g) => g.label === label)?.cents ?? 0;
+  const [cover, setCover] = useState<Set<string>>(new Set());
+  const flashT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tap = (b: ClothBet) => {
     if (locked) return;
     onAdd(b);
+    // Tap feedback on touch screens: briefly light the covered numbers.
+    setCover(new Set(coveredBy(b)));
+    if (flashT.current) clearTimeout(flashT.current);
+    flashT.current = setTimeout(() => setCover(new Set()), 700);
   };
+  const hov = (b: ClothBet) => ({
+    onMouseEnter: () => setCover(new Set(coveredBy(b))),
+    onMouseLeave: () => setCover(new Set()),
+    onFocus: () => setCover(new Set(coveredBy(b))),
+    onBlur: () => setCover(new Set()),
+  });
+  const cv = (p: string) => (cover.has(p) ? " covered" : "");
 
   return (
     <div className={`rl-cloth${locked ? " locked" : ""}`} role="group" aria-label="American roulette layout">
@@ -424,7 +446,8 @@ export default function RouletteCloth({
       <div className="rl-grid">
         <button
           type="button"
-          className={`rl-cell green zero00 ${hit === "00" ? "hit" : ""}`}
+          className={`rl-cell green zero00 ${hit === "00" ? "hit" : ""}${cv("00")}`}
+          {...hov({ kind: "straight", numbers: ["00"], label: "00" })}
           onClick={() => tap({ kind: "straight", numbers: ["00"], label: "00" })}
         >
           00
@@ -432,7 +455,8 @@ export default function RouletteCloth({
         </button>
         <button
           type="button"
-          className={`rl-cell green zero0 ${hit === "0" ? "hit" : ""}`}
+          className={`rl-cell green zero0 ${hit === "0" ? "hit" : ""}${cv("0")}`}
+          {...hov({ kind: "straight", numbers: ["0"], label: "0" })}
           onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
         >
           0
@@ -441,6 +465,7 @@ export default function RouletteCloth({
         <button
           type="button"
           className="rl-cell green basket"
+          {...hov({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "five-number" })}
           onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "five-number" })}
           title="Five-number 0-00-1-2-3 · 6:1"
         >
@@ -456,8 +481,9 @@ export default function RouletteCloth({
               <button
                 type="button"
                 key={n}
-                className={`rl-cell ${col} n n-${n} r${ri} c${ci} ${hit === label ? "hit" : ""}`}
-                onClick={() => tap({ kind: "straight", numbers: [label], label })}
+                className={`rl-cell ${col} n n-${n} r${ri} c${ci} ${hit === label ? "hit" : ""}${cv(label)}`}
+                {...hov({ kind: "straight", numbers: [label], label })}
+          onClick={() => tap({ kind: "straight", numbers: [label], label })}
               >
                 {n}
                 <OnChip cents={onAmount(label)} />
@@ -486,6 +512,7 @@ export default function RouletteCloth({
                   <button
                     type="button"
                     className="rl-spot split-h"
+                    {...hov({ kind: "split", numbers: [String(n), String(right)], label: "" })}
                     title={`Split ${n}-${right} · 17:1`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -500,6 +527,7 @@ export default function RouletteCloth({
                   <button
                     type="button"
                     className="rl-spot split-v"
+                    {...hov({ kind: "split", numbers: [String(n), String(below)], label: "" })}
                     title={`Split ${n}-${below} · 17:1`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -514,6 +542,7 @@ export default function RouletteCloth({
                   <button
                     type="button"
                     className="rl-spot corner"
+                    {...hov({ kind: "corner", numbers: [n, right, below, belowRight].map(String), label: "" })}
                     title={`Corner ${[n, right, below, belowRight].sort((a, b) => a - b).join("-")} · 8:1`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -528,6 +557,7 @@ export default function RouletteCloth({
                   <button
                     type="button"
                     className="rl-spot street"
+                    {...hov({ kind: "street", numbers: streetNums.map(String), label: "" })}
                     title={`Street ${streetNums[0]}-${streetNums[1]}-${streetNums[2]} · 11:1`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -541,6 +571,7 @@ export default function RouletteCloth({
                   <button
                     type="button"
                     className="rl-spot sixline"
+                    {...hov({ kind: "six", numbers: [...streetNums, ...nextStreet].map(String), label: "" })}
                     title={`Six-line ${streetNums[0]}-${nextStreet[2]} · 5:1`}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -561,6 +592,7 @@ export default function RouletteCloth({
             type="button"
             key={`col${which}`}
             className={`rl-cell outside col21 col-r${i}`}
+            {...hov({ kind: "column", which, label: "" })}
             onClick={() => tap({ kind: "column", which, label: `col ${which}` })}
           >
             2:1
@@ -569,48 +601,57 @@ export default function RouletteCloth({
           </button>
         ))}
 
-        <button type="button" className="rl-cell outside dozen d1" onClick={() => tap({ kind: "dozen", which: 1, label: "1st 12" })}>
+        <button type="button" className="rl-cell outside dozen d1" {...hov({ kind: "dozen", which: 1, label: "1st 12" })}
+          onClick={() => tap({ kind: "dozen", which: 1, label: "1st 12" })}>
           1st 12
           <OnChip cents={onAmount("1st 12")} />
           <OnChip cents={ghostOn("1st 12")} ghost />
         </button>
-        <button type="button" className="rl-cell outside dozen d2" onClick={() => tap({ kind: "dozen", which: 2, label: "2nd 12" })}>
+        <button type="button" className="rl-cell outside dozen d2" {...hov({ kind: "dozen", which: 2, label: "2nd 12" })}
+          onClick={() => tap({ kind: "dozen", which: 2, label: "2nd 12" })}>
           2nd 12
           <OnChip cents={onAmount("2nd 12")} />
           <OnChip cents={ghostOn("2nd 12")} ghost />
         </button>
-        <button type="button" className="rl-cell outside dozen d3" onClick={() => tap({ kind: "dozen", which: 3, label: "3rd 12" })}>
+        <button type="button" className="rl-cell outside dozen d3" {...hov({ kind: "dozen", which: 3, label: "3rd 12" })}
+          onClick={() => tap({ kind: "dozen", which: 3, label: "3rd 12" })}>
           3rd 12
           <OnChip cents={onAmount("3rd 12")} />
           <OnChip cents={ghostOn("3rd 12")} ghost />
         </button>
 
-        <button type="button" className="rl-cell outside even-money e-low" onClick={() => tap({ kind: "low", numbers: [], label: "1-18" })}>
+        <button type="button" className="rl-cell outside even-money e-low" {...hov({ kind: "low", numbers: [], label: "1-18" })}
+          onClick={() => tap({ kind: "low", numbers: [], label: "1-18" })}>
           1 to 18
           <OnChip cents={onAmount("1-18")} />
           <OnChip cents={ghostOn("1-18")} ghost />
         </button>
-        <button type="button" className="rl-cell outside even-money e-even" onClick={() => tap({ kind: "even", numbers: [], label: "even" })}>
+        <button type="button" className="rl-cell outside even-money e-even" {...hov({ kind: "even", numbers: [], label: "even" })}
+          onClick={() => tap({ kind: "even", numbers: [], label: "even" })}>
           Even
           <OnChip cents={onAmount("even")} />
           <OnChip cents={ghostOn("even")} ghost />
         </button>
-        <button type="button" className="rl-cell outside even-money e-red" onClick={() => tap({ kind: "red", numbers: [], label: "red" })}>
+        <button type="button" className="rl-cell outside even-money e-red" {...hov({ kind: "red", numbers: [], label: "red" })}
+          onClick={() => tap({ kind: "red", numbers: [], label: "red" })}>
           <Diamond color="red" /> Red
           <OnChip cents={onAmount("red")} />
           <OnChip cents={ghostOn("red")} ghost />
         </button>
-        <button type="button" className="rl-cell outside even-money e-black" onClick={() => tap({ kind: "black", numbers: [], label: "black" })}>
+        <button type="button" className="rl-cell outside even-money e-black" {...hov({ kind: "black", numbers: [], label: "black" })}
+          onClick={() => tap({ kind: "black", numbers: [], label: "black" })}>
           <Diamond color="black" /> Black
           <OnChip cents={onAmount("black")} />
           <OnChip cents={ghostOn("black")} ghost />
         </button>
-        <button type="button" className="rl-cell outside even-money e-odd" onClick={() => tap({ kind: "odd", numbers: [], label: "odd" })}>
+        <button type="button" className="rl-cell outside even-money e-odd" {...hov({ kind: "odd", numbers: [], label: "odd" })}
+          onClick={() => tap({ kind: "odd", numbers: [], label: "odd" })}>
           Odd
           <OnChip cents={onAmount("odd")} />
           <OnChip cents={ghostOn("odd")} ghost />
         </button>
-        <button type="button" className="rl-cell outside even-money e-high" onClick={() => tap({ kind: "high", numbers: [], label: "19-36" })}>
+        <button type="button" className="rl-cell outside even-money e-high" {...hov({ kind: "high", numbers: [], label: "19-36" })}
+          onClick={() => tap({ kind: "high", numbers: [], label: "19-36" })}>
           19 to 36
           <OnChip cents={onAmount("19-36")} />
           <OnChip cents={ghostOn("19-36")} ghost />

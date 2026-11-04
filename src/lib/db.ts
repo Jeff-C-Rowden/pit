@@ -52,6 +52,15 @@ CREATE TABLE IF NOT EXISTS game_states (
   updated_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_games_user ON game_states(user_id, game, status);
+CREATE TABLE IF NOT EXISTS roulette_spins (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL REFERENCES users(id),
+  pocket TEXT NOT NULL,
+  stake_cents INTEGER NOT NULL,
+  payout_cents INTEGER NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_rl_spins_user ON roulette_spins(user_id, created_at);
 CREATE TABLE IF NOT EXISTS progressive_meters (
   id TEXT PRIMARY KEY,
   amount_cents INTEGER NOT NULL,

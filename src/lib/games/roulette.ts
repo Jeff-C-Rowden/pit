@@ -107,8 +107,38 @@ export function publicWheel() {
     red: [...RED],
     black: [...BLACK],
     payouts: PAY,
-    houseEdge: "American double-zero roulette house edge is 5.26% (2.63% on five-number). RTP on standard bets is 94.74%.",
+    houseEdge: "American double-zero roulette house edge is 5.26% on every bet except the five-number (0-00-1-2-3), which is 7.89%. RTP on standard bets is 94.74%.",
+    odds: oddsTable(),
   };
+}
+
+/** True odds per bet type: payout, win probability over 38 pockets, house edge. */
+export function oddsTable() {
+  const counts: [BetKind, number, string][] = [
+    ["straight", 1, "Straight up"], ["split", 2, "Split"], ["street", 3, "Street"], ["corner", 4, "Corner"],
+    ["five", 5, "Five-number 0-00-1-2-3"], ["six", 6, "Six line"], ["dozen", 12, "Dozen"], ["column", 12, "Column"],
+    ["red", 18, "Red / Black, Even / Odd, 1-18 / 19-36"],
+  ];
+  return counts.map(([kind, n, label]) => {
+    const pay = PAY[kind];
+    const edge = 1 - (n * (pay + 1)) / 38;
+    return { kind, label, numbers: n, payout: `${pay}:1`, probabilityPct: +((n / 38) * 100).toFixed(2), houseEdgePct: +(edge * 100).toFixed(2) };
+  });
+}
+
+export const HISTORY_LIMIT = 20;
+
+export function recordSpin(db: import("better-sqlite3").Database, s: { id: string; userId: string; pocket: string; stakeCents: number; payoutCents: number }) {
+  if (!WHEEL.includes(s.pocket)) throw new Error("bad pocket");
+  db.prepare("INSERT INTO roulette_spins (id, user_id, pocket, stake_cents, payout_cents, created_at) VALUES (?, ?, ?, ?, ?, ?)")
+    .run(s.id, s.userId, s.pocket, s.stakeCents, s.payoutCents, new Date().toISOString());
+}
+
+/** Newest first. Real settled results from the server only. */
+export function recentSpins(db: import("better-sqlite3").Database, userId: string, limit = HISTORY_LIMIT): string[] {
+  const rows = db.prepare("SELECT pocket FROM roulette_spins WHERE user_id = ? ORDER BY created_at DESC, rowid DESC LIMIT ?")
+    .all(userId, Math.min(Math.max(1, limit), 100)) as { pocket: string }[];
+  return rows.map((r) => r.pocket);
 }
 
 export { PAY, nset, range, newId };
