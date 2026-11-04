@@ -523,18 +523,6 @@ onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
           0
           <OnChip cents={onAmount("0")} paid={paidOf("0")} />
         </button>
-        <button
-          type="button"
-          className="rl-cell green basket"
-          {...hov({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "five-number" })}
-          onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("five-number"); }}
-          data-bet={"five-number"}
-onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "five-number" })}
-          title="Five-number 0-00-1-2-3 · 6:1"
-        >
-          0-00
-          <OnChip cents={onAmount("five-number")} paid={paidOf("five-number")} />
-        </button>
 
         {FELT_ROWS.map((row, ri) =>
           row.map((n, ci) => {

@@ -53,10 +53,10 @@ export function validateBet(b: RouletteBet): void {
   const n = b.numbers;
   const ok = (pred: boolean) => { if (!pred) throw new Error(`invalid ${k} bet`); };
   if (k === "straight") ok(n.length === 1 && WHEEL.includes(n[0]!));
-  else if (k === "split") ok(n.length === 2 && n.every((x) => WHEEL.includes(x)));
+  else if (k === "split") ok(n.length === 2 && n.every((x) => WHEEL.includes(x)) && !(n.includes("0") && n.includes("00")));
   else if (k === "street") ok(n.length === 3);
   else if (k === "corner") ok(n.length === 4);
-  else if (k === "five") ok(n.length === 5);
+  else if (k === "five") throw new Error("the 0-00 (five-number) bet is not offered at this table");
   else if (k === "six") ok(n.length === 6);
   else if (k === "dozen") ok(n.length === 12);
   else if (k === "column") ok(n.length === 12);
@@ -107,7 +107,7 @@ export function publicWheel() {
     red: [...RED],
     black: [...BLACK],
     payouts: PAY,
-    houseEdge: "American double-zero roulette house edge is 5.26% on every bet except the five-number (0-00-1-2-3), which is 7.89%. RTP on standard bets is 94.74%.",
+    houseEdge: "American double-zero roulette house edge is 5.26% on every bet offered. RTP on standard bets is 94.74%.",
     odds: oddsTable(),
   };
 }
@@ -116,7 +116,7 @@ export function publicWheel() {
 export function oddsTable() {
   const counts: [BetKind, number, string][] = [
     ["straight", 1, "Straight up"], ["split", 2, "Split"], ["street", 3, "Street"], ["corner", 4, "Corner"],
-    ["five", 5, "Five-number 0-00-1-2-3"], ["six", 6, "Six line"], ["dozen", 12, "Dozen"], ["column", 12, "Column"],
+    ["six", 6, "Six line"], ["dozen", 12, "Dozen"], ["column", 12, "Column"],
     ["red", 18, "Red / Black, Even / Odd, 1-18 / 19-36"],
   ];
   return counts.map(([kind, n, label]) => {

@@ -10,7 +10,7 @@ import { POST as spinPOST } from "../src/app/api/games/roulette/route";
 describe("roulette payouts (stake included)", () => {
   const cases: [string, string[], number][] = [
     ["split", ["17", "20"], 1800], ["street", ["1", "2", "3"], 1200], ["corner", ["1", "2", "4", "5"], 900],
-    ["five", ["0", "00", "1", "2", "3"], 700], ["six", ["1", "2", "3", "4", "5", "6"], 600],
+["six", ["1", "2", "3", "4", "5", "6"], 600],
   ];
   for (const [kind, nums, pay] of cases) {
     it(`${kind} pays ${pay / 100 - 1}:1`, () => {
@@ -23,9 +23,10 @@ describe("roulette payouts (stake included)", () => {
     expect(settleRoulette([{ kind: "column", numbers: column(1), amountCents: 100 }], "34").payoutCents).toBe(300);
     expect(settleRoulette([{ kind: "red", numbers: [...RED], amountCents: 100 }], "1").payoutCents).toBe(200);
   });
-  it("every non-five bet has 5.26% edge; five-number 7.89%", () => {
-    for (const o of oddsTable()) expect(o.houseEdgePct).toBe(o.kind === "five" ? 7.89 : 5.26);
-    expect(publicWheel().houseEdge).toContain("7.89%");
+  it("every offered bet has 5.26% edge (no 0-00 five-number bet)", () => {
+    for (const o of oddsTable()) expect(o.houseEdgePct).toBe(5.26);
+    expect(oddsTable().some((o) => o.kind === "five")).toBe(false);
+    expect(publicWheel().houseEdge).toContain("5.26% on every bet offered");
   });
   it("client coverage matches server dozens/columns and wheel order matches", () => {
     expect(coveredBy({ kind: "dozen", which: 2 })).toEqual(dozen(2));
@@ -68,3 +69,23 @@ describe("roulette history", () => {
     expect(getBalance(uid)).toBeLessThanOrEqual(10000 + 300);
   });
 });
+
+describe("0-00 spot removed", () => {
+  it("server rejects the five-number (0-00-1-2-3) bet", async () => {
+    const { validateBet } = await import("../src/lib/games/roulette");
+    expect(() => validateBet({ kind: "five", numbers: ["0", "00", "1", "2", "3"], amountCents: 100 } as never)).toThrow(/not offered/);
+  });
+  it("server rejects a 0/00 split but keeps 0 and 00 straight-ups", async () => {
+    const { validateBet } = await import("../src/lib/games/roulette");
+    expect(() => validateBet({ kind: "split", numbers: ["0", "00"], amountCents: 100 } as never)).toThrow();
+    expect(() => validateBet({ kind: "straight", numbers: ["0"], amountCents: 100 } as never)).not.toThrow();
+    expect(() => validateBet({ kind: "straight", numbers: ["00"], amountCents: 100 } as never)).not.toThrow();
+  });
+  it("table UI has no 0-00 spot", async () => {
+    const { readFileSync } = await import("fs");
+    const src = readFileSync("src/components/RouletteCloth.tsx", "utf8");
+    expect(src).not.toContain("five-number");
+    expect(src).not.toMatch(/>\s*0-00\s*</);
+  });
+});
+

@@ -21,7 +21,7 @@ const HISTORY_N = 20;
 
 const ODDS: [string, string, number, number][] = [
   ["Straight up", "35:1", 1, 5.26], ["Split", "17:1", 2, 5.26], ["Street", "11:1", 3, 5.26], ["Corner", "8:1", 4, 5.26],
-  ["Five-number 0-00-1-2-3", "6:1", 5, 7.89], ["Six line", "5:1", 6, 5.26], ["Dozen / Column", "2:1", 12, 5.26],
+["Six line", "5:1", 6, 5.26], ["Dozen / Column", "2:1", 12, 5.26],
   ["Red/Black, Even/Odd, 1-18/19-36", "1:1", 18, 5.26],
 ];
 
@@ -56,7 +56,7 @@ function HotCold({ pockets }: { pockets: string[] }) {
 function OddsPanel() {
   return (
     <details className="rl-odds panel">
-      <summary>Odds &amp; payouts · house edge 5.26% (five-number 7.89%)</summary>
+      <summary>Odds &amp; payouts · house edge 5.26% on every bet</summary>
       <table>
         <thead><tr><th>Bet</th><th className="num">Pays</th><th className="num">Win chance</th><th className="num">House edge</th></tr></thead>
         <tbody>{ODDS.map(([name, pay, n, edge]) => (
