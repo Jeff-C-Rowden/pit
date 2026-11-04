@@ -2329,3 +2329,97 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
   .rl-spot.sixline { right: auto; left: 0; bottom: 0; transform: translate(-50%, 50%); width: 32px; height: 32px; z-index: 10; }
 }
 @media (max-width: 600px) { .rl-bowl { width: min(420px, 100%); } }
+
+/* —— Roulette UX pass: status strip, hint, result, compact dock —— */
+.pit-shell:has(.rl-dock) { padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px)); }
+.rl-ux .rl-chrome { margin: 10px 0 8px; padding: 8px 12px; gap: 8px; }
+.rl-ux .rl-chrome-title { font-size: 13px; }
+.rl-ux .rl-chrome-meta { font-size: 11px; color: var(--ivory); }
+.rl-status {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 0 0 10px;
+}
+.rl-status > div {
+  background: #0f0d0b; border: 1px solid rgba(201,162,39,.35); border-radius: 12px;
+  padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.rl-status span { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #cfc4ad; }
+.rl-status strong { font-size: 20px; color: #fff7e6; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rl-status strong.up { color: #8ff0c0; }
+.rl-status strong.down { color: #ffb0b0; }
+.rl-hint {
+  display: flex; gap: 12px; align-items: flex-start; margin: 0 0 10px; padding: 12px 14px;
+  background: #142a20; border: 1px solid #3fa57a; border-radius: 12px; color: #f3ead7; font-size: 15px; line-height: 1.4;
+}
+.rl-hint ol { margin: 6px 0 4px; padding-left: 20px; }
+.rl-hint p { margin: 4px 0 0; color: #d8ceb8; font-size: 14px; }
+.rl-hint-x { flex: none; min-height: 44px; min-width: 72px; }
+.rl-result {
+  display: flex; gap: 12px; align-items: center; margin: 0 0 10px; padding: 12px 14px;
+  border-radius: 12px; border: 2px solid; background: #111;
+}
+.rl-result.win { border-color: #3fd08a; background: #0f2a1c; }
+.rl-result.loss { border-color: #c85a5a; background: #2a1212; }
+.rl-result.push { border-color: #c9a227; background: #241e0c; }
+.rl-result .rl-pocket-pip { width: 48px; height: 48px; font-size: 20px; flex: none; }
+.rl-result-h { font-size: 22px; font-weight: 800; color: #fff; }
+.rl-result-d { font-size: 14px; color: #e4dac4; margin-top: 2px; }
+.rl-felt-wrap { min-width: 0; position: relative; }
+.rl-remove-banner {
+  position: sticky; top: 4px; z-index: 12; margin: 0 0 8px; padding: 10px 12px; border-radius: 10px;
+  background: #5a1a1a; color: #fff; font-size: 14px; font-weight: 700; text-align: center;
+}
+.rl-cloth.remove-mode .rl-cell { filter: saturate(.6); }
+.rl-cloth.remove-mode .chip-on-num { outline: 2px dashed #ff8a8a; outline-offset: 2px; border-radius: 50%; }
+.rl-bet-amt {
+  position: absolute; left: 50%; bottom: -12px; transform: translateX(-50%);
+  background: #fff7e6; color: #111; font-size: 10px; font-weight: 800; line-height: 1;
+  padding: 2px 4px; border-radius: 6px; white-space: nowrap; pointer-events: none; box-shadow: 0 1px 3px rgba(0,0,0,.6);
+}
+.rl-spot .rl-bet-amt { display: none; }
+.rl-toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; font-size: 15px; }
+.rl-toggle input { width: 22px; height: 22px; }
+.rl-ux .rl-odds summary { min-height: 44px; display: flex; align-items: center; font-size: 15px; cursor: pointer; }
+.rl-ux .rl-odds table { width: 100%; font-size: 14px; }
+.rl-ux .rl-odds td, .rl-ux .rl-odds th { padding: 6px 4px; }
+.rl-toast {
+  position: fixed; left: 50%; bottom: calc(190px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  z-index: 45; background: #222; color: #fff; padding: 8px 14px; border-radius: 999px; font-size: 14px; border: 1px solid #666;
+}
+.rl-dock {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+  background: rgba(8,8,7,.97); border-top: 1px solid rgba(201,162,39,.45);
+  padding: 8px max(10px, env(safe-area-inset-right, 0px)) max(8px, env(safe-area-inset-bottom, 0px)) max(10px, env(safe-area-inset-left, 0px));
+  box-shadow: 0 -10px 30px rgba(0,0,0,.5);
+}
+.rl-dock > * { max-width: 760px; margin-left: auto; margin-right: auto; }
+.rl-dock-chips { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.rl-dock-chips .clay-chip-btn { min-width: 48px; min-height: 48px; display: grid; place-items: center; }
+.rl-dock-chips .clay-chip-btn.sel { transform: translateY(-4px) scale(1.12); filter: drop-shadow(0 0 6px #ffd76a) drop-shadow(0 0 2px #fff); }
+.rl-dock-lab { display: flex; flex-direction: column; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #cfc4ad; min-width: 54px; }
+.rl-dock-lab b { font-size: 16px; color: #ffd76a; letter-spacing: 0; }
+.rl-dock-actions { display: flex; gap: 8px; align-items: stretch; margin-top: 8px; }
+.rl-dock-sec { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; flex: 1; min-width: 0; }
+.rl-btn {
+  min-height: 52px; min-width: 0; padding: 4px 2px !important; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; font-size: 17px !important; letter-spacing: 0 !important; line-height: 1;
+}
+.rl-btn span { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: #e8dcc2; }
+.rl-btn.on { background: #7a2020; border-color: #ff8a8a; }
+.rl-btn:disabled { opacity: .4; }
+.rl-spin {
+  flex: none; width: 118px; min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 20px !important; font-weight: 800; letter-spacing: .08em !important; padding: 4px 8px !important;
+}
+.rl-spin small { font-size: 11px; font-weight: 600; letter-spacing: 0; text-transform: none; opacity: .9; }
+.rl-spin:disabled { filter: grayscale(.7); opacity: .6; }
+.rl-dock-hint { margin: 6px 0 0; text-align: center; font-size: 13px; color: #e8dcc2; }
+.rl-dock-live { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 15px; color: #ffd76a; min-height: 48px; }
+.rl-dock-live .rl-btn { min-width: 88px; flex-direction: row; font-size: 15px !important; }
+@media (min-width: 901px) { .rl-dock-chips .clay-chip-btn { min-width: 56px; } }
+.rl-ux .rl-star { scroll-margin-top: 104px; }
+.rl-result.in-dock { margin: 0 auto 8px; padding: 6px 10px; gap: 10px; }
+.rl-result.in-dock .rl-pocket-pip { width: 38px; height: 38px; font-size: 17px; }
+.rl-result.in-dock .rl-result-h { font-size: 18px; }
+.rl-result.in-dock .rl-result-d { font-size: 13px; }
+.rl-bet-amt { writing-mode: horizontal-tb; }
+.pit-shell:has(.rl-result.in-dock) { padding-bottom: calc(260px + env(safe-area-inset-bottom, 0px)); }

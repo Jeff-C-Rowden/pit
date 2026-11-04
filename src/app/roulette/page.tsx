@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { pocketColor } from "@/lib/games/rouletteFelt";
 import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
-import { ActionDock, ChipRow, OutcomeBanner } from "@/components/TableUX";
+import { Chip } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 import RouletteCloth, {
@@ -15,6 +15,8 @@ import RouletteCloth, {
 } from "@/components/RouletteCloth";
 
 const TURBO_KEY = "pit-rl-turbo";
+const HINT_KEY = "pit-rl-hint-v1";
+const CHIPS = [25, 100, 500, 1000, 2500];
 const HISTORY_N = 20;
 
 const ODDS: [string, string, number, number][] = [
@@ -105,6 +107,10 @@ export default function RoulettePage() {
   const [hydrated, setHydrated] = useState(false);
   const [plan, setPlan] = useState<SpinPlan | null>(null);
   const rotorRef = useRef(0);
+  const wheelRef = useRef<HTMLDivElement | null>(null);
+  const [removeMode, setRemoveMode] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   const [turbo, setTurbo] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -116,8 +122,29 @@ export default function RoulettePage() {
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     if (mq) { setReduced(mq.matches); mq.addEventListener?.("change", (e) => setReduced(e.matches)); }
     api("/api/games/roulette/history").then((d) => { if (Array.isArray(d.pockets)) setHistory(d.pockets); }).catch(() => {});
+    try { setShowHint(localStorage.getItem(HINT_KEY) !== "1"); } catch { setShowHint(true); }
     setHydrated(true);
   }, []);
+
+  function dismissHint() {
+    setShowHint(false);
+    try { localStorage.setItem(HINT_KEY, "1"); } catch { /* ignore */ }
+  }
+
+  function flash(msg: string) {
+    setToast(msg);
+    window.setTimeout(() => setToast((t) => (t === msg ? null : t)), 1400);
+  }
+
+  function remove(label: string) {
+    if (busy) return;
+    setBets((x) => {
+      const j = x.map((b) => b.label).lastIndexOf(label);
+      if (j < 0) return x;
+      flash(`Removed ${money(x[j]!.amountCents)} from ${label}`);
+      return [...x.slice(0, j), ...x.slice(j + 1)];
+    });
+  }
 
   useEffect(() => {
     if (!hydrated) return;
@@ -145,6 +172,7 @@ export default function RoulettePage() {
     if (busy) return;
     setGhosts([]);
     setBets((x) => [...x, { ...b, amountCents: chip }]);
+    if (showHint) dismissHint();
   }
 
   function undo() {
@@ -167,6 +195,9 @@ export default function RoulettePage() {
     setErr(null);
     setBusy(true);
     setSpin(null);
+    setRemoveMode(false);
+    // Bring the wheel fully into view; the dock collapses while the ball is live.
+    wheelRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
     try {
       const pattern = bets.map((b) => ({ ...b }));
       const d = await api("/api/games/roulette", {
@@ -191,86 +222,129 @@ export default function RoulettePage() {
     finally { setBusy(false); }
   }
 
-  const net = spin ? (spin.netCents ?? spin.payoutCents) : 0;
+  const net = spin ? (spin.netCents ?? (spin.payoutCents - (spin.stakeCents ?? 0))) : 0;
   const paid = spin?.payoutCents ?? 0;
-  const won = spin && net > 0;
-  const push = spin && net === 0 && paid > 0;
-  const lost = !!(spin && !won && !push);
+  const staked = spin?.stakeCents ?? 0;
+  const tone = !spin ? null : net > 0 ? "win" : net === 0 ? "push" : "loss";
   const displayPocket = spinning ? livePocket : (spin?.pocket ?? livePocket);
+  const lastWin = spin && !spinning ? net : null;
+  const colorName = (p: string) => (pocketColor(p) === "green" ? "green" : pocketColor(p));
 
   return (
     <Shell>
       {(u) => (
-        <div className="roulette-page">
+        <div className={`roulette-page rl-ux${spinning ? " is-spinning" : ""}`}>
           <div className="rl-chrome">
-            <div className="rl-chrome-mark">Pit</div>
-            <div className="rl-chrome-title">American · 0 / 00</div>
-            <div className="rl-chrome-meta">House edge 5.26% · <span className="rl-sandbox-tag">Sandbox chips · 21+</span></div>
+            <div className="rl-chrome-title">American Roulette · 0 / 00</div>
+            <div className="rl-chrome-meta"><span className="rl-sandbox-tag">Sandbox chips · 21+</span> · Not real money</div>
           </div>
-          {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
-          {won && !spinning && (
-            <OutcomeBanner
-              win
-              title="YOU WIN"
-              amountCents={net}
-              subtitle={`${money(net)} added to your stack`}
-            />
+
+          <div className="rl-status" role="status" aria-live="polite">
+            <div><span>Balance</span><strong>{money(u.balanceCents)}</strong></div>
+            <div><span>Bet on table</span><strong>{money(stake)}</strong></div>
+            <div><span>Last spin</span><strong className={lastWin == null ? "" : lastWin > 0 ? "up" : lastWin < 0 ? "down" : ""}>
+              {lastWin == null ? "—" : `${lastWin > 0 ? "+" : ""}${money(lastWin)}`}</strong></div>
+          </div>
+
+          {showHint && (
+            <div className="rl-hint" role="note">
+              <div>
+                <strong>How to play</strong>
+                <ol>
+                  <li>Pick a chip value at the bottom.</li>
+                  <li>Tap a number or area on the table to place it. Tap again to add more.</li>
+                  <li>Press <b>Spin</b>. The server picks the number; the wheel just shows it.</li>
+                </ol>
+                <p>To take a chip back, press and hold it, or use <b>Remove</b>.</p>
+              </div>
+              <button className="btn rl-hint-x" onClick={dismissHint} aria-label="Dismiss how to play">Got it</button>
+            </div>
           )}
-          {push && !spinning && (
-            <OutcomeBanner
-              push
-              title="EVEN"
-              amountCents={paid}
-              subtitle="Even money. Stake came back."
-            />
-          )}
-          {lost && !spinning && (
-            <OutcomeBanner
-              title="YOU LOSE"
-              subtitle={
-                paid > 0
-                  ? `Ball on ${spin.pocket}. Winning bets paid ${money(paid)} against ${money(spin.stakeCents || paid)} in. Net ${money(net)}.`
-                  : `Ball on ${spin.pocket}. You lost this spin.`
-              }
-            />
-          )}
+
+          {err && <p className="err" role="alert" style={{ textAlign: "center" }}>{err}</p>}
+
           <div className="rl-stage">
-            <div className="rl-star">
+            <div className="rl-star" ref={wheelRef}>
               <RouletteWheel pocket={displayPocket} spinning={spinning} plan={plan} instant={reduced || skipped} />
               <div className="rl-tools">
-                <label><input type="checkbox" checked={turbo} onChange={(e) => setTurbo(e.target.checked)} /> Turbo spin</label>
-                {spinning && <button className="btn" onClick={() => skipRef.current?.()}>Skip animation</button>}
+                <label className="rl-toggle"><input type="checkbox" checked={turbo} onChange={(e) => setTurbo(e.target.checked)} /> Turbo spin</label>
                 {reduced && <span className="muted">Reduced motion: results show instantly</span>}
               </div>
               <div className="rl-last9-wrap">
-                <div className="rl-last9-lab">Last {HISTORY_N} results</div>
+                <div className="rl-last9-lab">Last {HISTORY_N} numbers (newest first)</div>
                 <HistoryStrip pockets={history} />
                 <HotCold pockets={history} />
               </div>
               <RouletteBots active={spinning} flashes={spinning || ghosts.length ? botFlashes : []} />
             </div>
-            <RouletteCloth
-              onAdd={add}
-              onAmount={on}
-              hit={spinning ? null : spin?.pocket}
-              lastNine={history}
-              ghosts={ghosts}
-              locked={busy}
-              hideLastNine
-            />
+            <div className="rl-felt-wrap">
+              {removeMode && <div className="rl-remove-banner">Remove mode: tap a chip on the table to take it back.</div>}
+              <RouletteCloth
+                onAdd={add}
+                onRemove={remove}
+                removeMode={removeMode}
+                onAmount={on}
+                hit={spinning ? null : spin?.pocket}
+                lastNine={history}
+                ghosts={ghosts}
+                locked={busy}
+                hideLastNine
+              />
+            </div>
           </div>
           <OddsPanel />
           <StandingRail youName={u.displayName} youStack={u.balanceCents} coinIn={stake} />
-          <ActionDock hint={spinning ? "Ball in play — bots dropping chips." : bets.length ? "Spin the wheel." : "Pick a chip, drop it on a number, then Spin."} busy={busy}>
-            <ChipRow amounts={[25, 100, 500, 1000, 2500]} selected={chip} onSelect={setChip} minCents={25} maxCents={500_000} />
-            <button className="btn" onClick={undo} disabled={busy || !bets.length}>Undo</button>
-            <button className="btn" onClick={() => setBets([])} disabled={busy || !bets.length}>Clear</button>
-            <button className="btn" onClick={double} disabled={busy || !bets.length}>Double</button>
-            <button className="btn" onClick={repeat} disabled={busy || !lastStake.length}>Repeat</button>
-            <button className="btn primary hero-act" onClick={go} disabled={!bets.length || busy}>
-              {busy || spinning ? "Spinning…" : `Spin${stake ? ` · ${money(stake)}` : ""}`}
-            </button>
-          </ActionDock>
+
+          {toast && <div className="rl-toast" role="status">{toast}</div>}
+
+          <div className={`rl-dock${spinning ? " collapsed" : ""}`} aria-busy={busy || undefined}>
+            {spinning ? (
+              <div className="rl-dock-live">
+                <span>Ball in play · {money(stake || lastStake.reduce((a, b) => a + b.amountCents, 0))} on the table</span>
+                <button className="btn rl-btn" onClick={() => skipRef.current?.()} aria-label="Skip the spin animation">Skip</button>
+              </div>
+            ) : (
+              <>
+          {spin && !spinning && tone && (
+                  <div className={`rl-result in-dock ${tone}`} role="status" aria-live="polite">
+                    <span className={`rl-pocket-pip ${pocketColor(spin.pocket)}`}>{spin.pocket}</span>
+                    <div>
+                      <div className="rl-result-h">
+                        {tone === "win" ? `You won ${money(net)}` : tone === "push" ? "You broke even" : `You lost ${money(-net)}`}
+                      </div>
+                      <div className="rl-result-d">
+                        Ball landed on {spin.pocket} {colorName(spin.pocket)}. You bet {money(staked)}, got back {money(paid)}.
+                      </div>
+                    </div>
+                  </div>
+                )}
+                <div className="rl-dock-chips" role="group" aria-label="Chip value">
+                  <span className="rl-dock-lab">Chip<b>{money(chip)}</b></span>
+                  {CHIPS.map((c) => (
+                    <Chip key={c} cents={c} size={46} selected={chip === c} onClick={() => { setChip(c); setRemoveMode(false); }} label={`Chip value ${money(c)}`} />
+                  ))}
+                </div>
+                <div className="rl-dock-actions">
+                  <div className="rl-dock-sec" role="group" aria-label="Bet tools">
+                    <button className="btn rl-btn" onClick={undo} disabled={busy || !bets.length} aria-label="Undo last chip">↶<span>Undo</span></button>
+                    <button className={`btn rl-btn${removeMode ? " on" : ""}`} onClick={() => setRemoveMode((m) => !m)} disabled={busy || !bets.length} aria-pressed={removeMode} aria-label="Remove mode">✕<span>Remove</span></button>
+                    <button className="btn rl-btn" onClick={() => { setBets([]); setRemoveMode(false); }} disabled={busy || !bets.length} aria-label="Clear all bets">⌫<span>Clear</span></button>
+                    <button className="btn rl-btn" onClick={repeat} disabled={busy || !lastStake.length || bets.length > 0} aria-label="Repeat last bets">↻<span>Repeat</span></button>
+                    <button className="btn rl-btn" onClick={double} disabled={busy || !bets.length} aria-label="Double all bets">×2<span>Double</span></button>
+                  </div>
+                  <button className="btn primary rl-spin" onClick={go} disabled={!bets.length || busy} aria-describedby="rl-spin-hint">
+                    {busy ? "Spinning…" : "Spin"}
+                    <small>{bets.length ? `${money(stake)} bet` : "No bets yet"}</small>
+                  </button>
+                </div>
+                <p id="rl-spin-hint" className="rl-dock-hint">
+                  {bets.length
+                    ? `${bets.length} chip${bets.length === 1 ? "" : "s"} placed · tap Spin when ready`
+                    : lastStake.length ? "Tap the table to bet, or Repeat your last bets" : "Tap the table to place a chip"}
+                </p>
+              </>
+            )}
+          </div>
         </div>
       )}
     </Shell>

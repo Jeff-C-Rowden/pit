@@ -15,3 +15,13 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 9 | Engagement | Achievements for exploring games (e.g., "Tried every table"), never for losses or volume of betting. | |
 | 10 | Visuals | PWA manifest + install icon + splash so the demo feels app-like on phones. | |
 | 11 | Onboarding | Guest "try one spin" demo mode before signup with no ledger writes. | |
+
+## NEXT (top): roulette betting table must fit phone width without sideways scroll; remove redundant old Session/Hottest panel on roulette.
+
+## Player research priorities (from /workspace/pit-player-research.md, 2026-11-04) — rank these first
+1. Live Canopy Spire jackpot meter in lobby + real last-won history
+2. Daily free sandbox-chip claim (once/day, no playthrough, no popups)
+3. Win animations scaled to real win size; sound + mute; turbo/skip
+4. Popup-free lobby with search + recently played
+5. Hold & win / stacking multipliers / cascade bonus with visible odds; bonus resumes after refresh
+Avoid: popup spam, fake or near-miss wins, hourly pressure timers, bot tournaments.

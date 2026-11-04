@@ -41,7 +41,8 @@ function isPair(h: Card[]): boolean {
 export function startBlackjackWithCards(betCents: number, ordered: Card[]): BjState {
   const s = startBlackjack(betCents);
   // rebuild from a known order: player, player, dealer, dealer, then rest
-  s.shoe = ordered.slice();
+  // Pad with a fresh shoe so scripted cards are drawn before any reshuffle.
+  s.shoe = [...ordered, ...shuffle(shoe(6))];
   s.playerHands = [{ cards: [s.shoe.shift()!, s.shoe.shift()!], betCents, stood: false, doubled: false, bust: false }];
   s.dealer = [s.shoe.shift()!, s.shoe.shift()!];
   s.active = 0;

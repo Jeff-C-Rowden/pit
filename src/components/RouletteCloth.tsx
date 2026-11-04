@@ -27,6 +27,7 @@ function OnChip({ cents, ghost }: { cents: number; ghost?: boolean }) {
   return (
     <span className={`chip-on-num${ghost ? " rl-bot-chip" : ""}`}>
       <ChipStack cents={cents} size={ghost ? 22 : 26} maxChips={ghost ? 2 : 4} showTotal={false} />
+      {!ghost && <span className="rl-bet-amt">{money(cents)}</span>}
     </span>
   );
 }
@@ -430,7 +431,12 @@ export default function RouletteCloth({
   ghosts,
   locked,
   hideLastNine,
+  removeMode,
+  onRemove,
 }: {
+  removeMode?: boolean;
+  /** Take the last chip off a spot (remove mode tap, or long-press). */
+  onRemove?: (label: string) => void;
   onAdd: (b: ClothBet) => void;
   onAmount: (label: string) => number;
   hit?: string | null;
@@ -444,6 +450,7 @@ export default function RouletteCloth({
   const flashT = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tap = (b: ClothBet) => {
     if (locked) return;
+    if (removeMode) { onRemove?.(b.label); return; }
     onAdd(b);
     // Tap feedback on touch screens: briefly light the covered numbers.
     setCover(new Set(coveredBy(b)));
@@ -459,14 +466,15 @@ export default function RouletteCloth({
   const cv = (p: string) => (cover.has(p) ? " covered" : "");
 
   return (
-    <div className={`rl-cloth${locked ? " locked" : ""}`} role="group" aria-label="American roulette layout">
+    <div className={`rl-cloth${locked ? " locked" : ""}${removeMode ? " remove-mode" : ""}`} role="group" aria-label="American roulette layout">
       {!hideLastNine && <LastNine pockets={lastNine || []} />}
       <div className="rl-grid">
         <button
           type="button"
           className={`rl-cell green zero00 ${hit === "00" ? "hit" : ""}${cv("00")}`}
           {...hov({ kind: "straight", numbers: ["00"], label: "00" })}
-          onClick={() => tap({ kind: "straight", numbers: ["00"], label: "00" })}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("00"); }}
+onClick={() => tap({ kind: "straight", numbers: ["00"], label: "00" })}
         >
           00
           <OnChip cents={onAmount("00")} />
@@ -475,7 +483,8 @@ export default function RouletteCloth({
           type="button"
           className={`rl-cell green zero0 ${hit === "0" ? "hit" : ""}${cv("0")}`}
           {...hov({ kind: "straight", numbers: ["0"], label: "0" })}
-          onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("0"); }}
+onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
         >
           0
           <OnChip cents={onAmount("0")} />
@@ -484,7 +493,8 @@ export default function RouletteCloth({
           type="button"
           className="rl-cell green basket"
           {...hov({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "five-number" })}
-          onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "five-number" })}
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("five-number"); }}
+onClick={() => tap({ kind: "five", numbers: ["0", "00", "1", "2", "3"], label: "five-number" })}
           title="Five-number 0-00-1-2-3 · 6:1"
         >
           0-00
@@ -500,6 +510,7 @@ export default function RouletteCloth({
                 type="button"
                 key={n}
                 className={`rl-cell ${col} n n-${n} r${ri} c${ci} ${hit === label ? "hit" : ""}${cv(label)}`}
+                aria-label={`${n} ${col}, straight up pays 35 to 1${onAmount(label) ? `, your bet ${money(onAmount(label))}` : ""}`}
                 {...hov({ kind: "straight", numbers: [label], label })}
           onClick={() => tap({ kind: "straight", numbers: [label], label })}
               >
@@ -611,7 +622,8 @@ export default function RouletteCloth({
             key={`col${which}`}
             className={`rl-cell outside col21 col-r${i}`}
             {...hov({ kind: "column", which, label: "" })}
-            onClick={() => tap({ kind: "column", which, label: `col ${which}` })}
+            onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.(`col ${which}`); }}
+onClick={() => tap({ kind: "column", which, label: `col ${which}` })}
           >
             2:1
             <OnChip cents={onAmount(`col ${which}`)} />
@@ -620,56 +632,65 @@ export default function RouletteCloth({
         ))}
 
         <button type="button" className="rl-cell outside dozen d1" {...hov({ kind: "dozen", which: 1, label: "1st 12" })}
-          onClick={() => tap({ kind: "dozen", which: 1, label: "1st 12" })}>
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("1st 12"); }}
+onClick={() => tap({ kind: "dozen", which: 1, label: "1st 12" })}>
           1st 12
           <OnChip cents={onAmount("1st 12")} />
           <OnChip cents={ghostOn("1st 12")} ghost />
         </button>
         <button type="button" className="rl-cell outside dozen d2" {...hov({ kind: "dozen", which: 2, label: "2nd 12" })}
-          onClick={() => tap({ kind: "dozen", which: 2, label: "2nd 12" })}>
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("2nd 12"); }}
+onClick={() => tap({ kind: "dozen", which: 2, label: "2nd 12" })}>
           2nd 12
           <OnChip cents={onAmount("2nd 12")} />
           <OnChip cents={ghostOn("2nd 12")} ghost />
         </button>
         <button type="button" className="rl-cell outside dozen d3" {...hov({ kind: "dozen", which: 3, label: "3rd 12" })}
-          onClick={() => tap({ kind: "dozen", which: 3, label: "3rd 12" })}>
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("3rd 12"); }}
+onClick={() => tap({ kind: "dozen", which: 3, label: "3rd 12" })}>
           3rd 12
           <OnChip cents={onAmount("3rd 12")} />
           <OnChip cents={ghostOn("3rd 12")} ghost />
         </button>
 
         <button type="button" className="rl-cell outside even-money e-low" {...hov({ kind: "low", numbers: [], label: "1-18" })}
-          onClick={() => tap({ kind: "low", numbers: [], label: "1-18" })}>
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("1-18"); }}
+onClick={() => tap({ kind: "low", numbers: [], label: "1-18" })}>
           1 to 18
           <OnChip cents={onAmount("1-18")} />
           <OnChip cents={ghostOn("1-18")} ghost />
         </button>
         <button type="button" className="rl-cell outside even-money e-even" {...hov({ kind: "even", numbers: [], label: "even" })}
-          onClick={() => tap({ kind: "even", numbers: [], label: "even" })}>
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("even"); }}
+onClick={() => tap({ kind: "even", numbers: [], label: "even" })}>
           Even
           <OnChip cents={onAmount("even")} />
           <OnChip cents={ghostOn("even")} ghost />
         </button>
         <button type="button" className="rl-cell outside even-money e-red" {...hov({ kind: "red", numbers: [], label: "red" })}
-          onClick={() => tap({ kind: "red", numbers: [], label: "red" })}>
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("red"); }}
+onClick={() => tap({ kind: "red", numbers: [], label: "red" })}>
           <Diamond color="red" /> Red
           <OnChip cents={onAmount("red")} />
           <OnChip cents={ghostOn("red")} ghost />
         </button>
         <button type="button" className="rl-cell outside even-money e-black" {...hov({ kind: "black", numbers: [], label: "black" })}
-          onClick={() => tap({ kind: "black", numbers: [], label: "black" })}>
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("black"); }}
+onClick={() => tap({ kind: "black", numbers: [], label: "black" })}>
           <Diamond color="black" /> Black
           <OnChip cents={onAmount("black")} />
           <OnChip cents={ghostOn("black")} ghost />
         </button>
         <button type="button" className="rl-cell outside even-money e-odd" {...hov({ kind: "odd", numbers: [], label: "odd" })}
-          onClick={() => tap({ kind: "odd", numbers: [], label: "odd" })}>
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("odd"); }}
+onClick={() => tap({ kind: "odd", numbers: [], label: "odd" })}>
           Odd
           <OnChip cents={onAmount("odd")} />
           <OnChip cents={ghostOn("odd")} ghost />
         </button>
         <button type="button" className="rl-cell outside even-money e-high" {...hov({ kind: "high", numbers: [], label: "19-36" })}
-          onClick={() => tap({ kind: "high", numbers: [], label: "19-36" })}>
+          onContextMenu={(e) => { e.preventDefault(); if (!locked) onRemove?.("19-36"); }}
+onClick={() => tap({ kind: "high", numbers: [], label: "19-36" })}>
           19 to 36
           <OnChip cents={onAmount("19-36")} />
           <OnChip cents={ghostOn("19-36")} ghost />
