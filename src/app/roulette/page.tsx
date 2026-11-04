@@ -48,7 +48,7 @@ function HotCold({ pockets }: { pockets: string[] }) {
     <div className="rl-hotcold">
       <div className="rl-hc-row"><span className="rl-hc-lab">Most seen</span>{hot.map(([p, n]) => <span key={p} className={`rl-hpip ${pocketColor(p)}`} title={`${n}×`}>{p}<sub>×{n}</sub></span>)}</div>
       <div className="rl-hc-row"><span className="rl-hc-lab">Not seen</span>{cold.map((p) => <span key={p} className={`rl-hpip ${pocketColor(p)}`}>{p}</span>)}</div>
-      <div className="rl-hotcold-note">Counts from your last {pockets.length} real spins. Past results don't predict anything; every spin is independent.</div>
+      <div className="rl-hotcold-note">Counts from your last {pockets.length} real spin{pockets.length === 1 ? "" : "s"}. Past results don't predict anything; every spin is independent.</div>
     </div>
   );
 }

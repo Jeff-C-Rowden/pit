@@ -2630,3 +2630,5 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
   .floor-search input { font-size: 16px; }
 }
 @media (prefers-reduced-motion: reduce) { .floor-recent-chip { transition: none; } }
+.rl-cloth .rl-cell.outside, .rl-cloth .rl-cell:not(.red):not(.black):not(.green) { background: linear-gradient(180deg,#1a5b40,#134a34) !important; color: #efe3bf; }
+.rl-recent .rl-hpip.empty { opacity: .45; }
