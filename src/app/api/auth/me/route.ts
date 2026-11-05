@@ -1,4 +1,4 @@
-import { withDbSync } from "@/lib/dbSync";
+import { ledgerMode, withDbSync } from "@/lib/dbSync";
 import { cookies } from "next/headers";
 import { getUserByToken, SESSION_COOKIE, toPublic } from "@/lib/auth";
 import { json } from "@/lib/http";
@@ -8,8 +8,9 @@ async function _GET() {
   getDb();
   const token = cookies().get(SESSION_COOKIE)?.value;
   const user = getUserByToken(token);
-  if (!user) return json({ user: null }, 200);
-  return json({ user: toPublic(user) });
+  const ledger = ledgerMode();
+  if (!user) return json({ user: null, ledger }, 200);
+  return json({ user: toPublic(user), ledger });
 }
 
 async function _POST(req: Request) {

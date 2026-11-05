@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { UserProvider } from "@/components/useUser";
+import LedgerNotice from "@/components/LedgerNotice";
 
 export const metadata: Metadata = {
   title: "Pit — Private Tables",
@@ -18,6 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
+        <LedgerNotice />
         <UserProvider>{children}</UserProvider>
       </body>
     </html>
