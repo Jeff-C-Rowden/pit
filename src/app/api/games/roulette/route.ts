@@ -38,7 +38,7 @@ async function _POST(req: Request) {
     const pocket = spinAmerican();
     const settled = settleRoulette(bets, pocket);
     if (settled.payoutCents > 0) {
-      creditPayout(user.id, settled.payoutCents, "roulette", id, `rl-pay-${id}`);
+      creditPayout(user.id, settled.payoutCents, "roulette", id, `rl-pay-${id}`, { stakeBackCents: settled.stakeBackCents, wonCents: settled.payoutCents - settled.stakeBackCents });
     }
     recordSpin(getDb(), { id, userId: user.id, pocket, stakeCents: stake, payoutCents: settled.payoutCents });
     const u = getDb().prepare("SELECT * FROM users WHERE id = ?").get(user.id) as typeof user;

@@ -13,6 +13,7 @@ export type PaiGowState = {
   phase: "set" | "settled";
   result?: string;
   payoutCents?: number;
+  stakeBackCents?: number;
   commissionCents?: number;
 };
 
@@ -230,13 +231,16 @@ function settle(s: PaiGowState) {
     const commission = Math.ceil(s.betCents * 0.05);
     s.commissionCents = commission;
     s.payoutCents = gross - commission;
+    s.stakeBackCents = s.betCents;
     s.result = `win both · ${ph.name} / ${pl.name} · 5% commission ${commission}¢`;
   } else if (highLose && lowLose) {
     s.payoutCents = 0;
+    s.stakeBackCents = 0;
     s.commissionCents = 0;
     s.result = `lose both · dealer ${dh.name} / ${dl.name}`;
   } else {
     s.payoutCents = s.betCents;
+    s.stakeBackCents = s.betCents;
     s.commissionCents = 0;
     s.result = `push · high ${highWin ? "you" : "house"} · low ${lowWin ? "you" : "house"}`;
   }

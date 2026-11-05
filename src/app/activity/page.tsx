@@ -56,11 +56,33 @@ export default function ActivityPage() {
             <p className="lim-help">The file lists the same ledger rows as above, oldest first, with Chicago and UTC times.</p>
           </>
         )}
+        <HistoryExport />
         <div className="btn-row" style={{ marginTop: 16 }}>
           <Link className="btn" href="/wallet#time">Time settings &amp; break</Link>
           <Link className="btn" href="/floor">Back to the floor</Link>
         </div>
       </section>
     </Shell>
+  );
+}
+
+const chiDay = (t: number) => new Date(t).toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
+/** "Download all my history": every ledger row (chips added, bets, payouts, refunds) between two Chicago dates. */
+function HistoryExport() {
+  const today = chiDay(Date.now());
+  const [from, setFrom] = useState(() => chiDay(Date.now() - 29 * 86_400_000));
+  const [to, setTo] = useState(today);
+  const bad = !from || !to ? "Pick both dates." : from > to ? "The start date is after the end date." : null;
+  const href = `/api/session/activity?format=csv&scope=all&from=${from}&to=${to}`;
+  return (
+    <fieldset className="hist-export">
+      <legend>Download all my history</legend>
+      <div className="hist-dates">
+        <label>From <input type="date" value={from} max={to || today} onChange={(e) => setFrom(e.target.value)} /></label>
+        <label>To <input type="date" value={to} min={from} max={today} onChange={(e) => setTo(e.target.value)} /></label>
+      </div>
+      {bad ? <p className="lim-help" role="alert">{bad}</p> : <a className="btn" href={href} download>Download all my history (CSV)</a>}
+      <p className="lim-help">Every ledger row in those Chicago dates, all sessions, oldest first. Up to 366 days per file.</p>
+    </fieldset>
   );
 }

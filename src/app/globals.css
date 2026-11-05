@@ -3273,3 +3273,26 @@ button.zone:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px;
 .pg-table .table-seat:not(.you) .seat-cards { max-width: 76px; transform: scale(.82); transform-origin: top center; }
 .pg-table .table-seat:not(.you) .seat-cards > * + * { margin-left: -30px; }
 .pg-table .table-seat.you .seat-cards > * + * { margin-left: -30px; }
+/* R28: your settled Pai Gow hand as two readable rows */
+.seat-card-rows { display: flex; flex-direction: column; align-items: center; gap: 2px; position: relative; z-index: 1; }
+.seat-card-row { display: flex; align-items: center; }
+.seat-card-row > .card, .seat-card-row > :not(.seat-row-lbl) { flex: none; }
+.seat-card-row > :not(.seat-row-lbl) + :not(.seat-row-lbl) { margin-left: -14px; }
+.seat-row-lbl { font-size: 8px; letter-spacing: .12em; text-transform: uppercase; color: rgba(232,213,163,.8); width: 26px; text-align: right; margin-right: 3px; }
+.pg-table .seat-card-row .card, .pg-table .seat-card-row > :not(.seat-row-lbl) { transform: scale(.8); transform-origin: center; margin-block: -4px; }
+/* R28: softened start buttons while bets are paused */
+button[data-paused="1"], button[data-paused="1"]:disabled { background: rgba(238,243,249,.08) !important; color: #c9d3df !important; border: 1px dashed rgba(238,243,249,.35) !important; box-shadow: none !important; opacity: 1; font-size: .9em; }
+/* R28: Floor note while excluded */
+.excl-note { margin: 14px auto 0; max-width: 560px; text-align: left; padding: 12px 14px; border-radius: 12px; background: rgba(120,150,190,.12); border: 1px solid rgba(170,195,225,.3); color: #eef3f9; font-size: 14px; line-height: 1.45; }
+.excl-note p { margin: 0; }
+.excl-note .excl-links { margin-top: 8px; font-size: 13px; }
+.excl-note a { color: #e8d5a3; text-decoration: underline; display: inline-block; padding: 4px 0; }
+/* R28: full-history export */
+.hist-export { margin-top: 18px; border: 1px solid rgba(232,213,163,.25); border-radius: 12px; padding: 10px 12px 12px; }
+.hist-export legend { padding: 0 6px; font-weight: 600; }
+.hist-dates { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.hist-dates label { display: flex; flex-direction: column; font-size: 13px; gap: 4px; flex: 1 1 140px; }
+.hist-dates input { min-height: 44px; font-size: 16px; }
+.rl-spin[data-paused="1"] { font-size: 15px !important; line-height: 1.2; letter-spacing: .02em; }
+.hist-export .btn { display: inline-block; margin-bottom: 10px; }
+.hist-export .lim-help { margin-top: 6px; }

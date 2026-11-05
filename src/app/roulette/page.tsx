@@ -9,6 +9,7 @@ import { Chip, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, 
 import { celebrationLevel, playChip, playPayout } from "@/lib/feel";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
+import { usePausedLabel } from "@/components/PauseStatus";
 import LiveAnnounce, { resultPhrase } from "@/components/LiveAnnounce";
 import RouletteCloth, {
   PIT_ROULETTE_BOTS,
@@ -98,6 +99,7 @@ function pickGhosts(): GhostChip[] {
 
 export default function RoulettePage() {
   const { setUser } = useUser();
+  const paused = usePausedLabel();
   const [chip, setChip] = useState(100);
   const [bets, setBets] = useState<(ClothBet & { amountCents: number })[]>([]);
   const [lastStake, setLastStake] = useState<(ClothBet & { amountCents: number })[]>([]);
@@ -424,8 +426,8 @@ export default function RoulettePage() {
                       ? <button className="btn rl-btn" onClick={double} disabled={busy} aria-label="Double all bets">×2<span>Double</span></button>
                       : <button className="btn rl-btn" onClick={repeat} disabled={busy || !lastStake.length} aria-label="Repeat last bets">↻<span>Repeat</span></button>}
                   </div>
-                  <button className="btn primary rl-spin" onClick={go} disabled={!bets.length || busy} aria-describedby="rl-spin-hint">
-                    {busy ? "Spinning…" : "Spin"}
+                  <button className="btn primary rl-spin" onClick={go} disabled={!bets.length || busy || !!paused} data-paused={paused ? "1" : undefined} aria-describedby="rl-spin-hint">
+                    {paused || (busy ? "Spinning…" : "Spin")}
                     <small>{bets.length ? `${money(stake)} bet` : "No bets yet"}</small>
                   </button>
                 </div>

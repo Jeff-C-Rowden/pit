@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { api, useUser } from "./useUser";
-import { pauseText, type PauseInfo } from "@/lib/pauseText";
+import { pauseText, pausedLabel, type PauseInfo } from "@/lib/pauseText";
 
 /** Calm bottom-bar line while the server is refusing new bets (break, self-exclusion, time's up). Reads the server's own state. */
-export default function PauseStatus() {
+/** The server's pause state, refreshed on load, on session/balance events and every minute. */
+export function usePauseInfo(): PauseInfo | null {
   const { user } = useUser();
   const [d, setD] = useState<PauseInfo | null>(null);
   useEffect(() => {
@@ -17,6 +18,16 @@ export default function PauseStatus() {
     window.addEventListener("pit:session", on); window.addEventListener("pit:balance", on);
     return () => { live = false; clearInterval(t); window.removeEventListener("pit:session", on); window.removeEventListener("pit:balance", on); };
   }, [user]);
+  return d;
+}
+
+/** "Paused until h:mm AM" while new bets are refused, else null. For Deal / Spin / Roll buttons only. */
+export function usePausedLabel(): string | null {
+  return pausedLabel(usePauseInfo());
+}
+
+export default function PauseStatus() {
+  const d = usePauseInfo();
   const text = pauseText(d);
   if (!text) return null;
   return (

@@ -6,6 +6,7 @@ import PlayingCard from "@/components/PlayingCard";
 import { ActionDock, ChipRow, OutcomeBanner, ResultsStrip, TableReplay, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { CARD_BACK, DealerBooth, TableHeart, TableSeat, botPaiGowCards, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
+import { usePausedLabel } from "@/components/PauseStatus";
 
 export default function PaiGowPage() {
   const { setUser } = useUser();
@@ -72,6 +73,7 @@ export default function PaiGowPage() {
 }
 
 function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualSet, betting, pay, won, push, lost, hint }: any) {
+  const paused = usePausedLabel();
   const { occupants, setYouSeat, n } = useTableSeats("paigow", u.displayName, u.balanceCents);
   return (
     <>
@@ -132,10 +134,11 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
         {occupants.map((occ) => {
           const isYou = occ.kind === "you";
           let cards: any[] | undefined;
+          let cardRows: { label: string; cards: any[] }[] | undefined;
           let betCents = 0;
           if (isYou) {
             betCents = game?.betCents || (betting ? bet : 0);
-            if (game?.playerHigh) cards = [...game.playerHigh, ...(game.playerLow || [])];
+            if (game?.playerHigh) cardRows = [{ label: "High", cards: game.playerHigh }, { label: "Low", cards: game.playerLow || [] }];
             else if (game?.phase === "set") cards = game.playerCards;
           } else if (occ.kind === "bot" && game) {
             betCents = 1000;
@@ -150,6 +153,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
               layout="paigow"
               total={n}
               cards={cards}
+              cardRows={cardRows}
               betCents={betCents}
               onSit={setYouSeat}
               winning={isYou && won}
@@ -189,8 +193,8 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
         {betting && (
           <>
             <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} minCents={500} maxCents={500_000} />
-            <button className="btn primary hero-act" disabled={busy} onClick={() => act("deal")}>
-              {busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal"}
+            <button className="btn primary hero-act" disabled={busy || !!paused} data-paused={paused ? "1" : undefined} onClick={() => act("deal")}>
+              {paused || (busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal")}
             </button>
           </>
         )}

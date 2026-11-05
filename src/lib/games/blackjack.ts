@@ -16,6 +16,8 @@ export type BjState = {
   phase: "insurance" | "play" | "dealer" | "settled";
   result?: string;
   payoutCents?: number;
+  /** Part of payoutCents that is the player's own stake coming back (the rest is winnings). */
+  stakeBackCents?: number;
 };
 
 function draw(s: BjState): Card {
@@ -54,6 +56,7 @@ export function startBlackjackWithCards(betCents: number, ordered: Card[]): BjSt
   s.phase = "play";
   s.result = undefined;
   s.payoutCents = undefined;
+  s.stakeBackCents = undefined;
   const pBj = s.playerHands[0]!.cards.length === 2 && blackjackValue(s.playerHands[0]!.cards).total === 21;
   const dBj = s.dealer.length === 2 && blackjackValue(s.dealer).total === 21;
   const dealerAce = s.dealer[0]!.rank === 1;
@@ -64,9 +67,9 @@ export function startBlackjackWithCards(betCents: number, ordered: Card[]): BjSt
   }
   if (pBj || dBj) {
     s.phase = "settled";
-    if (pBj && dBj) { s.result = "push"; s.payoutCents = betCents; }
-    else if (pBj) { s.result = "blackjack"; s.payoutCents = betCents + Math.floor(betCents * 3 / 2); }
-    else { s.result = "dealer blackjack"; s.payoutCents = 0; }
+    if (pBj && dBj) { s.result = "push"; s.payoutCents = betCents; s.stakeBackCents = betCents; }
+    else if (pBj) { s.result = "blackjack"; s.payoutCents = betCents + Math.floor(betCents * 3 / 2); s.stakeBackCents = betCents; }
+    else { s.result = "dealer blackjack"; s.payoutCents = 0; s.stakeBackCents = 0; }
   }
   return s;
 }
@@ -114,12 +117,15 @@ function settleNaturals(s: BjState) {
   if (pBj && dBj) {
     s.result = "push";
     s.payoutCents = s.playerHands[0]!.betCents; // return stake
+    s.stakeBackCents = s.payoutCents;
   } else if (pBj) {
     s.result = "blackjack";
     s.payoutCents = s.playerHands[0]!.betCents + Math.floor(s.playerHands[0]!.betCents * 3 / 2);
+    s.stakeBackCents = s.playerHands[0]!.betCents;
   } else {
     s.result = "dealer blackjack";
     s.payoutCents = 0;
+    s.stakeBackCents = 0;
   }
 }
 
@@ -136,6 +142,7 @@ export function takeInsurance(s: BjState, take: boolean): BjState {
     s.result = take ? "insurance wins, dealer blackjack" : "dealer blackjack";
     // insurance pays 2:1 plus we do not return the main bet
     s.payoutCents = take ? s.insuranceCents * 3 : 0;
+    s.stakeBackCents = take ? s.insuranceCents : 0;
     return s;
   }
   // insurance lost (already debited). Continue play. Naturals already handled if player BJ.
@@ -187,6 +194,7 @@ function settle(s: BjState) {
   s.phase = "settled";
   const dv = handValue(s.dealer);
   let pay = 0;
+  let back = 0;
   const parts: string[] = [];
   for (const h of s.playerHands) {
     const pv = handValue(h.cards);
@@ -195,18 +203,18 @@ function settle(s: BjState) {
       continue;
     }
     if (isBlackjack(h.cards) && s.playerHands.length === 1) {
-      pay += h.betCents + Math.floor(h.betCents * 3 / 2);
+      pay += h.betCents + Math.floor(h.betCents * 3 / 2); back += h.betCents;
       parts.push("blackjack");
       continue;
     }
     if (dv.total > 21) {
-      pay += h.betCents * 2;
+      pay += h.betCents * 2; back += h.betCents;
       parts.push("dealer bust");
     } else if (pv.total > dv.total) {
-      pay += h.betCents * 2;
+      pay += h.betCents * 2; back += h.betCents;
       parts.push("win");
     } else if (pv.total === dv.total) {
-      pay += h.betCents;
+      pay += h.betCents; back += h.betCents;
       parts.push("push");
     } else {
       parts.push("lose");
@@ -214,6 +222,7 @@ function settle(s: BjState) {
   }
   // insurance already settled separately when dealer had BJ; if we got here insurance lost
   s.payoutCents = pay;
+  s.stakeBackCents = back;
   s.result = parts.join(" / ");
 }
 
@@ -283,6 +292,7 @@ export function abandonHand(s: BjState): BjState {
   s.phase = "settled";
   s.result = "hand closed";
   s.payoutCents = 0;
+  s.stakeBackCents = 0;
   return s;
 }
 

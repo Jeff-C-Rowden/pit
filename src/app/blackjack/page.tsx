@@ -7,6 +7,7 @@ import { ActionDock, ChipRow, OutcomeBanner, ReplayCard, ResultsStrip, cageHref,
 import { DealerBooth, TableHeart, TableSeat, botBlackjackHand, botHandValue, useTableSeats } from "@/components/Seating";
 import LiveAnnounce from "@/components/LiveAnnounce";
 import { api, money, useUser } from "@/components/useUser";
+import { usePausedLabel } from "@/components/PauseStatus";
 
 export default function BlackjackPage() {
   const { setUser } = useUser();
@@ -87,6 +88,7 @@ export default function BlackjackPage() {
 }
 
 function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, err, busy, act, betting, isPush, isWin, isLoss, result, hint, settledFor }: any) {
+  const paused = usePausedLabel();
   const hasPlayed = useHasPlayed("blackjack", `${game?.id}-${game?.phase}`);
   const { occupants, setYouSeat, n, nudgeBot } = useTableSeats("blackjack", u.displayName, u.balanceCents);
   const dealerRank = game?.dealer?.cards?.[0]?.rank;
@@ -233,11 +235,12 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
             <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} minCents={100} maxCents={500_000} />
             <button
               className="btn primary hero-act"
-              disabled={busy || !canAfford}
+              disabled={busy || !canAfford || !!paused}
+              data-paused={paused ? "1" : undefined}
               title={!canAfford ? "Add sandbox chips above to deal." : undefined}
               onClick={() => act("deal")}
             >
-              {busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal"}
+              {paused || (busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal")}
             </button>
           </>
         )}

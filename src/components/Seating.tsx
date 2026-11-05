@@ -199,6 +199,7 @@ export function TableSeat({
   layout,
   total,
   cards,
+  cardRows,
   betCents,
   dealer,
   blind,
@@ -213,6 +214,8 @@ export function TableSeat({
   layout: "holdem" | "blackjack" | "paigow";
   total: number;
   cards?: PubCard[];
+  /** Optional labelled rows (e.g. Pai Gow high / low) shown instead of one fan. */
+  cardRows?: { label: string; cards: PubCard[] }[];
   betCents?: number;
   dealer?: boolean;
   blind?: "SB" | "BB" | null;
@@ -255,7 +258,16 @@ export function TableSeat({
           <ChipStack cents={betCents!} size={28} maxChips={8} showTotal winning={!!winning} />
         )}
       </div>
-      {cards && cards.length > 0 && (
+      {cardRows && cardRows.length > 0 ? (
+        <div className="seat-card-rows">
+          {cardRows.map((r) => (
+            <div key={r.label} className="seat-card-row" aria-label={`${r.label} hand`}>
+              <span className="seat-row-lbl">{r.label}</span>
+              {r.cards.map((c, i) => <PlayingCard key={i} card={c} size="sm" />)}
+            </div>
+          ))}
+        </div>
+      ) : cards && cards.length > 0 && (
         <div className="seat-cards">
           {cards.map((c, i) => (
             <PlayingCard key={i} card={c} size="sm" />

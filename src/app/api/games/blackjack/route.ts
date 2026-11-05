@@ -45,7 +45,7 @@ async function _POST(req: Request) {
       debitBet(user.id, bet, "blackjack", state.id, `bj-bet-${state.id}-${key}`, { action: "deal" });
       const done = state.phase === "settled";
       if (done && (state.payoutCents || 0) > 0) {
-        creditPayout(user.id, state.payoutCents!, "blackjack", state.id, `bj-pay-${state.id}`);
+        creditPayout(user.id, state.payoutCents!, "blackjack", state.id, `bj-pay-${state.id}`, { stakeBackCents: state.stakeBackCents ?? 0, wonCents: state.payoutCents! - (state.stakeBackCents ?? 0) });
       }
       saveGame({ id: state.id, userId: user.id, game: "blackjack", status: done ? "settled" : "open", state });
       const u = freshUser(user.id) as typeof user;
@@ -81,7 +81,7 @@ async function _POST(req: Request) {
 
     const done = state.phase === "settled";
     if (done && (state.payoutCents || 0) > 0) {
-      creditPayout(user.id, state.payoutCents!, "blackjack", state.id, `bj-pay-${state.id}`);
+      creditPayout(user.id, state.payoutCents!, "blackjack", state.id, `bj-pay-${state.id}`, { stakeBackCents: state.stakeBackCents ?? 0, wonCents: state.payoutCents! - (state.stakeBackCents ?? 0) });
     }
     saveGame({ id: state.id, userId: user.id, game: "blackjack", status: done ? "settled" : "open", state });
     const u = freshUser(user.id) as typeof user;

@@ -6,6 +6,8 @@ import Shell from "@/components/Shell";
 import Onboarding from "@/components/Onboarding";
 import { api, money } from "@/components/useUser";
 import { filterGames, readRecent } from "@/lib/lobby";
+import { usePauseInfo } from "@/components/PauseStatus";
+import { exclusionNote } from "@/lib/pauseText";
 
 type MeterPublic = {
   id: string;
@@ -134,6 +136,8 @@ function RecentlyPlayed() {
 
 export default function Floor() {
   const [q, setQ] = useState("");
+  const pause = usePauseInfo();
+  const excl = exclusionNote(pause);
   const shown = filterGames(GAMES, q);
   const [jp, setJp] = useState(true);
   useEffect(() => { try { setJp(localStorage.getItem("pit.showJackpots") !== "0"); } catch {} }, []);
@@ -148,6 +152,12 @@ export default function Floor() {
             <h1>The floor</h1>
             <div className="rule" />
             <p className="muted">Tables open. The cage keeps the ledger. Sandbox credits only.</p>
+            {excl && (
+              <aside className="excl-note" role="note" aria-label="Self-exclusion">
+                <p><b>You're taking time away.</b> {excl} You can still look around, see your history and use the cage; new bets stay closed until then, and the end time can't be shortened.</p>
+                <p className="excl-links"><a href="/wallet#time">Your limits and time away</a> · <a href="/rules">House rules &amp; odds</a> · <a href="/activity">Your history</a> · <a href="tel:18004262537">Problem gambling helpline 1-800-GAMBLER</a></p>
+              </aside>
+            )}
           </div>
           <div className="floor-banner" role="status">
             <span className="sandbox-chip">Sandbox</span>

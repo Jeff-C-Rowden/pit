@@ -134,11 +134,45 @@ export function sessionActivity(db: Database.Database, userId: string, now = new
   const rows = db.prepare(`SELECT created_at AS at, type, game, amount_cents AS amountCents, balance_after_cents AS balanceAfterCents, meta FROM ledger
     WHERE user_id = ? AND type IN ('bet','payout','refund') AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT 500`)
     .all(userId, session.startedAt, now.toISOString()) as (ActivityRow & { meta: string | null })[];
-  return { session, rows: rows.map(({ meta, ...r }) => {
-    let back: unknown;
-    try { back = meta ? (JSON.parse(meta) as { stakeBackCents?: unknown }).stakeBackCents : undefined; } catch { back = undefined; }
-    return typeof back === "number" && r.type === "payout" ? { ...r, stakeBackCents: back } : r;
-  }) };
+  return { session, rows: rows.map(withBack) };
+}
+
+function withBack({ meta, ...r }: ActivityRow & { meta: string | null }): ActivityRow {
+  let back: unknown;
+  try { back = meta ? (JSON.parse(meta) as { stakeBackCents?: unknown }).stakeBackCents : undefined; } catch { back = undefined; }
+  return typeof back === "number" && r.type === "payout" ? { ...r, stakeBackCents: back } : r;
+}
+
+const YMD = /^\d{4}-\d{2}-\d{2}$/;
+/** UTC instant of midnight at the start of a Chicago calendar day (handles CST/CDT). */
+export function chicagoDayStart(ymd: string): Date {
+  const [y, m, d] = ymd.split("-").map(Number);
+  const guess = Date.UTC(y!, m! - 1, d!, 6); // midnight CST
+  for (const off of [5, 6]) {
+    const t = new Date(Date.UTC(y!, m! - 1, d!, off));
+    if (t.toLocaleString("en-CA", { timeZone: "America/Chicago", hourCycle: "h23", hour: "2-digit" }) === "00") return t;
+  }
+  return new Date(guess);
+}
+export const HISTORY_MAX_DAYS = 366;
+/** Validates a Chicago date range (inclusive). Returns UTC bounds or an error message. */
+export function historyRange(from: string | null, to: string | null): { start: Date; end: Date } | { error: string } {
+  if (!from || !to || !YMD.test(from) || !YMD.test(to)) return { error: "Pick a start and end date (YYYY-MM-DD)." };
+  const chk = (s: string) => { const d = new Date(s + "T12:00:00Z"); return !isNaN(+d) && d.toISOString().slice(0, 10) === s; };
+  if (!chk(from) || !chk(to)) return { error: "That date doesn't exist." };
+  if (from > to) return { error: "The start date is after the end date." };
+  const start = chicagoDayStart(from);
+  const next = new Date(Date.parse(to + "T12:00:00Z") + 86_400_000).toISOString().slice(0, 10);
+  const end = chicagoDayStart(next);
+  if ((end.getTime() - start.getTime()) / 86_400_000 > HISTORY_MAX_DAYS + 1) return { error: `Please pick at most ${HISTORY_MAX_DAYS} days at a time.` };
+  return { start, end };
+}
+/** Every ledger row for this player in [start, end), newest first, same shape as sessionActivity. */
+export function historyActivity(db: Database.Database, userId: string, start: Date, end: Date): ActivityRow[] {
+  const rows = db.prepare(`SELECT created_at AS at, type, game, amount_cents AS amountCents, balance_after_cents AS balanceAfterCents, meta FROM ledger
+    WHERE user_id = ? AND created_at >= ? AND created_at < ? ORDER BY created_at DESC, rowid DESC LIMIT 50000`)
+    .all(userId, start.toISOString(), end.toISOString()) as (ActivityRow & { meta: string | null })[];
+  return rows.map(withBack);
 }
 
 const csvCell = (v: string) => `"${v.replace(/"/g, '""')}"`;

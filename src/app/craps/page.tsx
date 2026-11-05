@@ -5,6 +5,7 @@ import { crapsFeltCents, crapsRiskedCents } from "@/lib/feel";
 import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
+import { usePausedLabel } from "@/components/PauseStatus";
 import LiveAnnounce from "@/components/LiveAnnounce";
 import { paidPhrase } from "@/lib/paidPhrase";
 
@@ -46,6 +47,7 @@ function BoxChip({ cents }: { cents: number }) {
 
 export default function CrapsPage() {
   const { setUser } = useUser();
+  const paused = usePausedLabel();
   const [table, setTable] = useState<any>(null);
   const [chip, setChip] = useState(500);
   const [err, setErr] = useState<string | null>(null);
@@ -56,6 +58,7 @@ export default function CrapsPage() {
   const [rollRef, setRollRef] = useState<string | null>(null);
   const hasPlayed = useHasPlayed("craps", rollRef);
   const canRoll = crapsFeltCents(table) > 0 || (!!table?.alwaysRepeat && !!table?.canRepeat);
+  const hasWorking = crapsFeltCents(table) > 0; // chips already on the felt can still be rolled out during a pause
   const [replay, setReplay] = useState<any>(null);
   const closeReplay = useCallback(() => setReplay(null), []);
   async function replayLast() {
@@ -320,7 +323,7 @@ export default function CrapsPage() {
               </button>
             </div>
             <div className="felt-total" aria-live="polite">Your felt: <b key={crapsFeltCents(table)} className="felt-amt">{money(crapsFeltCents(table))}</b></div>
-            <button className="btn primary hero-act" disabled={busy || !canRoll} onClick={roll}>{busy ? "Rolling…" : canRoll ? "Roll" : "Place a bet to roll"}</button>
+            <button className="btn primary hero-act" disabled={busy || !canRoll || (!!paused && !hasWorking)} data-paused={paused && !hasWorking ? "1" : undefined} onClick={roll}>{busy ? "Rolling…" : paused && !hasWorking ? paused : canRoll ? "Roll" : "Place a bet to roll"}</button>
           </ActionDock>
         </div>
       )}

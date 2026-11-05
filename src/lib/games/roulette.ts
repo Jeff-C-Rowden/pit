@@ -91,14 +91,16 @@ export function spinAmerican(): string {
 
 export function settleRoulette(bets: RouletteBet[], pocket: string) {
   let payout = 0;
+  let stakeBack = 0;
   const details: { bet: RouletteBet; win: boolean; payoutCents: number }[] = [];
   for (const bet of bets) {
     const hit = bet.numbers.includes(pocket);
     const pay = hit ? bet.amountCents * (PAY[bet.kind] + 1) : 0; // includes stake
     payout += pay;
+    if (hit) stakeBack += bet.amountCents;
     details.push({ bet, win: hit, payoutCents: pay });
   }
-  return { payoutCents: payout, details, pocket };
+  return { payoutCents: payout, stakeBackCents: stakeBack, details, pocket };
 }
 
 export function publicWheel() {

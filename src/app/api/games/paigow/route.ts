@@ -40,7 +40,7 @@ async function _POST(req: Request) {
     else if (action === "set") state = setHands(state, body.high as number[], body.low as number[]);
     else return err("unknown action");
     if (state.phase === "settled" && (state.payoutCents || 0) > 0) {
-      creditPayout(user.id, state.payoutCents!, "paigow", state.id, `pg-pay-${state.id}`);
+      creditPayout(user.id, state.payoutCents!, "paigow", state.id, `pg-pay-${state.id}`, { stakeBackCents: state.stakeBackCents ?? 0, wonCents: state.payoutCents! - (state.stakeBackCents ?? 0) });
     }
     saveGame({ id: state.id, userId: user.id, game: "paigow", status: state.phase === "settled" ? "settled" : "open", state });
     const u = getDb().prepare("SELECT * FROM users WHERE id = ?").get(user.id) as typeof user;
