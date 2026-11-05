@@ -150,21 +150,34 @@ export default function CrapsPage() {
   const z = (on: boolean) => `zone ${on ? "on" : ""}`;
   const comeAmt = (table?.come || []).reduce((s: number, c: any) => s + (c.amount || 0), 0);
   const dcAmt = (table?.dontCome || []).reduce((s: number, c: any) => s + (c.amount || 0), 0);
+  const propsCents = ["anySeven","anyCraps","yo","passOdds","dontPassOdds"].reduce((n, k) => n + (table?.[k] || 0), 0)
+    + [4,6,8,10].reduce((n, k) => n + (table?.hard?.[String(k)] || 0), 0);
   const canRepeat = lastPattern.length > 0 || !!table?.canRepeat;
 
   return (
     <Shell>
       {(u) => (
         <div className="craps-page">
-          <div className="rail-label" style={{ marginTop: 18 }}>Craps · American · {table?.comeOut ? "COME-OUT" : `POINT ${table?.point}`}</div>
+          <div className="cr-status" aria-live="polite">
+            <div className={`cr-puck ${table?.comeOut ? "off" : "on"}`} aria-label={table?.comeOut ? "Puck off: come-out roll" : `Puck on: point is ${table?.point}`}>
+              <span className="cr-puck-word">{table?.comeOut ? "OFF" : "ON"}</span>
+              {!table?.comeOut && <span className="cr-puck-num">{table?.point}</span>}
+            </div>
+            <div className="cr-status-txt">
+              <b>{table?.comeOut ? "Come-out roll" : `Point is ${table?.point}`}</b>
+              <span className="muted">{table?.comeOut ? "7 or 11 wins the pass line" : `Roll ${table?.point} again before a 7`}</span>
+            </div>
+            <div className="cr-last" aria-label={table?.lastRoll ? `Last roll ${table.lastRoll[0]} and ${table.lastRoll[1]}, total ${table.lastTotal}` : "No roll yet"}>
+              {table?.lastRoll ? (
+                <>
+                  <span className="dice cr-die">{table.lastRoll[0]}</span>
+                  <span className="dice cr-die">{table.lastRoll[1]}</span>
+                  <span className="cr-total">{table.lastTotal}</span>
+                </>
+              ) : <span className="muted cr-noroll">No roll yet</span>}
+            </div>
+          </div>
           {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
-          {table?.lastRoll && (
-            <p style={{ textAlign: "center" }}>
-              <span className="dice">{table.lastRoll[0]}</span>
-              <span className="dice">{table.lastRoll[1]}</span>
-              <span className="muted"> = {table.lastTotal}</span>
-            </p>
-          )}
           {lastPay != null && lastPay > 0 && (
             <OutcomeBanner
               win
@@ -191,15 +204,17 @@ export default function CrapsPage() {
                 </div>
               ))}
             </div>
-            <div className={z(!!table?.field)} style={{ margin: "8px 0" }} onClick={() => bet({ type: "field" })}>
-              Field 2,3,4,9,10,11,12 · 2 pays 2:1 · 12 pays 3:1
+            <div className={`${z(!!table?.field)} cr-field`} onClick={() => bet({ type: "field" })}>
+              <span className="cr-field-name">Field</span>
+              <span className="cr-field-nums">2 · 3 · 4 · 9 · 10 · 11 · 12</span>
+              <span className="cr-field-pay">2 pays 2:1 · 12 pays 3:1</span>
               <BoxChip cents={table?.field || 0} />
             </div>
-            <div className={z(!!table?.come?.length)} style={{ minHeight: 70 }} onClick={() => bet({ type: "come" })}>
+            <div className={`${z(!!table?.come?.length)} cr-come`} onClick={() => bet({ type: "come" })}>
               Come {table?.come?.map((c: any) => `${money(c.amount)}${c.point ? "@"+c.point : ""}`).join(" · ")}
               <BoxChip cents={comeAmt} />
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6, margin: "8px 0" }}>
+            <div className="cr-two">
               <div className={z(!!table?.dontPass)} onClick={() => bet({ type: "dontPass" })}>
                 Don&apos;t pass bar
                 <BoxChip cents={table?.dontPass || 0} />
@@ -213,7 +228,9 @@ export default function CrapsPage() {
               Pass line
               <BoxChip cents={table?.pass || 0} />
             </div>
-            <div className="cr-prop-grid">
+            <details className="cr-more">
+              <summary>More bets{propsCents ? ` · ${money(propsCents)} on` : ""} <span className="muted">· one-roll, hardways, odds</span></summary>
+              <div className="cr-prop-grid">
               <div className="zone" onClick={() => bet({ type: "anySeven" })}>Any 7 4:1<BoxChip cents={table?.anySeven || 0} /></div>
               <div className="zone" onClick={() => bet({ type: "anyCraps" })}>Any craps 7:1<BoxChip cents={table?.anyCraps || 0} /></div>
               <div className="zone" onClick={() => bet({ type: "yo" })}>Yo 11 15:1<BoxChip cents={table?.yo || 0} /></div>
@@ -225,6 +242,7 @@ export default function CrapsPage() {
               <div className="zone" onClick={() => bet({ type: "passOdds" })}>Pass odds<BoxChip cents={table?.passOdds || 0} /></div>
               <div className="zone" onClick={() => bet({ type: "dontPassOdds" })}>Don&apos;t odds<BoxChip cents={table?.dontPassOdds || 0} /></div>
             </div>
+            </details>
           </div>
           <StandingRail youName={u.displayName} youStack={u.balanceCents} />
           {table?.log && <div className="panel log" style={{ marginTop: 12 }}>{table.log.slice().reverse().map((l: string, i: number) => <div key={i}>{l}</div>)}</div>}
