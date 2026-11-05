@@ -68,9 +68,6 @@ function Gate() {
         {sp.get("gate") && <p className="err">Age confirmation is required to enter the floor.</p>}
         {err && <p className="err">{err}</p>}
         <div className="btn-row age-actions">
-          <button type="button" className="btn primary" disabled={busy} onClick={confirm}>
-            {busy ? "Confirming…" : "I am 21 or older — enter"}
-          </button>
           <button type="button" className="btn" onClick={() => setErr("Pit does not admit anyone under 21.")}>
             I am under 21
           </button>

@@ -3201,3 +3201,4 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
 .start-here .felt-thumb{float:right;width:96px;margin:0 0 6px 10px}
 .felt-amt{display:inline-block}
 @media (prefers-reduced-motion:no-preference){.felt-amt{animation:feltPop .35s ease-out}@keyframes feltPop{0%{transform:scale(1.25);color:#f3d27a}100%{transform:none}}}
+.progressive-card .felt-thumb{margin-top:26px}
