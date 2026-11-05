@@ -3328,3 +3328,9 @@ button[data-paused="1"], button[data-paused="1"]:disabled { background: rgba(238
 .marquee-hero .muted { color: #d9e2d6; }
 @media (prefers-reduced-motion: reduce) { .marquee-bulbs { animation: none; } }
 html[data-reduced-motion="1"] .marquee-bulbs { animation: none; }
+/* R29 fixes: keep bot rows on the felt, calm toggle label, roulette link under the dock */
+.pg-table .seat-card-rows.sm .seat-card-row > :not(.seat-row-lbl) + :not(.seat-row-lbl) { margin-left: -30px; }
+.pg-table .seat-card-rows.sm { transform: translateX(-14px); }
+label.pg-rows-toggle { text-transform: none; letter-spacing: 0; font-size: 13px; font-family: inherit; margin: 4px 12px; position: relative; z-index: 2; }
+.rl-dock .paused-why { position: static; display: block; text-align: right; padding: 4px 12px 0; font-size: 12px; }
+.paused-why.inline { display: inline-block; padding: 6px 4px; min-height: 0; }

@@ -429,7 +429,7 @@ export default function RoulettePage() {
                   <button className="btn primary rl-spin" onClick={go} disabled={!bets.length || busy || !!paused} data-paused={paused ? "1" : undefined} aria-describedby="rl-spin-hint">
                     {paused || (busy ? "Spinning…" : "Spin")}
                     <small>{bets.length ? `${money(stake)} bet` : "No bets yet"}</small>
-                  </button>{paused && <a className="paused-why" href="/wallet#time">Why is this paused?</a>}
+                  </button>
                 </div>
                 {bets.length > 0 && (() => { const pv = previewBets(bets); return (
                   <div className="rl-preview" aria-label="Bet preview">
@@ -438,7 +438,7 @@ export default function RoulettePage() {
                     <span>Profit on <b>{pv.netWinPockets}</b> of {pv.pockets} numbers</span>
                   </div>); })()}
                 <p id="rl-spin-hint" className="rl-dock-hint">
-                  {bets.length
+                  {paused ? <a className="paused-why inline" href="/wallet#time">Why is this paused?</a> : bets.length
                     ? `${bets.length} chip${bets.length === 1 ? "" : "s"} placed · tap Spin when ready`
                     : lastStake.length ? "Tap the table to bet, or Repeat your last bets" : "Tap the table to place a chip"}
                 </p>
