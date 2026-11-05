@@ -174,7 +174,13 @@ export default function CrapsPage() {
                   <span className="dice cr-die">{table.lastRoll[1]}</span>
                   <span className="cr-total">{table.lastTotal}</span>
                 </>
-              ) : <span className="muted cr-noroll">No roll yet</span>}
+              ) : (
+                <>
+                  <span className="dice cr-die cr-die-ghost" aria-hidden>–</span>
+                  <span className="dice cr-die cr-die-ghost" aria-hidden>–</span>
+                  <span className="cr-total cr-total-ghost">–</span>
+                </>
+              )}
             </div>
           </div>
           {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
@@ -228,7 +234,7 @@ export default function CrapsPage() {
               Pass line
               <BoxChip cents={table?.pass || 0} />
             </div>
-            <details className="cr-more">
+            <details className="cr-more" onToggle={(e) => { const d = e.currentTarget; if (d.open) requestAnimationFrame(() => d.scrollIntoView({ block: "nearest", behavior: "smooth" })); }}>
               <summary>More bets{propsCents ? ` · ${money(propsCents)} on` : ""} <span className="muted">· one-roll, hardways, odds</span></summary>
               <div className="cr-prop-grid">
               <div className="zone" onClick={() => bet({ type: "anySeven" })}>Any 7 4:1<BoxChip cents={table?.anySeven || 0} /></div>
