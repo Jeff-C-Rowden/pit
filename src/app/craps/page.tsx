@@ -33,7 +33,7 @@ function layoutFromTable(t: any): PatternBet[] {
 }
 
 function BoxChip({ cents }: { cents: number }) {
-  if (!cents) return <div className="muted">$0.00</div>;
+  if (!cents) return null;
   return (
     <div className="chip-on-num" style={{ position: "relative", transform: "none", left: "auto", top: "auto" }}>
       <ChipStack cents={cents} size={30} maxChips={6} />
@@ -183,10 +183,10 @@ export default function CrapsPage() {
             <OutcomeBanner push title="PUSH" subtitle={repeatNote} />
           )}
           <div className="felt-table felt-rect craps-felt">
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: 6 }}>
+            <div className="cr-place-grid">
               {[4,5,6,8,9,10].map((n) => (
                 <div key={n} className={z(!!table?.place?.[String(n)])} onClick={() => bet({ type: "place", number: n })}>
-                  Place {n}
+                  <span className="cr-z-sm">Place</span> <span className="cr-z-big">{n}</span>
                   <BoxChip cents={table?.place?.[String(n)] || 0} />
                 </div>
               ))}
@@ -213,7 +213,7 @@ export default function CrapsPage() {
               Pass line
               <BoxChip cents={table?.pass || 0} />
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginTop: 10 }}>
+            <div className="cr-prop-grid">
               <div className="zone" onClick={() => bet({ type: "anySeven" })}>Any 7 4:1<BoxChip cents={table?.anySeven || 0} /></div>
               <div className="zone" onClick={() => bet({ type: "anyCraps" })}>Any craps 7:1<BoxChip cents={table?.anyCraps || 0} /></div>
               <div className="zone" onClick={() => bet({ type: "yo" })}>Yo 11 15:1<BoxChip cents={table?.yo || 0} /></div>
@@ -229,16 +229,16 @@ export default function CrapsPage() {
           <StandingRail youName={u.displayName} youStack={u.balanceCents} />
           {table?.log && <div className="panel log" style={{ marginTop: 12 }}>{table.log.slice().reverse().map((l: string, i: number) => <div key={i}>{l}</div>)}</div>}
           <ActionDock busy={busy} hint={table?.alwaysRepeat
-            ? "Always last bet is on. Each roll puts the same chips back."
-            : canRepeat
-              ? "Repeat restacks the last round. Always last bet keeps doing that every roll."
-              : "Drop a chip, then Roll. Repeat remembers that round."}>
+            ? "Auto-repeat is on: each roll restacks your chips."
+            : "Pick a chip, tap the felt, then Roll."}>
             <ChipRow amounts={[100, 500, 1000, 2500]} selected={chip} onSelect={setChip} minCents={100} maxCents={500_000} />
-            <button className="btn" disabled={busy || !table?.canUndo} onClick={undo}>Undo</button>
-            <button className="btn" disabled={busy || !canRepeat} onClick={repeat}>Repeat</button>
-            <button className={`btn toggle${table?.alwaysRepeat ? " on" : ""}`} disabled={busy} onClick={toggleAlways}>
-              Always last bet {table?.alwaysRepeat ? "on" : "off"}
-            </button>
+            <div className="cr-tools">
+              <button className="btn" disabled={busy || !table?.canUndo} onClick={undo}>Undo</button>
+              <button className="btn" disabled={busy || !canRepeat} onClick={repeat}>Repeat</button>
+              <button className={`btn toggle${table?.alwaysRepeat ? " on" : ""}`} disabled={busy} onClick={toggleAlways} aria-pressed={!!table?.alwaysRepeat}>
+                Auto-repeat {table?.alwaysRepeat ? "on" : "off"}
+              </button>
+            </div>
             <button className="btn primary hero-act" disabled={busy} onClick={roll}>{busy ? "Rolling…" : "Roll"}</button>
           </ActionDock>
         </div>
