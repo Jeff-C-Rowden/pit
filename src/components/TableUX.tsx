@@ -1,6 +1,10 @@
 "use client";
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { money } from "./useUser";
+import { celebrationLevel, playChip, playPayout, shouldSlidePayout } from "@/lib/feel";
+
+const LOADED_AT = typeof performance !== "undefined" ? performance.now() : 0;
+const settled = () => typeof performance !== "undefined" && performance.now() - LOADED_AT > 1500;
 
 export function ActionDock({ hint, children, busy }: { hint?: string; children: ReactNode; busy?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -34,7 +38,10 @@ export function OutcomeBanner({
   message,
   title,
   subtitle,
+  stakeCents,
 }: {
+  /** What was risked on this result; lets effects scale with real profit. */
+  stakeCents?: number | null;
   win?: boolean;
   push?: boolean;
   amountCents?: number | null;
@@ -45,6 +52,12 @@ export function OutcomeBanner({
   subtitle?: string | null;
 }) {
   const hasAmount = amountCents != null && amountCents !== undefined;
+  const fxTone: HandResultTone = push ? "push" : win ? "win" : "loss";
+  const level = fxTone === "win" ? celebrationLevel(stakeCents, amountCents) : 0;
+  const slide = shouldSlidePayout(fxTone, amountCents);
+  useEffect(() => {
+    if (slide) playPayout(level);
+  }, [slide, level, amountCents]);
   if (!message && !title && !subtitle && !hasAmount && win == null && !push) return null;
 
   const tone: HandResultTone = push ? "push" : win ? "win" : "loss";
@@ -73,12 +86,17 @@ export function OutcomeBanner({
 
   return (
     <div
-      className={`result-banner hand-result ${tone}`}
+      className={`result-banner hand-result ${tone} fx-l${level}`}
       role="status"
       aria-live="polite"
     >
       <div className="result-banner-title">{headline}</div>
       {detail ? <div className="result-banner-sub">{detail}</div> : null}
+      {slide && (
+        <div className="pay-slide" aria-hidden>
+          <ChipStack cents={amountCents || 0} size={24} maxChips={6} showTotal={false} quiet />
+        </div>
+      )}
     </div>
   );
 }
@@ -387,7 +405,10 @@ export function ChipStack({
   maxChips = 10,
   showTotal = true,
   winning = false,
+  quiet = false,
 }: {
+  /** No placement click (pots, payouts). */
+  quiet?: boolean;
   cents: number;
   size?: number;
   maxChips?: number;
@@ -395,6 +416,11 @@ export function ChipStack({
   winning?: boolean;
 }) {
   const chips = useMemo(() => breakIntoChips(cents, maxChips), [cents, maxChips]);
+  const prev = useRef(0);
+  useEffect(() => {
+    if (!quiet && !winning && cents > prev.current && settled()) playChip();
+    prev.current = cents;
+  }, [cents, quiet, winning]);
   if (cents <= 0 || chips.length === 0) return null;
   const lift = Math.max(4, Math.round(size * 0.12));
   const pileH = Math.round(size * 1.1) + (chips.length - 1) * lift;
@@ -404,7 +430,7 @@ export function ChipStack({
         {chips.map((c, i) => (
           <div
             key={`${c}-${i}`}
-            className="chip-stack-unit"
+            className="chip-stack-unit chip-drop"
             style={{ bottom: i * lift, zIndex: i + 1, width: size }}
           >
             <ClayChip cents={c} size={size} />

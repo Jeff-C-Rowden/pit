@@ -1,0 +1,84 @@
+// Tactile feedback: how big a result effect should be, plus soft synthesized sounds.
+// Effects follow the real settled result only. Losses, pushes and wins smaller than the
+// stake never celebrate. Sound is off by default and remembered per device.
+
+export type FeelLevel = 0 | 1 | 2 | 3;
+
+/**
+ * returnCents = total paid back (stake included). stakeCents = what was risked.
+ * 0: no celebration (loss, push, profit below the stake, or stake unknown)
+ * 1: profit at least the stake (even money and up)
+ * 2: profit at least 5x the stake
+ * 3: profit at least 20x the stake
+ */
+export function celebrationLevel(stakeCents: number | null | undefined, returnCents: number | null | undefined): FeelLevel {
+  const stake = Number(stakeCents) || 0;
+  const ret = Number(returnCents) || 0;
+  if (stake <= 0 || ret <= stake) return 0;
+  const profit = ret - stake;
+  if (profit >= stake * 20) return 3;
+  if (profit >= stake * 5) return 2;
+  if (profit >= stake) return 1;
+  return 0;
+}
+
+/** Chips slide to the player whenever real money comes back on a win. */
+export function shouldSlidePayout(tone: "win" | "loss" | "push", returnCents: number | null | undefined): boolean {
+  return tone === "win" && (Number(returnCents) || 0) > 0;
+}
+
+const KEY = "pit.sound";
+export function soundOn(): boolean {
+  try { return typeof window !== "undefined" && window.localStorage.getItem(KEY) === "on"; } catch { return false; }
+}
+export function setSoundOn(on: boolean) {
+  try { window.localStorage.setItem(KEY, on ? "on" : "off"); } catch {}
+  window.dispatchEvent(new Event("pit-sound"));
+}
+export function reducedMotion(): boolean {
+  return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+}
+
+let ctx: AudioContext | null = null;
+function ac(): AudioContext | null {
+  if (!soundOn() || typeof window === "undefined") return null;
+  const C = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!C) return null;
+  ctx = ctx || new C();
+  if (ctx.state === "suspended") void ctx.resume();
+  return ctx;
+}
+
+function tone(c: AudioContext, freq: number, at: number, dur: number, gain: number, type: OscillatorType = "sine") {
+  const o = c.createOscillator(); const g = c.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, c.currentTime + at);
+  g.gain.setValueAtTime(0.0001, c.currentTime + at);
+  g.gain.exponentialRampToValueAtTime(gain, c.currentTime + at + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + at + dur);
+  o.connect(g).connect(c.destination); o.start(c.currentTime + at); o.stop(c.currentTime + at + dur + 0.02);
+}
+
+function clack(c: AudioContext, at: number, gain = 0.12) {
+  // Short filtered noise burst: clay chip on felt.
+  const len = Math.floor(c.sampleRate * 0.035);
+  const buf = c.createBuffer(1, len, c.sampleRate); const d = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, 3);
+  const s = c.createBufferSource(); s.buffer = buf;
+  const f = c.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 2400; f.Q.value = 1.2;
+  const g = c.createGain(); g.gain.value = gain;
+  s.connect(f).connect(g).connect(c.destination); s.start(c.currentTime + at);
+}
+
+/** One chip placed. */
+export function playChip() { const c = ac(); if (c) clack(c, 0); }
+
+/** Chips paid to the player; size follows the level. Never called for losses. */
+export function playPayout(level: FeelLevel) {
+  const c = ac(); if (!c) return;
+  const clacks = [2, 3, 4, 5][level];
+  for (let i = 0; i < clacks; i++) clack(c, i * 0.06, 0.09);
+  if (level >= 1) {
+    const notes = [[660], [660, 880], [660, 880, 1100], [660, 880, 1100, 1320]][level];
+    notes.forEach((f, i) => tone(c, f, 0.12 + i * 0.09, 0.35, 0.05, "triangle"));
+  }
+}

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { api, money, useUser, type User } from "./useUser";
 import { recordRecent } from "@/lib/lobby";
+import { playChip, setSoundOn, soundOn } from "@/lib/feel";
 
 function AnimatedBalance({ cents }: { cents: number }) {
   const prev = useRef<number | null>(null);
@@ -37,6 +38,21 @@ function AnimatedBalance({ cents }: { cents: number }) {
   }, [cents]);
 
   return <strong className={flash}>{money(display)}</strong>;
+}
+
+function SoundToggle() {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    setOn(soundOn());
+    const f = () => setOn(soundOn());
+    window.addEventListener("pit-sound", f);
+    return () => window.removeEventListener("pit-sound", f);
+  }, []);
+  return (
+    <button type="button" className={`nav-sound${on ? " on" : ""}`} aria-pressed={on} onClick={() => { setSoundOn(!on); if (!on) setTimeout(playChip, 30); }}>
+      Sound {on ? "on" : "off"}
+    </button>
+  );
 }
 
 export default function Shell({ children, requireAuth = true }: { children: React.ReactNode | ((u: User) => React.ReactNode); requireAuth?: boolean }) {
@@ -89,6 +105,7 @@ export default function Shell({ children, requireAuth = true }: { children: Reac
           {nav.map(([h, l]) => (
             <Link key={h} href={h} className={path === h || path.startsWith(h + "/") ? "active" : ""}>{l}</Link>
           ))}
+          <SoundToggle />
         </nav>
         <div className="topbar-actions">
           {user && (

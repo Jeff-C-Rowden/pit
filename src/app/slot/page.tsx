@@ -119,6 +119,7 @@ export default function SlotPage() {
               win
               title="YOU WIN"
               amountCents={spin.winCents}
+              stakeCents={coinIn}
               subtitle={`${money(spin.winCents)} added to your stack`}
             />
           )}

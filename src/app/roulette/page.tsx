@@ -5,6 +5,7 @@ import { previewBets } from "@/lib/games/roulettePreview";
 import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
 import { Chip } from "@/components/TableUX";
+import { celebrationLevel, playChip, playPayout } from "@/lib/feel";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 import RouletteCloth, {
@@ -242,6 +243,12 @@ export default function RoulettePage() {
   const spots = showSettled ? [...new Map(lastStake.map((b) => [b.label, b])).values()] : [];
   const paidCount = spots.filter((b) => coveredBy(b).includes(spin!.pocket)).length;
   const tone = !spin ? null : net > 0 ? "win" : net === 0 ? "push" : "loss";
+  const prevStake = useRef(stake);
+  useEffect(() => { if (stake > prevStake.current) playChip(); prevStake.current = stake; }, [stake]);
+  useEffect(() => {
+    if (spin && !spinning && tone === "win") playPayout(celebrationLevel(staked, paid));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spin, spinning]);
   const shownWin = useCountUp(tone === "win" && !spinning ? net : 0, reduced || skipped);
   const displayPocket = spinning ? livePocket : (spin?.pocket ?? livePocket);
   const lastWin = spin && !spinning ? net : null;

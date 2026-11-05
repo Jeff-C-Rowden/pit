@@ -127,6 +127,7 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
               win
               title="YOU WIN"
               amountCents={game.payoutCents}
+              stakeCents={youBet}
               subtitle={`${money(game.payoutCents)} added to your stack`}
             />
           )}

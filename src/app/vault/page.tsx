@@ -256,6 +256,7 @@ export default function VaultPage() {
               win
               title="YOU WIN"
               amountCents={lastWinCents}
+              stakeCents={coinIn}
               subtitle={`${money(lastWinCents)} added to your stack`}
             />
           )}

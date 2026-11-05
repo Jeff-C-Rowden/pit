@@ -118,7 +118,7 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
       <div className="felt-table seated holdem-table">
         {flyPot != null && won && (
           <div className="pot-fly">
-            <ChipStack cents={flyPot} size={32} showTotal={false} winning />
+            <ChipStack cents={flyPot} size={32} showTotal={false} winning quiet />
           </div>
         )}
         <TableHeart>
@@ -128,7 +128,7 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
           {!board.length && <p className="he-felt-blinds" aria-label="Blinds one and two dollars, no limit, house banks">Blinds $1 / $2 · No limit</p>}
           <div className={`he-pot${pot ? " live" : ""}`} aria-live="polite">
             <span className="he-pot-lbl">Pot</span>
-            {pot > 0 && <ChipStack cents={pot} size={28} winning={!!won} showTotal={false} />}
+            {pot > 0 && <ChipStack cents={pot} size={28} winning={!!won} showTotal={false} quiet />}
             <span className="he-pot-amt">{game ? money(game.pot) : "$0.00"}</span>
             <span className="he-pot-street">{game?.street || "Waiting for the deal"}</span>
           </div>
