@@ -73,7 +73,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
   const { occupants, setYouSeat, n } = useTableSeats("paigow", u.displayName, u.balanceCents);
   return (
     <>
-      <div className="hero" style={{ paddingTop: 24 }}>
+      <div className="hero game-hero" style={{ paddingTop: 24 }}>
         <p className="lede">House banks · 5% commission on wins · 6 seats</p>
         <h1 style={{ fontSize: 48 }}>Pai Gow Poker</h1>
       </div>
