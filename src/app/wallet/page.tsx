@@ -23,6 +23,8 @@ export default function WalletPage() {
   const [list, setList] = useState<unknown[]>([]);
   const [status, setStatus] = useState<WalletStatus | null>(null);
   const [busyAmt, setBusyAmt] = useState<number | null>(null);
+  const [confirmWd, setConfirmWd] = useState<number | null>(null);
+  const [wdBusy, setWdBusy] = useState(false);
 
   useEffect(() => {
     api("/api/wallet/withdraw").then((d) => setList(d.withdrawals || [])).catch(() => null);
@@ -58,18 +60,17 @@ export default function WalletPage() {
             </div>
             <p className="muted">Ledger balance · no card · no ACH</p>
           </div>
-          <div className="notice cage-notice">
-            {status ? (
-              <>
-                <strong>{isSandbox ? "Sandbox deposits" : "Partner not connected"}</strong>
-                {" — "}
-                {status.message}
-                {status.adapter && (
-                  <span className="muted"> (adapter: {status.adapter}, mode: {status.mode}{status.live ? ", LIVE" : ""})</span>
-                )}
-              </>
-            ) : (
-              <>Sandbox only. “Add test funds” writes a ledger deposit. There is no Stripe, no card, no ACH.</>
+          <div className="notice cage-notice" role="note">
+            <strong className="cage-notice-title">{isSandbox ? "Practice money only" : "Partner not connected"}</strong>
+            {isSandbox ? (
+              <ul className="cage-notice-list">
+                <li><b>Add test funds</b> gives you free practice chips.</li>
+                <li><b>Withdrawals</b> just set chips aside as pending. No money is ever sent.</li>
+                <li><b>No card, no bank,</b> nothing to pay, ever.</li>
+              </ul>
+            ) : status && <p>{status.message}</p>}
+            {status?.adapter && (
+              <span className="muted cage-notice-meta">Wallet: {status.adapter} · {status.mode}{status.live ? " · LIVE" : ""}</span>
             )}
           </div>
           {msg && <p className="ok cage-flash" role="status">{msg}</p>}
@@ -110,23 +111,39 @@ export default function WalletPage() {
               <input id="wd-amt" inputMode="decimal" autoComplete="off" value={wd} onChange={(e) => setWd(e.target.value)} placeholder="10.00" aria-describedby="wd-help" />
             </div>
             <p id="wd-help" className="muted cage-help">Minimum $10.00. Up to your balance of {money(u.balanceCents)}.</p>
-            <div className="btn-row cage-actions">
-              <button type="button" className="btn" onClick={async () => {
-                setErr(null); setMsg(null);
-                const cents = parseDollarsInput(wd);
-                if (cents == null) { setErr("Enter a dollar amount, like 25 or 25.50."); return; }
-                try {
-                  const d = await api("/api/wallet/withdraw", { method: "POST", body: JSON.stringify({ amountCents: cents }) });
-                  if (d.user) setUser(d.user);
-                  setMsg(`Withdrawal ${money(cents)} is pending (${d.withdrawal.id.slice(0,8)}…).`);
-                  setList((x) => [d.withdrawal, ...x]);
-                } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
-              }}>Request withdrawal</button>
-            </div>
+            {confirmWd == null ? (
+              <div className="btn-row cage-actions">
+                <button type="button" className="btn" onClick={() => {
+                  setErr(null); setMsg(null);
+                  const cents = parseDollarsInput(wd);
+                  if (cents == null) { setErr("Enter a dollar amount, like 25 or 25.50."); return; }
+                  setConfirmWd(cents);
+                }}>Review withdrawal</button>
+              </div>
+            ) : (
+              <div className="cage-confirm" role="alertdialog" aria-labelledby="wd-confirm-t">
+                <p id="wd-confirm-t"><b>Set aside {money(confirmWd)} as pending?</b></p>
+                <p className="muted">It leaves your playable balance now. This is a sandbox: nothing is sent to a bank, and pending requests can&apos;t be cancelled here yet.</p>
+                <div className="btn-row cage-actions">
+                  <button type="button" className="btn" disabled={wdBusy} onClick={() => setConfirmWd(null)}>Back</button>
+                  <button type="button" className="btn primary" disabled={wdBusy} onClick={async () => {
+                    setWdBusy(true);
+                    try {
+                      const d = await api("/api/wallet/withdraw", { method: "POST", body: JSON.stringify({ amountCents: confirmWd }) });
+                      if (d.user) setUser(d.user);
+                      setMsg(`Withdrawal ${money(confirmWd)} is pending (${d.withdrawal.id.slice(0,8)}…).`);
+                      setList((x) => [d.withdrawal, ...x]);
+                      setConfirmWd(null);
+                    } catch (e) { setErr(e instanceof Error ? e.message : "failed"); setConfirmWd(null); }
+                    finally { setWdBusy(false); }
+                  }}>{wdBusy ? "Requesting…" : `Confirm ${money(confirmWd)}`}</button>
+                </div>
+              </div>
+            )}
             {!!list.length && (
-              <ul className="cage-wd-list">
+              <ul className="cage-wd-list" aria-label="Your withdrawal requests">
                 {(list as any[]).map((w) => (
-                  <li key={w.id}><span>{money(w.amount_cents ?? w.amountCents)}</span><span className="muted">{w.status}</span><span className="muted">{w.created_at ? new Date(w.created_at).toLocaleDateString() : "just now"}</span></li>
+                  <li key={w.id}><span>{money(w.amount_cents ?? w.amountCents)}</span><span className={`cage-wd-status st-${w.status}`}>{w.status}</span><span className="muted">{w.created_at ? new Date(w.created_at).toLocaleDateString() : "just now"}</span></li>
                 ))}
               </ul>
             )}
