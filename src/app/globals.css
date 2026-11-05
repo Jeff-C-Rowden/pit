@@ -1320,56 +1320,6 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 .rl-last9-pip.green { background: radial-gradient(circle at 35% 30%, #2aba62, #0f7a3e 55%, #085828); }
 .rl-last9-pip.newest { box-shadow: 0 0 0 2px #e8d5a3, 0 0 12px rgba(201,162,39,.45); }
 
-.rl-stats {
-  width: min(400px, 100%);
-  background: linear-gradient(180deg, rgba(12,16,14,.88), rgba(6,10,8,.94));
-  border: 1px solid rgba(201,162,39,.34);
-  padding: 12px 14px 14px;
-  border-radius: 10px;
-  box-shadow: inset 0 1px 0 rgba(232,213,163,.08);
-}
-.rl-stats-h {
-  font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
-  color: var(--gold); margin-bottom: 10px; text-align: center;
-}
-.rl-stats-colors {
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
-  margin-bottom: 10px;
-}
-.rl-stat-pill {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 6px 4px;
-  border-radius: 8px;
-  border: 1px solid rgba(232,213,163,.18);
-}
-.rl-stat-pill em {
-  font-style: normal; font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--ivory-dim);
-}
-.rl-stat-pill strong {
-  font-size: 16px; font-variant-numeric: tabular-nums; color: var(--ivory);
-}
-.rl-stat-pill.red { background: rgba(179,27,36,.28); }
-.rl-stat-pill.black { background: rgba(0,0,0,.35); }
-.rl-stat-pill.green { background: rgba(15,122,62,.28); }
-.rl-stats-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px;
-}
-.rl-stats-row {
-  display: flex; justify-content: space-between; gap: 10px;
-  font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
-  color: var(--ivory-dim); padding: 2px 0;
-}
-.rl-stats-row strong { color: var(--ivory); font-variant-numeric: tabular-nums; }
-.rl-hot {
-  display: flex; align-items: center; gap: 6px;
-  margin-top: 12px; justify-content: center; flex-wrap: wrap;
-}
-.rl-hot-lab {
-  font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--gold);
-}
-.rl-hot .rl-last9-pip { min-width: 30px; padding: 0 6px; min-height: 28px; font-size: 12px; }
-
 .rl-bots {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
   width: min(400px, 100%);
@@ -2281,7 +2231,7 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 .rl-ball-layer { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 4; pointer-events: none; }
 
 /* Phone: stand the roulette layout on end so it fits without sideways scroll. */
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .rl-cloth { overflow-x: visible; }
   .rl-grid {
     min-width: 0;
@@ -2328,7 +2278,7 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
   .rl-spot.street { left: 0; bottom: auto; top: 50%; transform: translate(-50%, -50%); width: 32px; height: 34px; }
   .rl-spot.sixline { right: auto; left: 0; bottom: 0; transform: translate(-50%, 50%); width: 32px; height: 32px; z-index: 10; }
 }
-@media (max-width: 600px) { .rl-bowl { width: min(420px, 100%); } }
+@media (max-width: 700px) { .rl-bowl { width: min(420px, 100%); } }
 
 /* —— Roulette UX pass: status strip, hint, result, compact dock —— */
 .pit-shell:has(.rl-dock) { padding-bottom: calc(200px + env(safe-area-inset-bottom, 0px)); }
@@ -2505,7 +2455,7 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 /* 0-00 (five-number) spot removed: zeros fill its space */
 .rl-cell.zero00 { grid-column: 1 / 3; }
 .rl-cell.zero0 { grid-column: 1 / 3; }
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .rl-grid { grid-template-rows: 52px 0px repeat(12, 42px) 40px; }
   .rl-cell.zero0 { grid-column: 3 / 5; grid-row: 1 / 3; }
   .rl-cell.zero00 { grid-column: 5; grid-row: 1 / 3; }
@@ -2513,17 +2463,17 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 /* ---- Roulette round 4: chips never hide the number you bet on ---- */
 .rl-cloth .rl-cell.n:has(.chip-on-num), .rl-cloth .rl-cell.green:has(.chip-on-num) { place-items: center start; padding-left: 12px; }
 .rl-cloth .rl-cell.n > .chip-on-num, .rl-cloth .rl-cell.green > .chip-on-num { left: auto; right: 4px; top: 50%; transform: translateY(-50%) scale(.82); transform-origin: right center; }
-@media (min-width: 601px) {
+@media (min-width: 701px) {
   .rl-cloth .rl-cell.n:has(.chip-on-num) { place-items: start center; padding: 5px 0 0; }
   .rl-cloth .rl-cell.n > .chip-on-num { right: auto; left: 50%; top: auto; bottom: 1px; transform: translateX(-50%) scale(.7); transform-origin: bottom center; }
 }
-@media (min-width: 601px) {
+@media (min-width: 701px) {
   .rl-cloth .rl-cell.outside:has(.chip-on-num) { padding-bottom: 0; padding-right: 44px; }
   .rl-cloth .rl-cell.outside .chip-on-num { inset: 50% 4px auto auto; margin: 0; transform: translateY(-50%) scale(.72); transform-origin: right center; }
 }
 /* ---- Roulette round 5 (phone): straight-up chip sits top-right as a compact row,
    clear of the split/corner tap targets on the left and bottom edges ---- */
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .rl-cloth .rl-cell.n:has(.chip-on-num) { place-items: center start; padding-left: 20px; }
   .rl-cloth .rl-cell.n > .chip-on-num {
     left: auto; right: 3px; top: 3px; bottom: auto; transform: none;
@@ -2533,15 +2483,15 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
   .rl-cloth .rl-cell.n > .chip-on-num .rl-bet-amt { position: static; transform: none; font-size: 10px; padding: 1px 4px; }
 }
 @keyframes rlPopPlain { from { opacity: 0; scale: .6; } to { opacity: 1; scale: 1; } }
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .rl-cloth .rl-cell.n > .chip-on-num { animation: rlPopPlain .18s ease-out; transform: none !important; }
 }
 @media (prefers-reduced-motion: reduce) { .rl-cloth .rl-cell.n > .chip-on-num { animation: none; } }
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .rl-cloth .rl-cell.n > .chip-on-num > :first-child { transform: none; margin-left: 0; zoom: .62; }
 }
 .rl-bet-amt .amt-short { display: none; }
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .rl-cloth .rl-cell.n:has(.chip-on-num) { padding-left: 10px; }
   .rl-cloth .rl-cell.n > .chip-on-num .amt-full { display: none; }
   .rl-cloth .rl-cell.n > .chip-on-num .amt-short { display: inline; }
@@ -2549,7 +2499,7 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 /* round 6 */
 .rl-custom-btn { font-size: 11px; font-weight: 700; letter-spacing: .02em; }
 .rl-custom-btn span { font-size: 8px; }
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .rl-cloth .rl-cell.zero > .chip-on-num, .rl-cloth .rl-cell[class*="zero"] > .chip-on-num { right: 4px; top: 50%; translate: 0 -50%; flex-direction: row-reverse; display: flex; align-items: center; gap: 2px; }
   .rl-cloth .rl-cell[class*="zero"] > .chip-on-num > :first-child { zoom: .62; }
   .rl-cloth .rl-cell[class*="zero"] > .chip-on-num .rl-bet-amt { position: static; transform: none; font-size: 10px; padding: 1px 4px; }
@@ -2562,10 +2512,10 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 .rl-hotcold .rl-hpip { display:inline-flex; align-items:center; gap:2px; padding:0 6px; border-radius:6px; font-weight:700; color:#fff; background:#2a2a2a; border:1px solid #ffffff22; }
 .rl-hotcold .rl-hpip.red { background:#b3242b; } .rl-hotcold .rl-hpip.green { background:#147a45; }
 .rl-hotcold .rl-hpip sub { font-size:9px; opacity:.75; vertical-align:baseline; }
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .rl-cloth .rl-cell[class*="zero"]:has(.chip-on-num) { place-items: center start; padding-left: 12px; }
 }
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .rl-cloth .rl-cell[class*="zero"]:has(.chip-on-num) { place-items: start start; padding: 4px 0 0 10px; font-size: 17px; }
   .rl-cloth .rl-cell[class*="zero"] > .chip-on-num { top: auto; bottom: 3px; translate: none; }
 }
@@ -2636,4 +2586,32 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 .rl-preview { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px 12px; margin: 6px 0 0; font-size: 12px; color: #cfc4ad; font-variant-numeric: tabular-nums; }
 .rl-preview b { color: #f1e2b0; font-weight: 600; }
 .rl-preview span + span::before { content: "·"; margin-right: 12px; opacity: .5; }
-@media (max-width: 600px) { .rl-preview { font-size: 11.5px; gap: 2px 8px; } .rl-preview span + span::before { margin-right: 8px; } }
+@media (max-width: 700px) { .rl-preview { font-size: 11.5px; gap: 2px 8px; } .rl-preview span + span::before { margin-right: 8px; } }
+
+/* ---- Roulette round 10: the betting table always fits its column ----
+   No sideways page scroll and no hidden internal scroll on any width; every spot stays on screen. */
+.rl-cloth { overflow-x: visible; }
+.rl-grid { min-width: 0; width: 100%; box-sizing: border-box; }
+@media (min-width: 701px) {
+  .rl-grid { grid-template-columns: minmax(40px, 64px) minmax(12px, 22px) repeat(12, minmax(0, 1fr)) minmax(40px, 56px); }
+}
+@media (min-width: 1100px) {
+  .rl-grid { grid-template-columns: minmax(48px, 72px) minmax(14px, 24px) repeat(12, minmax(0, 1fr)) minmax(44px, 62px); }
+}
+@media (max-width: 1023px) {
+  .rl-stage { grid-template-columns: minmax(0, 1fr); padding: 16px 12px 18px; border-width: 12px; }
+}
+@media (min-width: 1024px) {
+  .rl-stage { grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); }
+}
+/* Chip dock fits a 320–400px phone: chips share the row instead of pushing Custom off-screen. */
+@media (max-width: 400px) {
+  .rl-dock-chips { gap: 2px; }
+  .rl-dock-lab { min-width: 40px; }
+  .rl-dock-chips .clay-chip-btn { min-width: 0; flex: 1 1 0; }
+  .rl-dock-chips .clay-chip-btn .clay-face { width: 40px !important; height: auto !important; }
+  .rl-custom-btn { flex: 0 0 auto; min-width: 44px; min-height: 44px; }
+}
+@media (max-width: 340px) {
+  .rl-dock-chips .clay-chip-btn .clay-face { width: 34px !important; }
+}

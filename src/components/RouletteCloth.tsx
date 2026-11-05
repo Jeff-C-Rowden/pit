@@ -1,7 +1,7 @@
 "use client";
 import { shouldSwallowClick } from "@/lib/tapGuard";
 import type React from "react";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ChipStack } from "./TableUX";
 import { SeatAvatar } from "./Seating";
 import { money } from "./useUser";
@@ -68,75 +68,6 @@ function LastNine({ pockets }: { pockets: string[] }) {
         );
       })}
     </div>
-  );
-}
-
-export function tallySession(pockets: string[]) {
-  const dozens = [0, 0, 0];
-  let red = 0, black = 0, green = 0, even = 0, odd = 0, low = 0, high = 0;
-  const freq = new Map<string, { n: number; recency: number }>();
-  pockets.forEach((p, i) => {
-    const prev = freq.get(p);
-    freq.set(p, { n: (prev?.n || 0) + 1, recency: prev ? prev.recency : i });
-    if (p === "0" || p === "00") {
-      green += 1;
-      return;
-    }
-    const n = Number(p);
-    if (n >= 1 && n <= 12) dozens[0]! += 1;
-    else if (n <= 24) dozens[1]! += 1;
-    else dozens[2]! += 1;
-    const c = pocketColor(p);
-    if (c === "red") red += 1;
-    else if (c === "black") black += 1;
-    if (n % 2 === 0) even += 1;
-    else odd += 1;
-    if (n <= 18) low += 1;
-    else high += 1;
-  });
-  const hot = [...freq.entries()]
-    .sort((a, b) => b[1].n - a[1].n || a[1].recency - b[1].recency)
-    .slice(0, 5)
-    .map(([p, v]) => ({ pocket: p, hits: v.n }));
-  return { spins: pockets.length, dozens, red, black, green, even, odd, low, high, hot };
-}
-
-export function RouletteStats({ pockets }: { pockets: string[] }) {
-  const s = useMemo(() => tallySession(pockets), [pockets]);
-  return (
-    <aside className="rl-stats" aria-label="Session statistics from last numbers">
-      <div className="rl-stats-h">Session · {s.spins} spin{s.spins === 1 ? "" : "s"}</div>
-      <div className="rl-stats-colors">
-        <span className="rl-stat-pill red"><em>Red</em><strong>{s.red}</strong></span>
-        <span className="rl-stat-pill black"><em>Black</em><strong>{s.black}</strong></span>
-        <span className="rl-stat-pill green"><em>0 / 00</em><strong>{s.green}</strong></span>
-      </div>
-      <div className="rl-stats-grid">
-        <div>
-          <div className="rl-stats-row"><span>1st 12</span><strong>{s.dozens[0]}</strong></div>
-          <div className="rl-stats-row"><span>2nd 12</span><strong>{s.dozens[1]}</strong></div>
-          <div className="rl-stats-row"><span>3rd 12</span><strong>{s.dozens[2]}</strong></div>
-        </div>
-        <div>
-          <div className="rl-stats-row"><span>Even</span><strong>{s.even}</strong></div>
-          <div className="rl-stats-row"><span>Odd</span><strong>{s.odd}</strong></div>
-          <div className="rl-stats-row"><span>1–18</span><strong>{s.low}</strong></div>
-          <div className="rl-stats-row"><span>19–36</span><strong>{s.high}</strong></div>
-        </div>
-      </div>
-      <div className="rl-hot">
-        <span className="rl-hot-lab">Hottest</span>
-        {s.hot.length === 0 ? (
-          <span className="muted">—</span>
-        ) : (
-          s.hot.map((h) => (
-            <span key={h.pocket} className={`rl-last9-pip chip ${pocketColor(h.pocket)}`} title={`${h.hits} hit${h.hits === 1 ? "" : "s"}`}>
-              {h.pocket}
-            </span>
-          ))
-        )}
-      </div>
-    </aside>
   );
 }
 
