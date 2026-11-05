@@ -3334,3 +3334,4 @@ html[data-reduced-motion="1"] .marquee-bulbs { animation: none; }
 label.pg-rows-toggle { text-transform: none; letter-spacing: 0; font-size: 13px; font-family: inherit; margin: 4px 12px; position: relative; z-index: 2; }
 .rl-dock .paused-why { position: static; display: block; text-align: right; padding: 4px 12px 0; font-size: 12px; }
 .paused-why.inline { display: inline-block; padding: 6px 4px; min-height: 0; }
+label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spacing: 0; font-family: inherit; font-size: 14px; color: #eef3f9; } label.remind-toggle small { font-size: 12px; color: #aeb9c6; text-transform: none; letter-spacing: 0; }
