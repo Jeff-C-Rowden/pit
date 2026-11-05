@@ -2,10 +2,10 @@
 
 import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { SYMBOLS, type Symbol } from "@/lib/games/slot";
+import { slotBlurCycleMs, slotStopMs } from "@/lib/slotFeel";
 
 const VISIBLE = 3;
 const FILLER_LEN = 28;
-const STOP_MS = [2400, 3000, 3600, 4200, 4800] as const;
 
 /** Tile height must match CSS `.reel` / `.sym` — keep JS spin math in sync. */
 function useSymHeight() {
@@ -289,10 +289,11 @@ type ReelProps = {
   winRows: Set<number>;
   spinGen: number;
   stopAllTick: number;
+  turbo: boolean;
   onStopped: (index: number) => void;
 };
 
-function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, onStopped }: ReelProps) {
+function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, turbo, onStopped }: ReelProps) {
   const SYM_H = useContext(SymHCtx);
   const [strip, setStrip] = useState<Symbol[]>(() => ["BAR", "CHIP", "LAMP"]);
   const [offset, setOffset] = useState(0);
@@ -353,10 +354,10 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
     cycleRef.current = setInterval(() => {
       setStrip(fillerStrip(FILLER_LEN));
       setOffset(-(Math.floor(Math.random() * 5) * SYM_H));
-    }, 85);
+    }, slotBlurCycleMs(turbo));
 
     return clearCycle;
-  }, [spinning, spinGen, SYM_H]);
+  }, [spinning, spinGen, SYM_H, turbo]);
 
   // Stop-all / Stop button: same path as tap-to-stop (queue until grid, then snap).
   // Only react to stopAllTick changes — do not re-fire on spinGen or a leftover tick would
@@ -388,7 +389,7 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
     setTransitionMs(0);
 
     const target = -((next.length - VISIBLE) * SYM_H);
-    const duration = STOP_MS[index] ?? 4800;
+    const duration = slotStopMs(index, turbo);
 
     let raf2 = 0;
     const raf1 = requestAnimationFrame(() => {
@@ -409,7 +410,7 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
     };
     // earlyTick re-runs so a mid-anim tap can snap immediately
     // eslint-disable-next-line react-hooks/exhaustive-deps -- markLanded closes over spinGen/index
-  }, [spinning, final, index, spinGen, SYM_H, earlyTick]);
+  }, [spinning, final, index, spinGen, SYM_H, earlyTick, turbo]);
 
   const interactive = spinning && !landed;
 
@@ -497,8 +498,10 @@ const SlotMachine = forwardRef<
     glow?: number;
     /** Animate the lights (Sound & feel on and no reduced motion). Otherwise they light steadily. */
     glowLive?: boolean;
+    /** Shorten reel settle times; outcomes still come from the server. */
+    turbo?: boolean;
   }
->(function SlotMachine({ grid, spinning, winCells, onSpinComplete, glow = 0, glowLive = false }, ref) {
+>(function SlotMachine({ grid, spinning, winCells, onSpinComplete, glow = 0, glowLive = false, turbo = false }, ref) {
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
   const [settled, setSettled] = useState(true);
@@ -586,6 +589,7 @@ const SlotMachine = forwardRef<
                   winRows={winByReel[r]!}
                   spinGen={spinGen}
                   stopAllTick={stopAllTick}
+                  turbo={turbo}
                   onStopped={onStopped}
                 />
               );

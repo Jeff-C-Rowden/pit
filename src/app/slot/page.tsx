@@ -7,6 +7,7 @@ import { ActionDock, ChipRow, OutcomeBanner, FirstVisitTip, useClearErrOnBalance
 import { api, money, useUser } from "@/components/useUser";
 import { PAYLINES, type Symbol } from "@/lib/games/slot";
 import { slotGlowTier, soundOn, reducedMotion } from "@/lib/feel";
+import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 
 type LineWin = { line: number; symbol: Symbol | null; count: number; pay: number; winCents: number };
 
@@ -42,11 +43,31 @@ export default function SlotPage() {
   const [showOutcome, setShowOutcome] = useState(false);
   const machineRef = useRef<SlotMachineHandle>(null);
   const [feelLive, setFeelLive] = useState(false);
+  const [turbo, setTurbo] = useState(false);
+  const [reduced, setReduced] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
     const f = () => setFeelLive(soundOn() && !reducedMotion());
     f(); window.addEventListener("pit-sound", f);
     return () => window.removeEventListener("pit-sound", f);
   }, []);
+  useEffect(() => {
+    try { setTurbo(localStorage.getItem(SLOT_TURBO_KEY) === "1"); } catch { /* ignore */ }
+    const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
+    if (mq) {
+      setReduced(mq.matches);
+      const onChange = (e: MediaQueryListEvent) => setReduced(e.matches);
+      mq.addEventListener?.("change", onChange);
+      setHydrated(true);
+      return () => mq.removeEventListener?.("change", onChange);
+    }
+    setHydrated(true);
+  }, []);
+  useEffect(() => {
+    if (!hydrated) return;
+    try { localStorage.setItem(SLOT_TURBO_KEY, turbo ? "1" : "0"); } catch { /* ignore */ }
+  }, [turbo, hydrated]);
+  const turboOn = slotTurboEffective(turbo, reduced);
 
   useEffect(() => {
     api("/api/games/slot").then(setInfo).catch((e) => setErr(e.message));
@@ -116,6 +137,7 @@ export default function SlotPage() {
               onSpinComplete={onSpinComplete}
               glow={showOutcome && spin ? slotGlowTier(coinIn, spin.winCents) : 0}
               glowLive={feelLive}
+              turbo={turboOn}
             />
           </div>
 
@@ -176,6 +198,14 @@ export default function SlotPage() {
               <p className="muted">{info.rtpPublished}</p>
             </div>
           )}
+
+          <div className="rl-tools">
+            <label className="rl-toggle">
+              <input type="checkbox" checked={turboOn} onChange={(e) => setTurbo(e.target.checked)} disabled={reduced} />
+              {" "}Turbo spin
+            </label>
+            {reduced && <span className="muted">Reduced motion: faster reel settles</span>}
+          </div>
 
           <ActionDock hint={spinning ? "Stop · or tap a reel · reels in motion…" : "Pick a coin size, then Spin."} busy={busy || spinning}>
             <ChipRow

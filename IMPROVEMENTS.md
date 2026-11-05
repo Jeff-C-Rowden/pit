@@ -16,7 +16,9 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 10 | Visuals | PWA manifest + install icon + splash so the demo feels app-like on phones. | |
 | 11 | Onboarding | Guest "try one spin" demo mode before signup with no ledger writes. | |
 
-## NEXT (top): Research #3 remainder — slot turbo/skip (Sound & feel mute already in Shell; honest win-size glow now on Gilded Track + Canopy Spire). Then backlog item 2 (game-card art) / research #5 hold-and-win.
+## NEXT (top): Backlog item 2 — game-card art (original SVG illustrations per table). Then research #5 hold-and-win / stacking multipliers / cascade bonus.
+
+## Shipped 2026-11-05: Slot Turbo spin on Gilded Track + Canopy Spire (research priority #3 remainder). Shared `slotFeel` stop timings (~40% of normal, still staggered); `pit-slot-turbo` localStorage (off by default); prefers-reduced-motion forces turbo settles; Spin→Stop / per-reel tap-to-stop unchanged. Outcomes still server-side after the spin request. Tests: tests/slotFeel.test.ts.
 
 ## Shipped 2026-11-05: Canopy Spire honest win-size cabinet glow (research priority #3 slice). VaultSpireMachine takes glow / glowLive like Gilded Track; lights only after reels settle via slotGlowTier(coinIn, server winCents); never on spin, never when return ≤ bet (tier 0); glow-t1…glow-t4 reuse shared .slot-cabinet CSS + slot-win-halo. Tests: tests/r30.test.ts Canopy suite.
 
@@ -29,7 +31,7 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 ## Player research priorities (from /workspace/pit-player-research.md, 2026-11-04) — rank these first
 1. Live Canopy Spire jackpot meter in lobby + real last-won history — SHIPPED 2026-11-05
 2. Daily free sandbox-chip claim (once/day, no playthrough, no popups) — SHIPPED 2026-11-05
-3. Win animations scaled to real win size; sound + mute; turbo/skip — PARTIAL 2026-11-05 (glow on both cabinets; sound/mute in Shell; turbo/skip NEXT)
+3. Win animations scaled to real win size; sound + mute; turbo/skip — SHIPPED 2026-11-05 (glow on both cabinets; sound/mute in Shell; Turbo spin on Gilded Track + Canopy Spire)
 4. Popup-free lobby with search + recently played — SHIPPED 2026-11-04 (floor search box + last-3 recently played chips, localStorage only)
 5. Hold & win / stacking multipliers / cascade bonus with visible odds; bonus resumes after refresh
 Avoid: popup spam, fake or near-miss wins, hourly pressure timers, bot tournaments.

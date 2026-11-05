@@ -14,10 +14,10 @@ import {
   type ReactNode,
 } from "react";
 import { VS_SYMBOLS, type VsSymbol } from "@/lib/games/slotProgressive";
+import { slotBlurCycleMs, slotStopMs } from "@/lib/slotFeel";
 
 const VISIBLE = 3;
 const FILLER_LEN = 28;
-const STOP_MS = [2400, 3000, 3600, 4200, 4800] as const;
 
 function useSymHeight() {
   const [h, setH] = useState(92);
@@ -294,10 +294,11 @@ type ReelProps = {
   winRows: Set<number>;
   spinGen: number;
   stopAllTick: number;
+  turbo: boolean;
   onStopped: (index: number) => void;
 };
 
-function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, onStopped }: ReelProps) {
+function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, turbo, onStopped }: ReelProps) {
   const SYM_H = useContext(SymHCtx);
   const [strip, setStrip] = useState<VsSymbol[]>(() => ["VINE", "COCONUT", "BANANA"]);
   const [offset, setOffset] = useState(0);
@@ -357,9 +358,9 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
     cycleRef.current = setInterval(() => {
       setStrip(fillerStrip(FILLER_LEN));
       setOffset(-(Math.floor(Math.random() * 5) * SYM_H));
-    }, 85);
+    }, slotBlurCycleMs(turbo));
     return clearCycle;
-  }, [spinning, spinGen, SYM_H]);
+  }, [spinning, spinGen, SYM_H, turbo]);
 
   // Stop-all / Stop button: same path as tap-to-stop (queue until grid, then snap).
   // Only react to stopAllTick changes — do not re-fire on spinGen.
@@ -389,7 +390,7 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
     setBlur(true);
     setTransitionMs(0);
     const target = -((next.length - VISIBLE) * SYM_H);
-    const duration = STOP_MS[index] ?? 4800;
+    const duration = slotStopMs(index, turbo);
     let raf2 = 0;
     const raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => {
@@ -407,7 +408,7 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
     };
     // earlyTick re-runs this effect so a mid-anim tap can snap immediately
     // eslint-disable-next-line react-hooks/exhaustive-deps -- markLanded closes over spinGen/index
-  }, [spinning, final, index, spinGen, SYM_H, earlyTick]);
+  }, [spinning, final, index, spinGen, SYM_H, earlyTick, turbo]);
 
   const interactive = spinning && !landed;
 
@@ -504,8 +505,10 @@ const VaultSpireMachine = forwardRef<
     glow?: number;
     /** Animate the lights (Sound & feel on and no reduced motion). Otherwise they light steadily. */
     glowLive?: boolean;
+    /** Shorten reel settle times; outcomes still come from the server. */
+    turbo?: boolean;
   }
->(function VaultSpireMachine({ grid, spinning, winCells, onSpinComplete, theme, glow = 0, glowLive = false }, ref) {
+>(function VaultSpireMachine({ grid, spinning, winCells, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false }, ref) {
   const t = { ...DEFAULT_THEME, ...theme, kickLabels: theme?.kickLabels ?? DEFAULT_THEME.kickLabels };
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
@@ -605,6 +608,7 @@ const VaultSpireMachine = forwardRef<
                     winRows={winByReel[r]!}
                     spinGen={spinGen}
                     stopAllTick={stopAllTick}
+                    turbo={turbo}
                     onStopped={onStopped}
                   />
                 );
