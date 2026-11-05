@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
+import { previewBets } from "@/lib/games/roulettePreview";
 import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
 import { Chip } from "@/components/TableUX";
@@ -386,6 +387,12 @@ export default function RoulettePage() {
                     <small>{bets.length ? `${money(stake)} bet` : "No bets yet"}</small>
                   </button>
                 </div>
+                {bets.length > 0 && (() => { const pv = previewBets(bets); return (
+                  <div className="rl-preview" aria-label="Bet preview">
+                    <span><b>{money(pv.stakeCents)}</b> on table</span>
+                    <span>Best case <b>{money(pv.bestReturnCents)}</b> back</span>
+                    <span>Profit on <b>{pv.netWinPockets}</b> of {pv.pockets} numbers</span>
+                  </div>); })()}
                 <p id="rl-spin-hint" className="rl-dock-hint">
                   {bets.length
                     ? `${bets.length} chip${bets.length === 1 ? "" : "s"} placed · tap Spin when ready`
