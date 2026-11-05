@@ -52,8 +52,8 @@ export default function PaiGowPage() {
   const won = game?.phase === "settled" && pay > (game?.betCents || 0);
   const push = game?.phase === "settled" && pay > 0 && pay <= (game?.betCents || pay);
   const lost = game?.phase === "settled" && pay === 0;
-  let hint = "Pick a bet, then Deal. Click an empty chair to sit.";
-  if (game?.phase === "set") hint = "Set high (5) and low (2), or play the house way.";
+  let hint = "Pick a chip, then Deal. Tap an empty chair to move.";
+  if (game?.phase === "set") hint = "Set high 5 and low 2, or tap House way.";
   else if (game?.phase === "settled") hint = "Hand is over. Deal the next one when you are ready.";
 
   return (
@@ -73,7 +73,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
   const { occupants, setYouSeat, n } = useTableSeats("paigow", u.displayName, u.balanceCents);
   return (
     <>
-      <div className="hero game-hero" style={{ paddingTop: 24 }}>
+      <div className="hero game-hero pg-hero">
         <p className="lede">House banks · 5% commission on wins · 6 seats</p>
         <h1 style={{ fontSize: 48 }}>Pai Gow Poker</h1>
       </div>

@@ -43,8 +43,8 @@ export default function HoldemPage() {
   const pot = game?.pot || 0;
   const raising = !!(game && game.currentBet);
 
-  let hint = "Sit anywhere empty. Post the blinds, then play the hand.";
-  if (live && game.toAct === "player") hint = "Your action — Fold, Check/Call, or Bet/Raise stay in the same slots.";
+  let hint = "Deal posts the blinds. Tap an empty chair to move.";
+  if (live && game.toAct === "player") hint = "Your turn: fold, call or raise.";
   else if (live && game.toAct === "house") hint = "House to act…";
   else if (game && !live) hint = "Hand is over. Next hand when you are ready.";
 

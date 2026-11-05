@@ -40,7 +40,7 @@ export default function BlackjackPage() {
   const isPush = result.includes("push") && !result.includes("win") && !result.includes("blackjack");
   const isWin = game?.phase === "settled" && (game.payoutCents || 0) > 0 && !isPush;
   const isLoss = game?.phase === "settled" && !isWin && !isPush && result !== "hand closed";
-  let hint = "Pick a bet, then Deal. Click an empty chair to sit.";
+  let hint = "Pick a chip, then Deal. Tap an empty chair to move.";
   if (game?.phase === "insurance") hint = "Dealer shows an Ace — insurance?";
   else if (game?.phase === "play") hint = "Hit or Stand. Double and split when offered.";
   else if (game?.phase === "settled") hint = "Hand is over. Deal the next one when you are ready.";

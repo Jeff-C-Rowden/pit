@@ -2774,3 +2774,64 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
 }
 @media (max-width: 640px) { .bj-table.felt-rect.felt-table.seated { min-height: 390px; } }
 .bj-table:has(.bj-felt-rules) .felt-wordmark { display: none; }
+
+/* r12-1: Pai Gow — more air between the bottom seat and the betting bar */
+.pg-hero { padding-top: 24px; }
+@media (max-width: 640px) {
+  .pit-shell .pg-hero { padding-top: 6px !important; padding-bottom: 0 !important; }
+  .pit-shell .pg-hero p.lede { font-size: 10px; letter-spacing: .12em; }
+  .bj-table.felt-rect.felt-table.seated { min-height: 385px; }
+}
+
+/* r12-2: your own marked bet spot (blackjack, Pai Gow) */
+.seat-bet { position: relative; }
+.bet-spot {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 2px dashed rgba(230, 196, 110, .7);
+  box-shadow: inset 0 0 0 3px rgba(0,0,0,.18), 0 0 10px rgba(230,196,110,.18);
+  display: grid; place-items: center; pointer-events: none; z-index: 0;
+}
+.bet-spot.filled { border-style: solid; border-color: rgba(230,196,110,.55); }
+.bet-spot-lbl { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: rgba(230,196,110,.85); font-weight: 600; }
+.seat-bet > :not(.bet-spot) { position: relative; z-index: 1; }
+
+/* r12-2b: dock hints never wrap into a ragged second line on phones */
+@media (max-width: 640px) {
+  .action-dock .table-hint { font-size: 11px; letter-spacing: .06em; text-wrap: balance; }
+}
+
+/* r12-gt: Gilded Track custom box fits "0.00" */
+@media (max-width: 640px) {
+  .slot-page .action-dock .custom-wager-label { font-size: 8px; letter-spacing: .08em; margin-right: 2px; }
+  .slot-page .action-dock .custom-wager { padding-left: 6px !important; padding-right: 4px !important; }
+  .slot-page .action-dock .custom-wager-input { width: 52px !important; min-width: 52px; padding: 0 4px !important; text-align: right; font-size: 14px !important; }
+}
+
+/* r12-4: Craps on phone */
+.cr-place-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.cr-prop-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 10px; }
+.cr-z-big { font-size: 1.25em; font-weight: 700; }
+.cr-tools { display: flex; gap: 6px; width: 100%; }
+.cr-tools .btn { flex: 1 1 0; min-width: 0; padding-left: 6px; padding-right: 6px; white-space: nowrap; }
+@media (max-width: 640px) {
+  .craps-felt { padding: 10px !important; }
+  .cr-place-grid { grid-template-columns: repeat(3, 1fr); }
+  .cr-place-grid .zone { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 6px 2px; min-height: 52px; }
+  .cr-place-grid .cr-z-sm { font-size: 9px; letter-spacing: .14em; opacity: .8; }
+  .cr-prop-grid { grid-template-columns: repeat(3, 1fr); }
+  .craps-felt .zone { font-size: 11px; padding: 8px 4px; min-height: 44px; overflow-wrap: anywhere; }
+  .cr-tools .btn { font-size: 10px; height: 40px; letter-spacing: .06em; }
+  .cr-tools .btn.toggle { flex-grow: 1.5; }
+}
+
+/* r12-5: cage money input */
+.cage-money-input { display: flex; align-items: center; gap: 0; border: 1px solid rgba(230,196,110,.35); border-radius: 6px; background: rgba(0,0,0,.35); }
+.cage-money-input > span { padding: 0 4px 0 12px; color: var(--gold, #e6c46e); font-weight: 600; }
+.cage-money-input input { border: 0 !important; background: transparent !important; flex: 1; min-width: 0; outline: none; }
+.cage-money-input:focus-within { border-color: var(--gold, #e6c46e); }
+.cage-wd-list { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 6px; }
+.cage-wd-list li { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; padding: 8px 10px; border: 1px solid rgba(230,196,110,.18); border-radius: 6px; font-size: 13px; }
+
+/* r12-1b: dock is solid behind its hint so page text never shows through */
+.action-dock { background: linear-gradient(180deg, rgba(7,8,7,.9) 0%, rgba(7,8,7,.985) 10px, rgba(7,8,7,.99) 100%) !important; }

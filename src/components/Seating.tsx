@@ -235,6 +235,11 @@ export function TableSeat({
       }}
     >
       <div className="seat-bet">
+        {you && layout !== "holdem" && (
+          <span className={`bet-spot${(betCents || 0) > 0 ? " filled" : ""}`} aria-hidden="true">
+            {!(betCents || 0) && <span className="bet-spot-lbl">Bet</span>}
+          </span>
+        )}
         {(betCents || 0) > 0 && !folded && (
           <ChipStack cents={betCents!} size={28} maxChips={8} showTotal winning={!!winning} />
         )}
