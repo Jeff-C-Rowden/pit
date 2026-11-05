@@ -2892,3 +2892,49 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
 .cage-confirm p { margin: 0 0 6px; }
 .cage-wd-status { text-transform: capitalize; font-size: 12px; }
 .cage-wd-status.st-pending { color: #e6c46e; }
+
+/* r14-1: Pai Gow title trim + rules lines never wrap */
+@media (max-width: 640px) {
+  .pg-hero { padding-top: 6px !important; padding-bottom: 4px !important; }
+  .pg-hero p.lede { display: none; }
+  .pg-hero h1 { font-size: 24px !important; margin: 2px 0 !important; }
+  .pg-felt-rules .bj-felt-sub { white-space: nowrap; font-size: 9.5px; letter-spacing: .12em; }
+}
+
+/* r14-2: Craps fold stays above the bar; smaller Come */
+.cr-come { min-height: 40px; }
+@media (max-width: 640px) {
+  .cr-come { min-height: 32px; }
+  .cr-place-grid .zone { min-height: 38px; }
+  .craps-felt .zone { min-height: 34px; padding: 5px 3px; }
+  .cr-more > summary { padding: 8px; }
+  .cr-more .cr-prop-grid { grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 0 6px 6px; }
+  .cr-more .cr-prop-grid .zone { font-size: 9px; letter-spacing: .04em; min-height: 36px; padding: 3px 2px; line-height: 1.15; }
+  .cr-more { scroll-margin-bottom: calc(var(--dock-h, 260px) + 8px); }
+}
+
+/* r14-3: Craps status strip lines up with the felt; ghost dice before the first roll */
+.cr-status { margin-left: 0; margin-right: 0; }
+@media (max-width: 640px) { .cr-status { margin: 8px 0 6px; } }
+.cr-die-ghost.dice { background: transparent; color: rgba(232,213,163,.45); border: 1.5px dashed rgba(232,213,163,.35); }
+.cr-total-ghost { color: rgba(232,213,163,.35); }
+
+/* r14-4: Hold'em seats pulled in on phones, no wordmark behind the pot */
+.holdem-table .felt-wordmark { display: none; }
+@media (max-width: 640px) {
+  .holdem-table { --seat-rx: .84; }
+  .holdem-table .table-seat.empty { opacity: .55; scale: .86; }
+  .holdem-table .table-seat.empty .seat-sit { font-size: 9px; }
+}
+
+/* r14-5: Cage tighter so the withdrawal box shows sooner */
+.cage-cur { margin: 0 0 4px; font-size: 12px; color: rgba(232,213,163,.8); }
+@media (max-width: 640px) {
+  .cage-hero { padding-top: 10px !important; padding-bottom: 6px !important; }
+  .cage-hero .lede { margin: 0 !important; }
+  .cage-hero h1 { font-size: 30px !important; margin: 2px 0 6px !important; }
+  .cage-amts { display: grid !important; grid-template-columns: repeat(4, 1fr); gap: 6px !important; }
+  .cage-amts .cage-amt { padding: 8px 2px !important; min-height: 38px; font-size: 11px !important; width: auto !important; min-width: 0 !important; margin: 0 !important; flex: none !important; box-sizing: border-box; }
+  .cage-amts .cage-amt:last-child { grid-column: auto; }
+  .cage-panel { padding-top: 12px !important; padding-bottom: 12px !important; }
+}
