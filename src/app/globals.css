@@ -3425,3 +3425,6 @@ label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spa
 .craps-felt.marquee-felt { margin-top: 12px; padding-top: 40px; }
 .craps-felt.marquee-felt .table-nameplate { transform: translate(-50%, 6px); }
 .craps-felt.marquee-felt .cr-place-grid { margin-top: 30px; }
+
+/* Freeze fix: a refused spin explains itself next to Spin, where the tap happened */
+.rl-dock-err { margin: 6px 0 0; padding: 6px 10px; border-radius: 10px; background: #4a1414; color: #ffd9d9; font-size: 13px; line-height: 1.3; text-align: center; }

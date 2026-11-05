@@ -240,8 +240,6 @@ export default function RoulettePage() {
     setBusy(true);
     setSpin(null);
     setRemoveMode(false);
-    // Bring the wheel fully into view; the dock collapses while the ball is live.
-    wheelRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
     setCustomOpen(false);
     try {
       const pattern = bets.map((b) => ({ ...b }));
@@ -249,6 +247,9 @@ export default function RoulettePage() {
         method: "POST",
         body: JSON.stringify({ bets, idempotencyKey: crypto.randomUUID() }),
       });
+      // Only once the house has accepted the spin: bring the wheel into view (the dock collapses
+      // while the ball is live). Scrolling before a refusal hid its message under the top bar.
+      wheelRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
       setLastStake(pattern);
       setGhosts(pickGhosts());
       setLivePocket(d.spin.pocket);
@@ -310,7 +311,6 @@ export default function RoulettePage() {
 
           <FirstVisitTip game="roulette" />
 
-          {err && <p className="err" role="alert" style={{ textAlign: "center" }}>{err}</p>}
 
           <div className="rl-stage">
             <div className="rl-star" ref={wheelRef}>
@@ -439,6 +439,7 @@ export default function RoulettePage() {
                     <span>Best case <b>{money(pv.bestReturnCents)}</b> back</span>
                     <span>Profit on <b>{pv.netWinPockets}</b> of {pv.pockets} numbers</span>
                   </div>); })()}
+                {err && <p className="err rl-dock-err" role="alert">{err}</p>}
                 <p id="rl-spin-hint" className="rl-dock-hint">
                   {paused ? <a className="paused-why inline" href="/wallet#time">Why is this paused?</a> : bets.length
                     ? `${bets.length} chip${bets.length === 1 ? "" : "s"} placed · tap Spin when ready`
