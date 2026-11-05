@@ -110,6 +110,7 @@ export default function Floor() {
               21+
             </span>
           </div>
+          <StartHere />
           <div className="floor-tools">
             <RecentlyPlayed />
             <label className="floor-search">
@@ -162,5 +163,28 @@ export default function Floor() {
         </>
       )}
     </Shell>
+  );
+}
+
+/** First visit only (no bets in the ledger yet): one honest, easy first table. */
+function StartHere() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    let live = true;
+    fetch("/api/wallet/ledger", { credentials: "same-origin" }).then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (live && d) setShow(!(d.recent || []).some((l: { type: string }) => l.type === "bet")); }).catch(() => null);
+    return () => { live = false; };
+  }, []);
+  if (!show) return null;
+  return (
+    <section className="start-here" aria-label="New here">
+      <div className="start-here-k">New here? Start with one easy bet</div>
+      <h2>Roulette: put a chip on Red, then Spin</h2>
+      <p className="muted">Red pays even money and wins 18 of 38 spins (47.4%). Each table shows its rules before you bet.</p>
+      <div className="start-here-row">
+        <Link href="/roulette" className="btn primary">Try Roulette →</Link>
+        <Link href="/blackjack" className="btn">Or Blackjack</Link>
+      </div>
+    </section>
   );
 }

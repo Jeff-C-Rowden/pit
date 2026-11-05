@@ -60,9 +60,8 @@ function Gate() {
         </div>
         {aged && <p className="ok age-ok">Age confirmed. Continue to signup or login.</p>}
         <p className="age-links">
-          <a href="/login">Already have a seat</a>
-          {" · "}
-          <a href="/rules">House rules & RTP</a>
+          <a href="/login" className="age-link">Log in</a>
+          <a href="/rules" className="age-link">House rules & odds</a>
         </p>
       </div>
       <div className="grid-games gate-preview">
