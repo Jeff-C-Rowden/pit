@@ -141,6 +141,12 @@ export function requestLimit(db: Database.Database, userId: string, kind: LimitK
       .run(next!.cents, next!.period, userId);
     return { applied: "now", effectiveAt: now.toISOString() };
   }
+  // Re-sending the change that is already queued keeps its original clock (the Cage form posts both limits on every save).
+  if (u[k.pa]) {
+    const pc = (u[k.pc] as number | null) ?? null;
+    const queued = pc == null ? next == null : !!next && next.cents === pc && next.period === asPeriod(u[k.pp]);
+    if (queued) return { applied: "pending", effectiveAt: u[k.pa] as string };
+  }
   const at = new Date(now.getTime() + COOL_OFF_MS).toISOString();
   db.prepare(`UPDATE users SET ${k.pc} = ?, ${k.pp} = ?, ${k.pa} = ? WHERE id = ?`)
     .run(next ? next.cents : null, next ? next.period : null, at, userId);

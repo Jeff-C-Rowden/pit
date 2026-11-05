@@ -68,6 +68,13 @@ describe("tightening vs loosening", () => {
     const v = limitView(db, "u1", "deposit", new Date(t0.getTime() + 2 * COOL_OFF_MS));
     expect(v).toMatchObject({ cents: 3000, period: "week", pending: null });
   });
+  it("re-sending the queued change keeps its clock; a different loosening restarts it", () => {
+    const db = mk(); const t0 = new Date("2026-11-05T12:00:00Z"); const t1 = new Date(t0.getTime() + 3600_000);
+    requestLimit(db, "u1", "loss", { cents: 5000, period: "day" }, t0);
+    const a = requestLimit(db, "u1", "loss", { cents: 9000, period: "day" }, t0);
+    expect(requestLimit(db, "u1", "loss", { cents: 9000, period: "day" }, t1)).toEqual(a);
+    expect(requestLimit(db, "u1", "loss", { cents: 9500, period: "day" }, t1).effectiveAt).toBe(new Date(t1.getTime() + COOL_OFF_MS).toISOString());
+  });
   it("settlePending is idempotent", () => {
     const db = mk(); const t0 = new Date("2026-11-05T12:00:00Z");
     requestLimit(db, "u1", "deposit", { cents: 5000, period: "day" }, t0);
