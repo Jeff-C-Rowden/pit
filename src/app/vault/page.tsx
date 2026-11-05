@@ -137,7 +137,7 @@ export default function VaultPage() {
     const bal = balRef.current;
     if (bal < coinIn) {
       setErr(
-        `Cage needs funds first — this spin costs ${money(coinIn)} (coin × 9). Open Cage and add test money.`,
+        `This spin costs ${money(coinIn)} (coin × 9). Add sandbox chips above.`,
       );
       return;
     }
@@ -380,7 +380,7 @@ export default function VaultPage() {
               {(err || u.balanceCents < coinIn) && (
                 <p className="err dock-err">
                   {err ||
-                    `Cage needs funds first — this spin costs ${money(coinIn)} (coin × 9). Open Cage and add test money.`}
+                    `This spin costs ${money(coinIn)} (coin × 9). Add sandbox chips above.`}
                 </p>
               )}
               <div className="vault-dock-bet">

@@ -4,7 +4,7 @@ const fmt = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
 const RULES: [RegExp, string | ((m: RegExpMatchArray) => string)][] = [
   [/^(deposit|loss) limit must be integer cents >= \$10$/i, (m) => `${m[1][0].toUpperCase()}${m[1].slice(1)} limit must be at least $10. Clear the box for no limit.`],
-  [/^insufficient funds$/i, "Not enough chips for that. Lower the bet or add test funds in the Cage."],
+  [/^insufficient funds$/i, "Not enough chips for that. Lower the bet or tap Add chips at the top."],
   [/^minimum withdrawal is \$10$/i, "The smallest withdrawal is $10."],
   [/^amount must be a (positive|non-negative) integer \(cents\)$/i, "Enter an amount in dollars, like 25 or 12.50."],
   [/^invalid (amount|dollars)$/i, "Enter an amount in dollars, like 25 or 12.50."],

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { api, money, useUser, type User } from "./useUser";
 import { recordRecent } from "@/lib/lobby";
+import RefillBar from "./RefillBar";
 import { playChip, setSoundOn, soundOn } from "@/lib/feel";
 
 function AnimatedBalance({ cents }: { cents: number }) {
@@ -118,6 +119,7 @@ export default function Shell({ children, requireAuth = true }: { children: Reac
           {user && <button type="button" className="btn btn-signout" onClick={logout}>Sign out</button>}
         </div>
       </header>
+      {user && path !== "/wallet" && <RefillBar />}
       {typeof children === "function" ? (user ? children(user) : null) : children}
       <footer className="footer">
         <p className="footer-line">Adults 21+ only. Sandbox wallet — no live charges.</p>
