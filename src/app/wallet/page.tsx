@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
+import { groupByDay, toDate } from "@/lib/ledgerDays";
 import { api, money, useUser, type User } from "@/components/useUser";
 import { parseDollarsInput, centsToInput } from "@/lib/money";
 
@@ -217,7 +218,7 @@ function CageLedger() {
       <span className="ledger-what">{TYPE_LABEL[l.type] || l.type}{l.game ? ` · ${l.game}` : ""}</span>
       <span className={`mono ${l.amountCents > 0 ? "up" : l.amountCents < 0 ? "down" : ""}`}>{l.amountCents > 0 ? "+" : l.amountCents < 0 ? "−" : ""}{money(Math.abs(l.amountCents))}</span>
       <span className="ledger-bal muted mono">bal {money(l.balanceAfterCents)}</span>
-      <span className="ledger-at muted">{new Date(l.at.endsWith("Z") || l.at.includes("T") ? l.at : l.at.replace(" ", "T") + "Z").toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+      <span className="ledger-at muted">{toDate(l.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>
     </li>
   );
   return (
@@ -230,7 +231,19 @@ function CageLedger() {
         </div>
       )}
       {focus && <h3 className="muted" style={{ fontSize: 13, margin: "12px 0 4px" }}>All recent</h3>}
-      {(recent.length ? <ul className="ledger-list">{recent.map(row)}</ul> : <p className="muted">No activity yet.</p>)}
+      {recent.length ? groupByDay(recent).map((g) => (
+        <section key={g.key} className="ledger-day">
+          <h3 className="ledger-day-h">
+            <span>{g.label}</span>
+            <span className="ledger-day-net">
+              Play <b className={g.playNet > 0 ? "up" : g.playNet < 0 ? "down" : ""}>{g.playNet > 0 ? "+" : g.playNet < 0 ? "−" : ""}{money(Math.abs(g.playNet))}</b>
+              {g.cashIn ? <> · added {money(g.cashIn)}</> : null}
+              {g.cashOut ? <> · out {money(g.cashOut)}</> : null}
+            </span>
+          </h3>
+          <ul className="ledger-list">{g.lines.map(row)}</ul>
+        </section>
+      )) : <p className="muted">No activity yet.</p>}
     </div>
   );
 }
