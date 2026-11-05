@@ -4,6 +4,7 @@ import Shell from "@/components/Shell";
 import { groupByDay, toDate } from "@/lib/ledgerDays";
 import { api, money, useUser, type User } from "@/components/useUser";
 import LimitsPanel from "@/components/LimitsPanel";
+import DailyClaim from "@/components/DailyClaim";
 import SessionPanel from "@/components/SessionPanel";
 import { parseDollarsInput, centsToInput } from "@/lib/money";
 
@@ -85,6 +86,7 @@ export default function WalletPage() {
           )}
           {msg && <p className="ok cage-flash" role="status">{msg}</p>}
           {err && <p className="err">{err}</p>}
+          {isSandbox && <DailyClaim onUser={setUser} />}
           {isSandbox && (
             <div className="panel cage-panel">
               <h3>Add test funds</h3>
