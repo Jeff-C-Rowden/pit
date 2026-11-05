@@ -158,7 +158,7 @@ export function seatStyle(i: number, n: number, layout: "holdem" | "blackjack" |
   const x = 50 + rx * Math.cos(a);
   const y = layout === "holdem" ? 50 + ry * Math.sin(a) : 54 + ry * Math.sin(a);
   return {
-    left: `${x}%`,
+    left: `calc(50% + ${(x - 50).toFixed(2)}% * var(--seat-rx, 1))`,
     top: `${y}%`,
     transform: "translate(-50%, -50%)",
     zIndex: 4 + Math.round(y),

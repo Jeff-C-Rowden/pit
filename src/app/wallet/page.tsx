@@ -18,8 +18,8 @@ export default function WalletPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [wd, setWd] = useState("100.00");
-  const [depLim, setDepLim] = useState("");
-  const [lossLim, setLossLim] = useState("");
+  const [depLim, setDepLim] = useState<string | null>(null);
+  const [lossLim, setLossLim] = useState<string | null>(null);
   const [list, setList] = useState<unknown[]>([]);
   const [status, setStatus] = useState<WalletStatus | null>(null);
   const [busyAmt, setBusyAmt] = useState<number | null>(null);
@@ -78,7 +78,7 @@ export default function WalletPage() {
           {isSandbox && (
             <div className="panel cage-panel">
               <h3>Add test funds</h3>
-              <p className="muted cage-help">Tap an amount. Credits hit your stack immediately on the server ledger.</p>
+              <p className="muted cage-help">Tap an amount. It lands on your balance right away.</p>
               <div className="btn-row cage-amts">
                 {AMTS.map((a) => (
                   <button
@@ -150,17 +150,21 @@ export default function WalletPage() {
           </div>
           <div className="panel cage-panel">
             <h3>Responsible play</h3>
-            <p className="muted">Optional limits. Leave blank for none. Enforced on the server.</p>
+            <p className="muted">Optional limits, enforced on the server. Minimum $10. Clear a box to remove that limit.</p>
             <label htmlFor="dep-lim">Deposit limit ($, lifetime in this sandbox)</label>
-            <input id="dep-lim" value={depLim} onChange={(e) => setDepLim(e.target.value)} inputMode="decimal" placeholder={u.depositLimitCents == null ? "none" : centsToInput(u.depositLimitCents)} />
+            <p className="cage-cur">Current: <b>{u.depositLimitCents == null ? "No limit" : money(u.depositLimitCents)}</b></p>
+            <input id="dep-lim" value={depLim ?? centsToInput(u.depositLimitCents)} onChange={(e) => setDepLim(e.target.value)} inputMode="decimal" placeholder="No limit" />
             <label htmlFor="loss-lim">Loss limit ($)</label>
-            <input id="loss-lim" value={lossLim} onChange={(e) => setLossLim(e.target.value)} inputMode="decimal" placeholder={u.lossLimitCents == null ? "none" : centsToInput(u.lossLimitCents)} />
+            <p className="cage-cur">Current: <b>{u.lossLimitCents == null ? "No limit" : money(u.lossLimitCents)}</b></p>
+            <input id="loss-lim" value={lossLim ?? centsToInput(u.lossLimitCents)} onChange={(e) => setLossLim(e.target.value)} inputMode="decimal" placeholder="No limit" />
             <div className="btn-row cage-actions">
               <button type="button" className="btn" onClick={async () => {
                 setErr(null);
-                const dl = depLim.trim() === "" ? null : parseDollarsInput(depLim);
-                const ll = lossLim.trim() === "" ? null : parseDollarsInput(lossLim);
-                if ((depLim.trim() !== "" && dl == null) || (lossLim.trim() !== "" && ll == null)) { setErr("Limits are dollar amounts, like 200 or 200.50."); return; }
+                const dRaw = (depLim ?? centsToInput(u.depositLimitCents)).trim();
+                const lRaw = (lossLim ?? centsToInput(u.lossLimitCents)).trim();
+                const dl = dRaw === "" ? null : parseDollarsInput(dRaw);
+                const ll = lRaw === "" ? null : parseDollarsInput(lRaw);
+                if ((dRaw !== "" && dl == null) || (lRaw !== "" && ll == null)) { setErr("Limits are dollar amounts, like 200 or 200.50."); return; }
                 try {
                   await api("/api/wallet/limits", { method: "POST", body: JSON.stringify({
                     depositLimitCents: dl,
