@@ -1,4 +1,5 @@
 "use client";
+import { SYM_ART } from "@/components/SlotMachine";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import SlotMachine, { type SlotMachineHandle, type WinCell } from "@/components/SlotMachine";
@@ -143,7 +144,7 @@ export default function SlotPage() {
                 <tbody>
                   {Object.entries(info.paytable || {}).map(([k, v]: any) => (
                     <tr key={k}>
-                      <td>{k}</td>
+                      <td className="pt-sym">{(() => { const a = (SYM_ART as any)[k]; if (!a) return k; const I = a.Svg; return (<><span className={`pt-art tone-${a.tone}`} aria-hidden><I /></span><span>{a.label}</span></>); })()}</td>
                       <td>{v[0]}</td>
                       <td>{v[1]}</td>
                       <td>{v[2]}</td>

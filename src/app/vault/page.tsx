@@ -1,5 +1,6 @@
 "use client";
 
+import { VS_SYM_ART } from "@/components/VaultSpireMachine";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import VaultSpireMachine, { type VaultSpireMachineHandle, type WinCell } from "@/components/VaultSpireMachine";
@@ -333,7 +334,7 @@ export default function VaultPage() {
                       <tbody>
                         {Object.entries(info?.paytable || {}).map(([k, v]: any) => (
                           <tr key={k}>
-                            <td>{k}</td>
+                            <td className="pt-sym">{(() => { const a = (VS_SYM_ART as any)[k]; if (!a) return k; const I = a.Svg; return (<><span className={`pt-art tone-${a.tone}`} aria-hidden><I /></span><span>{a.label}</span></>); })()}</td>
                             <td>{v[0]}</td>
                             <td>{v[1]}</td>
                             <td>{v[2]}</td>
