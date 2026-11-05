@@ -4,7 +4,7 @@ import { pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
 import { previewBets } from "@/lib/games/roulettePreview";
 import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
-import { Chip, ReplayCard, ResultsStrip, cageHref } from "@/components/TableUX";
+import { Chip, ReplayCard, ResultsStrip, cageHref, useHasPlayed } from "@/components/TableUX";
 import { celebrationLevel, playChip, playPayout } from "@/lib/feel";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
@@ -105,6 +105,7 @@ export default function RoulettePage() {
   const [spinning, setSpinning] = useState(false);
   const [livePocket, setLivePocket] = useState<string | null>(null);
   const [history, setHistory] = useState<string[]>([]);
+  const hasPlayed = useHasPlayed("roulette", history.length);
   const [ghosts, setGhosts] = useState<GhostChip[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [plan, setPlan] = useState<SpinPlan | null>(null);
@@ -296,7 +297,7 @@ export default function RoulettePage() {
           <ResultsStrip game="roulette" refreshKey={history.length + ":" + (spin?.id || "")} />
           {history.length > 0 && !spin?.replay && (
             <div className="rl-replay-row">
-              <button type="button" className="rl-replay" onClick={replayLast} disabled={busy || spinning}>↺ Replay last result</button>
+              {hasPlayed && <button type="button" className="rl-replay" onClick={replayLast} disabled={busy || spinning}>↺ Replay last result</button>}
             </div>
           )}
 

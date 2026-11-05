@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { crapsRiskedCents } from "@/lib/feel";
-import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, ResultsStrip, cageHref } from "@/components/TableUX";
+import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -50,6 +50,7 @@ export default function CrapsPage() {
   const [lastPay, setLastPay] = useState<number | null>(null);
   const [lastRisk, setLastRisk] = useState(0);
   const [rollRef, setRollRef] = useState<string | null>(null);
+  const hasPlayed = useHasPlayed("craps", rollRef);
   const [replay, setReplay] = useState<any>(null);
   const closeReplay = useCallback(() => setReplay(null), []);
   async function replayLast() {
@@ -212,7 +213,7 @@ export default function CrapsPage() {
               </div>
             </ReplayCard>
           ) : (
-            <div className="replay-row"><button type="button" className="rl-replay" onClick={replayLast} disabled={busy}>↺ Replay last result</button></div>
+            hasPlayed ? <div className="replay-row"><button type="button" className="rl-replay" onClick={replayLast} disabled={busy}>↺ Replay last result</button></div> : null
           )}
           {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
           {lastPay != null && lastPay > 0 && (

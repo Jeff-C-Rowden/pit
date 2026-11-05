@@ -586,7 +586,8 @@ export function TableReplay({ game, show, resetKey, render }: {
   const [msg, setMsg] = useState<string | null>(null);
   const close = useCallback(() => setLast(null), []);
   useEffect(() => { setLast(null); setMsg(null); }, [resetKey]);
-  if (!show) return null;
+  const hasPlayed = useHasPlayed(game, resetKey);
+  if (!show || !hasPlayed) return null;
   async function open() {
     setMsg(null);
     try {
@@ -603,4 +604,16 @@ export function TableReplay({ game, show, resetKey, render }: {
       {msg && <span className="muted" style={{ fontSize: 12 }}>{msg}</span>}
     </>
   );
+}
+
+/** True once the ledger shows at least one settled result for this game. Hides replay for brand-new players. */
+export function useHasPlayed(game: string, refreshKey?: unknown) {
+  const [has, setHas] = useState(false);
+  useEffect(() => {
+    let live = true;
+    fetch(`/api/replay?game=${game}&recent=1`, { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : null)).then((d) => { if (live && d) setHas((d.recent || []).length > 0); }).catch(() => null);
+    return () => { live = false; };
+  }, [game, refreshKey]);
+  return has;
 }

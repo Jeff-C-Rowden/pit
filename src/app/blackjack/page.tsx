@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import { blackjackResultLabel } from "@/lib/feel";
 import PlayingCard from "@/components/PlayingCard";
-import { ActionDock, ChipRow, OutcomeBanner, ReplayCard, ResultsStrip, cageHref } from "@/components/TableUX";
+import { ActionDock, ChipRow, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed } from "@/components/TableUX";
 import { DealerBooth, TableHeart, TableSeat, botBlackjackHand, botHandValue, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -85,6 +85,7 @@ export default function BlackjackPage() {
 }
 
 function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, err, busy, act, betting, isPush, isWin, isLoss, result, hint, settledFor }: any) {
+  const hasPlayed = useHasPlayed("blackjack", `${game?.id}-${game?.phase}`);
   const { occupants, setYouSeat, n, nudgeBot } = useTableSeats("blackjack", u.displayName, u.balanceCents);
   const dealerRank = game?.dealer?.cards?.[0]?.rank;
   const youBet = game?.playerHands?.reduce((s: number, h: any) => s + (h.betCents || 0), 0)
@@ -93,7 +94,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
   const canAfford = u.balanceCents >= bet;
   const openHand = game && game.phase !== "settled";
   const dealHint = betting && !canAfford
-    ? "Cage needs funds first — open Cage and add test money."
+    ? "Add sandbox chips above to deal."
     : hint;
 
   useEffect(() => {
@@ -122,7 +123,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
       <ResultsStrip game="blackjack" refreshKey={`${game?.id}-${game?.phase}`} />
       <div className="felt-table seated bj-table">
         <DealerBooth>
-          <div className="muted">Dealer {game?.dealer?.value ? `(${game.dealer.value.total})` : ""}</div>
+          {game?.dealer?.value ? <div className="muted">Showing {game.dealer.value.total}</div> : null}
           <div className="hand">
             {game?.dealer?.cards?.map((c: any, i: number) => <PlayingCard key={i} card={c} />)}
           </div>
@@ -218,7 +219,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
             <div className="replay-h">{blackjackResultLabel(replay.result) || "Settled"} · bet {money(replay.stakeCents)} · paid {money(replay.payoutCents)}</div>
           </ReplayCard>
         )}
-        {betting && !replay && (
+        {betting && !replay && hasPlayed && (
           <button type="button" className="rl-replay" onClick={replayLast} disabled={busy}>↺ Replay last result</button>
         )}
         {betting && (
@@ -227,7 +228,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
             <button
               className="btn primary hero-act"
               disabled={busy || !canAfford}
-              title={!canAfford ? "Cage needs funds first — open Cage and add test money." : undefined}
+              title={!canAfford ? "Add sandbox chips above to deal." : undefined}
               onClick={() => act("deal")}
             >
               {busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal"}
