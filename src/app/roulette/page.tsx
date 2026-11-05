@@ -264,17 +264,9 @@ export default function RoulettePage() {
           </div>
 
           {showHint && (
-            <div className="rl-hint" role="note">
-              <div>
-                <strong>How to play</strong>
-                <ol>
-                  <li>Pick a chip value at the bottom.</li>
-                  <li>Tap a number or area on the table to place it. Tap again to add more.</li>
-                  <li>Press <b>Spin</b>. The server picks the number; the wheel just shows it.</li>
-                </ol>
-                <p>To take a chip back, press and hold it, or tap <b>Undo</b>.</p>
-              </div>
-              <button className="btn rl-hint-x" onClick={dismissHint} aria-label="Dismiss how to play">Got it</button>
+            <div className="rl-hint rl-tip" role="note">
+              <span>Pick a chip, tap the table, press <b>Spin</b>. Hold a chip or tap <b>Undo</b> to take it back.</span>
+              <button className="rl-tip-x" onClick={dismissHint} aria-label="Dismiss tip">×</button>
             </div>
           )}
 
