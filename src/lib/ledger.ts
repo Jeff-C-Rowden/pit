@@ -18,7 +18,7 @@ export class LedgerError extends Error {
   }
 }
 
-function netLossCents(userId: string, db = getDb()): number {
+export function netLossCents(userId: string, db = getDb()): number {
   const row = db.prepare(
     `SELECT
        COALESCE(SUM(CASE WHEN type = 'bet' THEN -amount_cents ELSE 0 END), 0) AS wagered,
@@ -29,7 +29,7 @@ function netLossCents(userId: string, db = getDb()): number {
   return row.wagered - row.returned;
 }
 
-function depositedCents(userId: string, db = getDb()): number {
+export function depositedCents(userId: string, db = getDb()): number {
   const row = db.prepare(
     `SELECT COALESCE(SUM(amount_cents), 0) AS d FROM ledger WHERE user_id = ? AND type = 'deposit'`
   ).get(userId) as { d: number };

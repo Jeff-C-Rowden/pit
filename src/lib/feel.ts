@@ -130,3 +130,24 @@ export function paigowResultLabel(result: string | null | undefined): string {
   if (r.startsWith("push")) return "Push · one hand each";
   return r ? r.charAt(0).toUpperCase() + r.slice(1) : "Settled";
 }
+
+const CRAPS_FELT_KEYS = ["pass", "passOdds", "dontPass", "dontPassOdds", "come", "dontCome", "place", "field", "anySeven", "anyCraps", "yo", "hard"] as const;
+/** Total chips currently on the craps felt, from the server's public table. Nested come/place/hard boxes are summed. */
+export function crapsFeltCents(table: Record<string, unknown> | null | undefined): number {
+  const sum = (v: unknown): number =>
+    typeof v === "number" ? Math.max(0, v) : Array.isArray(v) ? v.reduce((n: number, x) => n + sum(x), 0)
+      : v && typeof v === "object" ? Object.values(v as object).reduce((n: number, x) => n + sum(x), 0) : 0;
+  if (!table) return 0;
+  return CRAPS_FELT_KEYS.reduce((n, k) => n + sum(table[k]), 0);
+}
+
+/** One-time "How to play in 10 seconds" tips, keyed by table. */
+export const TABLE_TIPS: Record<string, { title: string; steps: string[] }> = {
+  slot: { title: "Gilded Track in 10 seconds", steps: ["Pick a coin size.", "Tap Spin. Each spin bets all 9 lines.", "Wins pay from the paytable below the reels."] },
+  vault: { title: "Canopy Spire in 10 seconds", steps: ["Pick a coin size and tap Spin.", "A small part of every bet feeds the four jackpots.", "Jackpots are rare. Most spins pay nothing."] },
+  roulette: { title: "Roulette in 10 seconds", steps: ["Pick a chip.", "Tap a spot on the table, like Red.", "Tap Spin. Red wins 18 of 38 spins and pays 1 to 1. Undo takes a chip back."] },
+  blackjack: { title: "Blackjack in 10 seconds", steps: ["Pick a chip and tap Deal.", "Get closer to 21 than the dealer without going over.", "Hit takes a card. Stand keeps your hand."] },
+  craps: { title: "Craps in 10 seconds", steps: ["Pick a chip and tap Pass line.", "Tap Roll. 7 or 11 wins now. 2, 3 or 12 loses.", "Any other number is the point: roll it again before a 7 to win."] },
+  holdem: { title: "Hold'em in 10 seconds", steps: ["Tap Deal. You post a blind and get two cards.", "Check, bet or fold as the five shared cards come out.", "Best five-card hand at showdown takes the pot."] },
+  paigow: { title: "Pai Gow in 10 seconds", steps: ["Pick a chip and tap Deal. You get seven cards.", "Tap House way to split them into a 5-card and a 2-card hand.", "Win both to win. Win one for a push. Wins pay less 5%."] },
+};

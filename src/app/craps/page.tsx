@@ -1,8 +1,8 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import Shell from "@/components/Shell";
-import { crapsRiskedCents } from "@/lib/feel";
-import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed } from "@/components/TableUX";
+import { crapsFeltCents, crapsRiskedCents } from "@/lib/feel";
+import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -47,10 +47,12 @@ export default function CrapsPage() {
   const [table, setTable] = useState<any>(null);
   const [chip, setChip] = useState(500);
   const [err, setErr] = useState<string | null>(null);
+  useClearErrOnBalance(setErr);
   const [lastPay, setLastPay] = useState<number | null>(null);
   const [lastRisk, setLastRisk] = useState(0);
   const [rollRef, setRollRef] = useState<string | null>(null);
   const hasPlayed = useHasPlayed("craps", rollRef);
+  const canRoll = crapsFeltCents(table) > 0 || (!!table?.alwaysRepeat && !!table?.canRepeat);
   const [replay, setReplay] = useState<any>(null);
   const closeReplay = useCallback(() => setReplay(null), []);
   async function replayLast() {
@@ -200,6 +202,7 @@ export default function CrapsPage() {
               )}
             </div>
           </div>
+          <FirstVisitTip game="craps" />
           <ResultsStrip game="craps" refreshKey={rollRef} />
           {replay ? (
             <ReplayCard onClose={closeReplay} cageHref={cageHref("craps", replay.ref)}>
@@ -226,7 +229,10 @@ export default function CrapsPage() {
               subtitle={`${money(lastPay)} added to your stack`}
             />
           )}
-          {lastPay === 0 && (
+          {lastPay === 0 && lastRisk === 0 && (
+            <p className="calm-note" role="status">No bets this roll.</p>
+          )}
+          {lastPay === 0 && lastRisk > 0 && (
             <OutcomeBanner
               title="NOTHING PAID"
               subtitle="Nothing paid on that roll."
@@ -293,7 +299,7 @@ export default function CrapsPage() {
           {table?.log && <div className="panel log" style={{ marginTop: 12 }}>{table.log.slice().reverse().map((l: string, i: number) => <div key={i}>{l}</div>)}</div>}
           <ActionDock busy={busy} hint={table?.alwaysRepeat
             ? "Auto-repeat is on: each roll restacks your chips."
-            : "Pick a chip, tap the felt, then Roll."}>
+            : canRoll ? "Pick a chip, tap the felt, then Roll." : "Tap Pass line to place your first bet."}>
             <ChipRow amounts={[100, 500, 1000, 2500]} selected={chip} onSelect={setChip} minCents={100} maxCents={500_000} />
             <div className="cr-tools">
               <button className="btn" disabled={busy || !table?.canUndo} onClick={undo}>Undo</button>
@@ -302,7 +308,7 @@ export default function CrapsPage() {
                 Auto-repeat {table?.alwaysRepeat ? "on" : "off"}
               </button>
             </div>
-            <button className="btn primary hero-act" disabled={busy} onClick={roll}>{busy ? "Rolling…" : "Roll"}</button>
+            <button className="btn primary hero-act" disabled={busy || !canRoll} onClick={roll}>{busy ? "Rolling…" : canRoll ? "Roll" : "Place a bet to roll"}</button>
           </ActionDock>
         </div>
       )}

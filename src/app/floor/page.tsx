@@ -14,20 +14,20 @@ type MeterPublic = {
 };
 
 const GAMES = [
-  { href: "/blackjack", name: "Blackjack", meta: "7-spot · six-deck · S17 · BJ 3:2", line: "The pit staple.", accent: "bj" },
-  { href: "/slot", name: "Gilded Track", meta: "5 reels · 9 lines · published 94–96% RTP", line: "A video slot with a real paytable.", accent: "slot" },
+  { href: "/blackjack", level: "Easy to learn", pace: "Steady", name: "Blackjack", meta: "7-spot · six-deck · S17 · BJ 3:2", line: "The pit staple.", accent: "bj" },
+  { href: "/slot", level: "Easiest", pace: "Fast", name: "Gilded Track", meta: "5 reels · 9 lines · published 94–96% RTP", line: "A video slot with a real paytable.", accent: "slot" },
   {
-    href: "/vault",
+    href: "/vault", level: "Easiest", pace: "Fast",
     name: "Canopy Spire",
     meta: "5 reels · 9 lines · 4-tier progressive",
     line: "Jungle canopy progressive — Mini · Minor · Major · Grand.",
     accent: "vault",
     progressive: true,
   },
-  { href: "/holdem", name: "Texas Hold'em", meta: "$1 / $2 NL · 8-max felt", line: "Sit down. Bots take the other chairs. House banks.", cash: true, taken: 5, max: 8, stakes: "$1 / $2 NL", accent: "he" },
-  { href: "/roulette", name: "Roulette", meta: "American wheel · 0 and 00 · inside & outside", line: "38 pockets. The ball does not care.", accent: "rl" },
-  { href: "/craps", name: "Craps", meta: "Pass / don't · odds · place 6/8 · field · props", line: "Come-out, point, seven-out.", accent: "cr" },
-  { href: "/paigow", name: "Pai Gow Poker", meta: "6 seats · house banks · 5% on wins", line: "Seven cards. Two hands. Both must hold.", accent: "pg" },
+  { href: "/holdem", level: "Learn first", pace: "Slow", name: "Texas Hold'em", meta: "$1 / $2 NL · 8-max felt", line: "Sit down. Bots take the other chairs. House banks.", cash: true, taken: 5, max: 8, stakes: "$1 / $2 NL", accent: "he" },
+  { href: "/roulette", level: "Easy", pace: "Steady", name: "Roulette", meta: "American wheel · 0 and 00 · inside & outside", line: "38 pockets. The ball does not care.", accent: "rl" },
+  { href: "/craps", level: "Learn first", pace: "Fast", name: "Craps", meta: "Pass / don't · odds · place 6/8 · field · props", line: "Come-out, point, seven-out.", accent: "cr" },
+  { href: "/paigow", level: "Some rules", pace: "Slow", name: "Pai Gow Poker", meta: "6 seats · house banks · 5% on wins", line: "Seven cards. Two hands. Both must hold.", accent: "pg" },
 ];
 
 function VaultLobbyMeters() {
@@ -144,6 +144,7 @@ export default function Floor() {
                 <div className="gmeta gline">{g.line}</div>
                 <h2 className="gname">{g.name}</h2>
                 <div className="gmeta">{g.meta}</div>
+                <div className="gtags"><span className="gtag">{g.level}</span><span className="gtag">{g.pace} pace</span></div>
                 {g.progressive && <VaultLobbyMeters />}
                 {g.cash && (
                   <>

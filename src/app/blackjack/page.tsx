@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import { blackjackResultLabel } from "@/lib/feel";
 import PlayingCard from "@/components/PlayingCard";
-import { ActionDock, ChipRow, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed } from "@/components/TableUX";
+import { ActionDock, ChipRow, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { DealerBooth, TableHeart, TableSeat, botBlackjackHand, botHandValue, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -12,6 +12,7 @@ export default function BlackjackPage() {
   const [game, setGame] = useState<any>(null);
   const [bet, setBet] = useState(1000);
   const [err, setErr] = useState<string | null>(null);
+  useClearErrOnBalance(setErr);
   const [busy, setBusy] = useState(false);
   const [replay, setReplay] = useState<any>(null);
   const closeReplay = useCallback(() => setReplay(null), []);
@@ -120,6 +121,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
   return (
     <>
       <div className="rail-label" style={{ marginTop: 20 }}>Blackjack · 7-spot · 6 decks · S17 · 3:2</div>
+      <FirstVisitTip game="blackjack" />
       <ResultsStrip game="blackjack" refreshKey={`${game?.id}-${game?.phase}`} />
       <div className="felt-table seated bj-table">
         <DealerBooth>

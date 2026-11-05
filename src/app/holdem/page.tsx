@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Shell from "@/components/Shell";
 import PlayingCard from "@/components/PlayingCard";
 import { holdemRiskedCents } from "@/lib/feel";
-import { ActionDock, ChipStack, OutcomeBanner, ResultsStrip, TableReplay } from "@/components/TableUX";
+import { ActionDock, ChipStack, OutcomeBanner, ResultsStrip, TableReplay, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { CARD_BACK, TableHeart, TableSeat, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -11,6 +11,7 @@ export default function HoldemPage() {
   const { setUser } = useUser();
   const [game, setGame] = useState<any>(null);
   const [err, setErr] = useState<string | null>(null);
+  useClearErrOnBalance(setErr);
   const [busy, setBusy] = useState(false);
   const [flyPot, setFlyPot] = useState<number | null>(null);
 
@@ -115,6 +116,7 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
   return (
     <>
       <div className="rail-label he-label" style={{ marginTop: 20 }}>Texas Hold&apos;em · $1/$2 No-limit</div>
+      <FirstVisitTip game="holdem" />
       <ResultsStrip game="holdem" refreshKey={`${game?.id}-${live}`} />
       {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
       <div className="felt-table seated holdem-table">

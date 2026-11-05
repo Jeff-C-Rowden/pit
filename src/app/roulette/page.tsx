@@ -4,7 +4,7 @@ import { pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
 import { previewBets } from "@/lib/games/roulettePreview";
 import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
-import { Chip, ReplayCard, ResultsStrip, cageHref, useHasPlayed } from "@/components/TableUX";
+import { Chip, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { celebrationLevel, playChip, playPayout } from "@/lib/feel";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
@@ -101,6 +101,7 @@ export default function RoulettePage() {
   const [lastStake, setLastStake] = useState<(ClothBet & { amountCents: number })[]>([]);
   const [spin, setSpin] = useState<any>(null);
   const [err, setErr] = useState<string | null>(null);
+  useClearErrOnBalance(setErr);
   const [busy, setBusy] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [livePocket, setLivePocket] = useState<string | null>(null);
@@ -301,12 +302,7 @@ export default function RoulettePage() {
             </div>
           )}
 
-          {showHint && (
-            <div className="rl-hint rl-tip" role="note">
-              <span>Pick a chip, tap the table, press <b>Spin</b>. Hold a chip or tap <b>Undo</b> to take it back.</span>
-              <button className="rl-tip-x" onClick={dismissHint} aria-label="Dismiss tip">×</button>
-            </div>
-          )}
+          <FirstVisitTip game="roulette" />
 
           {err && <p className="err" role="alert" style={{ textAlign: "center" }}>{err}</p>}
 

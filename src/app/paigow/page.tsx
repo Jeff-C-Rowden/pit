@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { paigowResultLabel } from "@/lib/feel";
 import PlayingCard from "@/components/PlayingCard";
-import { ActionDock, ChipRow, OutcomeBanner, ResultsStrip, TableReplay } from "@/components/TableUX";
+import { ActionDock, ChipRow, OutcomeBanner, ResultsStrip, TableReplay, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { CARD_BACK, DealerBooth, TableHeart, TableSeat, botPaiGowCards, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -12,6 +12,7 @@ export default function PaiGowPage() {
   const [game, setGame] = useState<any>(null);
   const [bet, setBet] = useState(1000);
   const [err, setErr] = useState<string | null>(null);
+  useClearErrOnBalance(setErr);
   const [sel, setSel] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -78,6 +79,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
         <p className="lede">House banks · 5% commission on wins · 6 seats</p>
         <h1 style={{ fontSize: 48 }}>Pai Gow Poker</h1>
       </div>
+      <FirstVisitTip game="paigow" />
       <ResultsStrip game="paigow" refreshKey={`${game?.id}-${game?.phase}`} />
       {err && <p className="err">{err}</p>}
       <div className="felt-table seated felt-rect bj-table pg-table">

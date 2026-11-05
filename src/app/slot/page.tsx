@@ -3,7 +3,7 @@ import { SYM_ART } from "@/components/SlotMachine";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import SlotMachine, { type SlotMachineHandle, type WinCell } from "@/components/SlotMachine";
-import { ActionDock, ChipRow, OutcomeBanner } from "@/components/TableUX";
+import { ActionDock, ChipRow, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { api, money, useUser } from "@/components/useUser";
 import { PAYLINES, type Symbol } from "@/lib/games/slot";
 
@@ -35,6 +35,7 @@ export default function SlotPage() {
   const [grid, setGrid] = useState<Symbol[][] | null>(null);
   const [coin, setCoin] = useState(100);
   const [err, setErr] = useState<string | null>(null);
+  useClearErrOnBalance(setErr);
   const [busy, setBusy] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [showOutcome, setShowOutcome] = useState(false);
@@ -96,6 +97,7 @@ export default function SlotPage() {
             <h1>Gilded Track</h1>
             <p className="muted">9 lines · 5 reels · published RTP 94–96%</p>
           </div>
+          <FirstVisitTip game="slot" />
           {err && <p className="err">{err}</p>}
 
           <div className="slot-stage-wrap">

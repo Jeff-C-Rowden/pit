@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
-import { money } from "./useUser";
-import { celebrationLevel, playChip, playPayout, shouldSlidePayout } from "@/lib/feel";
+import { money, useUser } from "./useUser";
+import { celebrationLevel, playChip, playPayout, shouldSlidePayout, TABLE_TIPS } from "@/lib/feel";
 
 const LOADED_AT = typeof performance !== "undefined" ? performance.now() : 0;
 const settled = () => typeof performance !== "undefined" && performance.now() - LOADED_AT > 1500;
@@ -616,4 +616,30 @@ export function useHasPlayed(game: string, refreshKey?: unknown) {
     return () => { live = false; };
   }, [game, refreshKey]);
   return has;
+}
+
+/** One-time tip for a player's first visit to a table. Dismissed per table, remembered on this device. */
+export function FirstVisitTip({ game }: { game: string }) {
+  const tip = TABLE_TIPS[game];
+  const key = `pit_tip_v1:${game}`;
+  const [open, setOpen] = useState(false);
+  useEffect(() => { try { if (!localStorage.getItem(key)) setOpen(true); } catch {} }, [key]);
+  if (!open || !tip) return null;
+  const close = () => { try { localStorage.setItem(key, "1"); } catch {} setOpen(false); };
+  return (
+    <aside className="first-tip" role="note" aria-label={tip.title}>
+      <div className="first-tip-k">First time here</div>
+      <b>{tip.title}</b>
+      <ol>{tip.steps.map((s) => <li key={s}>{s}</li>)}</ol>
+      <button type="button" className="btn first-tip-ok" onClick={close}>Got it</button>
+    </aside>
+  );
+}
+
+/** Clears a table's stale error once the balance moves (for example after Add chips). */
+export function useClearErrOnBalance(setErr: (v: string | null) => void) {
+  const { user } = useUser();
+  const bal = user?.balanceCents;
+  const first = useRef(true);
+  useEffect(() => { if (first.current) { first.current = false; return; } setErr(null); }, [bal]); // eslint-disable-line react-hooks/exhaustive-deps
 }

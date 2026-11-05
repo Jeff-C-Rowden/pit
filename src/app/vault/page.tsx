@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import VaultSpireMachine, { type VaultSpireMachineHandle, type WinCell } from "@/components/VaultSpireMachine";
 import ProgressiveMeterStrip, { type MeterPublic } from "@/components/ProgressiveMeter";
-import { ActionDock, ChipRow, OutcomeBanner } from "@/components/TableUX";
+import { ActionDock, ChipRow, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { api, money, useUser } from "@/components/useUser";
 import { VS_PAYLINES, VS_TOTAL_CONTRIBUTION_BPS, type VsSymbol } from "@/lib/games/slotProgressive";
 
@@ -60,6 +60,7 @@ export default function VaultPage() {
   const [grid, setGrid] = useState<VsSymbol[][] | null>(null);
   const [coin, setCoin] = useState(100);
   const [err, setErr] = useState<string | null>(null);
+  useClearErrOnBalance(setErr);
   const [busy, setBusy] = useState(false);
   const [spinning, setSpinning] = useState(false);
   const [showOutcome, setShowOutcome] = useState(false);
@@ -213,6 +214,7 @@ export default function VaultPage() {
             </div>
           </div>
 
+          <FirstVisitTip game="vault" />
           {err && <p className="err">{err}</p>}
 
           <div className="vault-hero">
