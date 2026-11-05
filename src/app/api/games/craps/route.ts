@@ -5,6 +5,7 @@ import { toPublic } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
 import {
+  layoutActions,
   newCrapsTable, applyBet, rollDice, resolveRoll, publicCraps,
   rememberChip, takeRoundSnapshot, undoLastChip, repeatPlan, lockCurrentLayout,
   type CrapsState, type PlaceAction,
@@ -116,12 +117,16 @@ async function _POST(req: Request) {
       return json({ user: toPublic(u), table: publicCraps(t.state), repeated: placed.length, placedCents, balanceCents: getBalance(user.id) });
     }
     if (action === "roll") {
+      const riskedCents = layoutActions(t.state).reduce((n, b) => n + (Number(b.amount) || 0), 0);
       takeRoundSnapshot(t.state);
       const dice = rollDice();
       const r = resolveRoll(t.state, dice);
+      const rollRef = `${t.id}-${key}`;
       if (r.payoutCents > 0) {
-        creditPayout(user.id, r.payoutCents, "craps", `${t.id}-${key}`, `cr-pay-${t.id}-${key}`);
+        creditPayout(user.id, r.payoutCents, "craps", rollRef, `cr-pay-${t.id}-${key}`);
       }
+      // Remember the roll for "Replay last result"; the paid amount is read back from the ledger.
+      t.state.lastRollRecord = { ref: rollRef, dice: [dice[0], dice[1]], riskedCents, at: new Date().toISOString() };
       let repeatedCents = 0;
       if (t.state.alwaysRepeat && (t.state.lastRound || []).length) {
         const again = applyRepeat(user.id, t, `${key}-auto`);
@@ -133,6 +138,7 @@ async function _POST(req: Request) {
         user: toPublic(u),
         table: publicCraps(t.state),
         roll: dice,
+        rollRef,
         payoutCents: r.payoutCents,
         repeatedCents,
         balanceCents: getBalance(user.id),

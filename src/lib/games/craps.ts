@@ -9,6 +9,8 @@ export type PlaceAction =
 
 export type CrapsState = {
   id: string;
+  /** The most recent settled roll, kept so it can be replayed. Money comes from the ledger. */
+  lastRollRecord?: { ref: string; dice: [number, number]; riskedCents: number; at: string };
   point: number | null;
   pass: number;
   passOdds: number;
