@@ -132,7 +132,7 @@ export function serializeDb(): Buffer {
 
 export function getDb(): Database.Database {
   if (singleton) return singleton;
-  if (process.env.BLOB_READ_WRITE_TOKEN && !process.env.PIT_DB_PATH) {
+  if ((process.env.BLOB_READ_WRITE_TOKEN || (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN)) && !process.env.PIT_DB_PATH) {
     // Vercel: in-memory DB, snapshotted to Vercel Blob by withDbSync().
     return loadDbFromImage(null);
   }
