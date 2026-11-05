@@ -1,4 +1,5 @@
 "use client";
+import TableNameplate from "@/components/TableNameplate";
 import { useEffect, useMemo, useState } from "react";
 import Shell from "@/components/Shell";
 import PlayingCard from "@/components/PlayingCard";
@@ -119,7 +120,8 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
       <FirstVisitTip game="holdem" />
       <ResultsStrip game="holdem" refreshKey={`${game?.id}-${live}`} />
       {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
-      <div className="felt-table seated holdem-table">
+      <div className="marquee-felt felt-table seated holdem-table">
+<TableNameplate name="Texas Hold'em" sub="No limit · $1 / $2" />
         {flyPot != null && won && (
           <div className="pot-fly">
             <ChipStack cents={flyPot} size={32} showTotal={false} winning quiet />

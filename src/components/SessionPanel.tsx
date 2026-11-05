@@ -1,5 +1,6 @@
 "use client";
 import { RemindToggle } from "./ExclusionReminder";
+import Sparkline from "./Sparkline";
 import { useEffect, useState } from "react";
 import { api, money } from "./useUser";
 import { chicagoTime } from "@/lib/limitText";
@@ -22,6 +23,8 @@ export default function SessionPanel() {
     setRc(String((x.reality.pending ?? x.reality).minutes ?? ""));
     setSl(String((x.sessionLimit.pending ?? x.sessionLimit).minutes ?? ""));
   };
+  const [rows, setRows] = useState<{ type: string; amountCents: number }[]>([]);
+  useEffect(() => { api("/api/session/activity").then((x: { rows?: { type: string; amountCents: number }[] }) => setRows(x.rows ?? [])).catch(() => {}); }, [d?.session.netCents]);
   useEffect(() => { api("/api/session").then(load).catch(() => setErr("Couldn't load session settings.")); }, []);
   if (!d) return null;
   const post = async (body: object, ok: (r: any) => string) => {
@@ -56,6 +59,7 @@ export default function SessionPanel() {
           : <>No session in progress. A session ends after 30 minutes without a bet.</>}
         {" "}Shorter times apply at once; longer or off waits 24 hours.
       </p>
+      {d.session.active && <Sparkline rows={rows} />}
       {row("reality", "Reality check", "A reminder of how long you've played and your real net. It never pauses a hand or roll.", d.reality, rc, setRc, d.choices.reality)}
       {row("session", "Session time limit", "When time is up, new bets stop until you take a 30-minute break. Hands already dealt still finish and pay.", d.sessionLimit, sl, setSl, d.choices.session)}
       {err && <p className="err" role="alert">{err}</p>}

@@ -1,4 +1,5 @@
 "use client";
+import TableNameplate from "@/components/TableNameplate";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import { blackjackResultLabel } from "@/lib/feel";
@@ -126,7 +127,8 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
       <div className="rail-label" style={{ marginTop: 20 }}>Blackjack · 7-spot · 6 decks · S17 · 3:2</div>
       <LiveAnnounce text={game?.phase === "settled" && result !== "hand closed" ? `Hand over: ${result}. ${(game.payoutCents || 0) > 0 ? `Paid ${money(game.payoutCents)}.` : "No payout."}` : null} />
       <ResultsStrip game="blackjack" refreshKey={`${game?.id}-${game?.phase}`} />
-      <div className="felt-table seated bj-table">
+      <div className="marquee-felt felt-table seated bj-table">
+<TableNameplate name="Blackjack" sub="Pays 3 to 2" />
         <DealerBooth>
           {game?.dealer?.value ? <div className="muted">Showing {game.dealer.value.total}</div> : null}
           <div className="hand">

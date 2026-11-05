@@ -2,7 +2,7 @@ import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { getDb } from "@/lib/db";
 import { serverNow } from "@/lib/clock";
-import { breakUntil, breakKind, selfExclude, EXCLUSION_CHOICES, takeBreak, currentSession, settingView, requestSetting, cancelSettingPending, sessionBlock, REALITY_CHOICES, SESSION_CHOICES, type SettingKind } from "@/lib/session";
+import { weekSummary, breakUntil, breakKind, selfExclude, EXCLUSION_CHOICES, takeBreak, currentSession, settingView, requestSetting, cancelSettingPending, sessionBlock, REALITY_CHOICES, SESSION_CHOICES, type SettingKind } from "@/lib/session";
 
 function view(userId: string) {
   const db = getDb(); const now = serverNow();
@@ -14,6 +14,7 @@ function view(userId: string) {
     breakUntil: breakUntil(db, userId, now),
     breakKind: breakKind(db, userId, now),
     choices: { reality: REALITY_CHOICES, session: SESSION_CHOICES, exclusion: Object.keys(EXCLUSION_CHOICES) },
+    week: weekSummary(db, userId, now),
     serverNow: now.toISOString(),
   };
 }

@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Shell from "@/components/Shell";
+import Sparkline from "@/components/Sparkline";
 import { api, money, useUser } from "@/components/useUser";
 import { chicagoTime } from "@/lib/limitText";
 import { paidPhrase } from "@/lib/paidPhrase";
@@ -38,6 +39,7 @@ export default function ActivityPage() {
               Started {chicagoTime(d.session.startedAt!)} · {d.session.minutes} min<br />
               Bet {money(bets)} · paid back {money(back)} · <b>net {signed(d.session.netCents)}</b>
             </p>
+            <Sparkline rows={d.rows} />
             <p className="lim-help">From your ledger. Sandbox chips, not real money. Times are Chicago time.</p>
             <table className="activity-table">
               <thead><tr><th scope="col">Time</th><th scope="col">Game</th><th scope="col">What</th><th scope="col" className="num">Amount</th></tr></thead>

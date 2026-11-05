@@ -151,3 +151,15 @@ export const TABLE_TIPS: Record<string, { title: string; steps: string[] }> = {
   holdem: { title: "Hold'em in 10 seconds", steps: ["Tap Deal. You post a blind and get two cards.", "Check, bet or fold as the five shared cards come out.", "Best five-card hand at showdown takes the pot."] },
   paigow: { title: "Pai Gow in 10 seconds", steps: ["Pick a chip and tap Deal. You get seven cards.", "Tap House way to split them into a 5-card and a 2-card hand.", "Win both to win. Win one for a push. Wins pay less 5%."] },
 };
+
+/**
+ * Slot cabinet glow tier from the real server-paid return and the coin-in.
+ * 0: no glow (no pay, or paid back no more than the bet — never dressed up as a win)
+ * 1: profit under 1x bet · 2: return at least 2x · 3: at least 6x · 4: at least 21x
+ */
+export function slotGlowTier(betCents: number | null | undefined, returnCents: number | null | undefined): 0 | 1 | 2 | 3 | 4 {
+  const bet = Number(betCents) || 0, ret = Number(returnCents) || 0;
+  if (bet <= 0 || ret <= bet) return 0;
+  const m = ret / bet;
+  return m >= 21 ? 4 : m >= 6 ? 3 : m >= 2 ? 2 : 1;
+}

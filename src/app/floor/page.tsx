@@ -135,6 +135,28 @@ function RecentlyPlayed() {
   );
 }
 
+const hm = (m: number) => (m < 1 ? "Under 1 min" : m < 60 ? `${m} min` : `${Math.floor(m / 60)} h ${m % 60} min`);
+/** This Chicago week (Mon–Sun) from the ledger: time played, net and biggest single bet. */
+function WeekCard({ w }: { w?: { weekStart: string; minutes: number; netCents: number; biggestBetCents: number; bets: number } }) {
+  if (!w) return null;
+  const since = new Date(w.weekStart).toLocaleDateString("en-US", { timeZone: "America/Chicago", weekday: "short", month: "short", day: "numeric" });
+  return (
+    <section className="week-card" aria-label="Your week so far">
+      <div className="week-head"><h2>Your week</h2><span>since {since}</span></div>
+      {w.bets === 0 ? (
+        <p className="week-empty">No bets yet this week. Nothing to add up.</p>
+      ) : (
+        <dl className="week-stats">
+          <div><dt>Time played</dt><dd>{hm(w.minutes)}</dd></div>
+          <div><dt>Net</dt><dd className={w.netCents > 0 ? "pos" : w.netCents < 0 ? "neg" : ""}>{w.netCents >= 0 ? "+" : "−"}{money(Math.abs(w.netCents))}</dd></div>
+          <div><dt>Biggest bet</dt><dd>{money(w.biggestBetCents)}</dd></div>
+        </dl>
+      )}
+      <p className="week-foot">From your ledger, Chicago time · <a href="/wallet#time">Time settings</a> · <a href="/activity">History</a></p>
+    </section>
+  );
+}
+
 export default function Floor() {
   const [q, setQ] = useState("");
   const pause = usePauseInfo();
@@ -184,6 +206,7 @@ export default function Floor() {
               21+
             </span>
           </div>
+          <WeekCard w={pause?.week} />
           <StartHere />
           <div className="floor-tools">
             <RecentlyPlayed />

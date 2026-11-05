@@ -6,6 +6,7 @@ import SlotMachine, { type SlotMachineHandle, type WinCell } from "@/components/
 import { ActionDock, ChipRow, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { api, money, useUser } from "@/components/useUser";
 import { PAYLINES, type Symbol } from "@/lib/games/slot";
+import { slotGlowTier, soundOn, reducedMotion } from "@/lib/feel";
 
 type LineWin = { line: number; symbol: Symbol | null; count: number; pay: number; winCents: number };
 
@@ -40,6 +41,12 @@ export default function SlotPage() {
   const [spinning, setSpinning] = useState(false);
   const [showOutcome, setShowOutcome] = useState(false);
   const machineRef = useRef<SlotMachineHandle>(null);
+  const [feelLive, setFeelLive] = useState(false);
+  useEffect(() => {
+    const f = () => setFeelLive(soundOn() && !reducedMotion());
+    f(); window.addEventListener("pit-sound", f);
+    return () => window.removeEventListener("pit-sound", f);
+  }, []);
 
   useEffect(() => {
     api("/api/games/slot").then(setInfo).catch((e) => setErr(e.message));
@@ -107,6 +114,8 @@ export default function SlotPage() {
               spinning={spinning}
               winCells={winCells}
               onSpinComplete={onSpinComplete}
+              glow={showOutcome && spin ? slotGlowTier(coinIn, spin.winCents) : 0}
+              glowLive={feelLive}
             />
           </div>
 
@@ -116,13 +125,22 @@ export default function SlotPage() {
             <div><span>Last win</span><strong>{showOutcome && spin ? money(spin.winCents) : "—"}</strong></div>
           </div>
 
-          {showOutcome && spin && spin.winCents > 0 && (
+          {showOutcome && spin && spin.winCents > 0 && spin.winCents <= coinIn && (
+            <OutcomeBanner
+              push
+              title={spin.winCents === coinIn ? "BET BACK" : "PART BACK"}
+              amountCents={spin.winCents}
+              stakeCents={coinIn}
+              subtitle={spin.winCents === coinIn ? `${money(spin.winCents)} back on a ${money(coinIn)} bet · net $0.00` : `${money(spin.winCents)} back on a ${money(coinIn)} bet · net −${money(coinIn - spin.winCents)}`}
+            />
+          )}
+          {showOutcome && spin && spin.winCents > coinIn && (
             <OutcomeBanner
               win
               title="YOU WIN"
               amountCents={spin.winCents}
               stakeCents={coinIn}
-              subtitle={`${money(spin.winCents)} added to your stack`}
+              subtitle={`${money(spin.winCents)} back on a ${money(coinIn)} bet · net +${money(spin.winCents - coinIn)}`}
             />
           )}
           {showOutcome && spin && spin.winCents === 0 && (

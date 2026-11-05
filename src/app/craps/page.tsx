@@ -1,4 +1,5 @@
 "use client";
+import TableNameplate from "@/components/TableNameplate";
 import { useCallback, useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { crapsFeltCents, crapsRiskedCents } from "@/lib/feel";
@@ -250,7 +251,8 @@ export default function CrapsPage() {
           {repeatNote && (
             <OutcomeBanner push title="PUSH" subtitle={repeatNote} />
           )}
-          <div className="felt-table felt-rect craps-felt">
+          <div className="marquee-felt felt-table felt-rect craps-felt">
+<TableNameplate name="Craps" sub="Pass line pays 1 to 1" />
             <div className="cr-place-grid">
               {[4,5,6,8,9,10].map((n) => (
                 <button type="button" key={n} className={z(!!table?.place?.[String(n)])} aria-pressed={(table?.place?.[String(n)] || 0) > 0} aria-label={`${`Place ${n}`}, ${(table?.place?.[String(n)] || 0) > 0 ? money(table?.place?.[String(n)] || 0) + " on" : "no bet"}. Tap to add ${money(chip)}`} onClick={() => bet({ type: "place", number: n })}>

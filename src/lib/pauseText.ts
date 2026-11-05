@@ -1,6 +1,6 @@
 import { chicagoTime } from "./limitText";
 
-export type PauseInfo = { breakUntil?: string | null; breakKind?: "break" | "exclusion" | null; blocked?: { breakEndsAt: string } | null };
+export type PauseInfo = { breakUntil?: string | null; breakKind?: "break" | "exclusion" | null; blocked?: { breakEndsAt: string } | null; week?: { weekStart: string; minutes: number; netCents: number; biggestBetCents: number; bets: number } };
 /** Calm one-line status when the server is refusing new bets, or null. The end time is the server's own. */
 export function pauseText(d: PauseInfo | null | undefined): string | null {
   if (!d) return null;

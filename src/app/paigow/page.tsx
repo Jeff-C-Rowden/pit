@@ -1,4 +1,5 @@
 "use client";
+import TableNameplate from "@/components/TableNameplate";
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { paigowResultLabel } from "@/lib/feel";
@@ -86,7 +87,8 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
       </div>
       <ResultsStrip game="paigow" refreshKey={`${game?.id}-${game?.phase}`} />
       {err && <p className="err">{err}</p>}
-      <div className="felt-table seated felt-rect bj-table pg-table">
+      <div className="marquee-felt felt-table seated felt-rect bj-table pg-table">
+<TableNameplate name="Pai Gow Poker" sub="High · Low" />
         <DealerBooth>
           <div className="muted">Dealer high / low</div>
           {!(game?.dealerHigh || game?.dealerCards || []).length && (

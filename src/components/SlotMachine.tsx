@@ -493,8 +493,12 @@ const SlotMachine = forwardRef<
     spinning: boolean;
     winCells?: WinCell[];
     onSpinComplete?: () => void;
+    /** 0–4 from slotGlowTier on the real paid return; lights only after the reels settle. */
+    glow?: number;
+    /** Animate the lights (Sound & feel on and no reduced motion). Otherwise they light steadily. */
+    glowLive?: boolean;
   }
->(function SlotMachine({ grid, spinning, winCells, onSpinComplete }, ref) {
+>(function SlotMachine({ grid, spinning, winCells, onSpinComplete, glow = 0, glowLive = false }, ref) {
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
   const [settled, setSettled] = useState(true);
@@ -537,8 +541,9 @@ const SlotMachine = forwardRef<
 
   return (
     <SymHCtx.Provider value={symH}>
-    <div className="slot-cabinet" style={{ ["--sym-h" as string]: `${symH}px` }}>
+    <div className={`slot-cabinet${settled && !spinning && glow > 0 ? ` glow-t${glow}${glowLive ? " glow-live" : ""}` : ""}`} data-glow={settled && !spinning ? glow : 0} style={{ ["--sym-h" as string]: `${symH}px` }}>
       <div className="slot-lamp" aria-hidden />
+      <div className="slot-win-halo" aria-hidden />
       <div className="slot-top-lights" aria-hidden>
         <span />
         <span />

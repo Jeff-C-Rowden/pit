@@ -1,4 +1,5 @@
 "use client";
+import TableNameplate from "@/components/TableNameplate";
 import PauseStatus from "@/components/PauseStatus";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
@@ -351,7 +352,8 @@ export default function RoulettePage() {
                 {reduced && <span className="muted">Reduced motion: results show instantly</span>}
               </div>
             </div>
-            <div className="rl-felt-wrap" ref={feltRef}>
+            <div className="marquee-felt rl-felt-wrap" ref={feltRef}>
+<TableNameplate name="Roulette" sub="Double zero · 38 pockets" />
               <RouletteCloth
                 onAdd={add}
                 onRemove={remove}

@@ -201,3 +201,32 @@ export function activityCsv(rows: ActivityRow[]): string {
   });
   return [head.map(csvCell).join(","), ...lines].join("\r\n") + "\r\n";
 }
+
+/** Monday 00:00 Chicago time of the week containing `now`. */
+export function chicagoWeekStart(now: Date): Date {
+  const ymd = now.toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
+  const dow = new Date(ymd + "T12:00:00Z").getUTCDay(); // 0 = Sunday
+  const back = (dow + 6) % 7;
+  return chicagoDayStart(new Date(Date.parse(ymd + "T12:00:00Z") - back * 86_400_000).toISOString().slice(0, 10));
+}
+export type WeekSummary = { weekStart: string; minutes: number; netCents: number; biggestBetCents: number; bets: number };
+/**
+ * This Chicago week (Mon–Sun) from the ledger only. Time played sums each session's span
+ * (first to last bet/result, sessions split by BREAK_MS gaps). Net = payouts + refunds − bets.
+ */
+export function weekSummary(db: Database.Database, userId: string, now = new Date()): WeekSummary {
+  const start = chicagoWeekStart(now);
+  const rows = db.prepare(`SELECT type, amount_cents AS a, created_at AS t FROM ledger
+    WHERE user_id = ? AND type IN ('bet','payout','refund') AND created_at >= ? AND created_at <= ? ORDER BY created_at ASC`)
+    .all(userId, start.toISOString(), now.toISOString()) as { type: string; a: number; t: string }[];
+  let ms = 0, net = 0, big = 0, bets = 0, runStart = 0, prev = 0;
+  for (const r of rows) {
+    const t = Date.parse(r.t);
+    if (!prev || t - prev >= BREAK_MS) { if (prev) ms += prev - runStart; runStart = t; }
+    prev = t; net += r.a;
+    if (r.type === "bet") { bets++; big = Math.max(big, -r.a); }
+  }
+  if (prev) ms += prev - runStart;
+  return { weekStart: start.toISOString(), minutes: Math.round(ms / 60000), netCents: net, biggestBetCents: big, bets };
+}
+
