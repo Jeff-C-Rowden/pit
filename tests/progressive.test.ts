@@ -8,7 +8,14 @@ import {
   spinVaultSpire,
   evaluateVsGrid,
 } from "../src/lib/games/slotProgressive";
-import { applyProgressiveSpin, ensureAllTiers, publicMeters, rollTriggerCents } from "../src/lib/progressive";
+import {
+  applyProgressiveSpin,
+  ensureAllTiers,
+  getRecentProgressiveHits,
+  privacyDisplayName,
+  publicMeters,
+  rollTriggerCents,
+} from "../src/lib/progressive";
 
 describe("canopy spire progressive model", () => {
   it("has 4 tiers totaling 300 bps with target seeds/ceilings", () => {
@@ -101,5 +108,116 @@ describe("progressive meters", () => {
       }
     }
     expect(rollTriggerCents(VS_TIERS[3]!)).toBeNull();
+  });
+});
+
+describe("progressive last-won history", () => {
+  let db: Database.Database;
+
+  beforeEach(() => {
+    db = new Database(":memory:");
+    db.exec(`
+      CREATE TABLE users (
+        id TEXT PRIMARY KEY,
+        email TEXT UNIQUE NOT NULL,
+        password_hash TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        age_confirmed INTEGER NOT NULL DEFAULT 0,
+        is_operator INTEGER NOT NULL DEFAULT 0,
+        balance_cents INTEGER NOT NULL DEFAULT 0,
+        deposit_limit_cents INTEGER,
+        loss_limit_cents INTEGER,
+        created_at TEXT NOT NULL
+      );
+      CREATE TABLE progressive_meters (
+        id TEXT PRIMARY KEY,
+        amount_cents INTEGER NOT NULL,
+        seed_cents INTEGER NOT NULL,
+        contribution_bps INTEGER NOT NULL,
+        ceiling_cents INTEGER,
+        trigger_cents INTEGER,
+        last_hit_at TEXT,
+        updated_at TEXT NOT NULL
+      );
+    `);
+  });
+
+  it("returns an empty recentHits list when nobody has hit", () => {
+    ensureAllTiers(db);
+    expect(getRecentProgressiveHits(db)).toEqual([]);
+  });
+
+  it("never invents winners and records only real hits", () => {
+    ensureAllTiers(db);
+    db.prepare(
+      `INSERT INTO users (id, email, password_hash, display_name, age_confirmed, balance_cents, created_at)
+       VALUES (?, ?, ?, ?, 1, 0, ?)`,
+    ).run("u1", "a@example.com", "x", "Jeff Rowden", new Date().toISOString());
+
+    // No contribution → no hit → still empty
+    const miss = applyProgressiveSpin(
+      {
+        contributionByTier: { "vault-mini": 0, "vault-minor": 0, "vault-major": 0, "vault-grand": 0 },
+        userId: "u1",
+      },
+      db,
+    );
+    expect(miss.hits).toHaveLength(0);
+    expect(getRecentProgressiveHits(db)).toEqual([]);
+
+    const mini = db.prepare("SELECT * FROM progressive_meters WHERE id = ?").get("vault-mini") as any;
+    const trigger = mini.trigger_cents ?? 2500;
+    db.prepare("UPDATE progressive_meters SET amount_cents = ? WHERE id = ?").run(trigger - 1, "vault-mini");
+
+    const hit = applyProgressiveSpin(
+      {
+        contributionByTier: { "vault-mini": 5, "vault-minor": 0, "vault-major": 0, "vault-grand": 0 },
+        userId: "u1",
+      },
+      db,
+    );
+    expect(hit.hits).toHaveLength(1);
+    expect(hit.hits[0]!.tierId).toBe("vault-mini");
+
+    const recent = getRecentProgressiveHits(db);
+    expect(recent).toHaveLength(1);
+    expect(recent[0]!.tier).toBe("Mini");
+    expect(recent[0]!.tierId).toBe("vault-mini");
+    expect(recent[0]!.amountCents).toBe(hit.hits[0]!.awardCents);
+    expect(recent[0]!.displayName).toBe("Jeff R.");
+    expect(typeof recent[0]!.at).toBe("string");
+    expect(recent[0]!.at.length).toBeGreaterThan(10);
+
+    // Public API shape: only the documented fields, no fake filler rows
+    expect(Object.keys(recent[0]!).sort()).toEqual(
+      ["amountCents", "at", "displayName", "tier", "tierId"].sort(),
+    );
+  });
+
+  it("caps history newest-first and uses Player when name unknown", () => {
+    ensureAllTiers(db);
+    for (let i = 0; i < 3; i++) {
+      const mini = db.prepare("SELECT * FROM progressive_meters WHERE id = ?").get("vault-mini") as any;
+      const trigger = mini.trigger_cents ?? 2500;
+      db.prepare("UPDATE progressive_meters SET amount_cents = ? WHERE id = ?").run(trigger - 1, "vault-mini");
+      applyProgressiveSpin(
+        {
+          contributionByTier: { "vault-mini": 5, "vault-minor": 0, "vault-major": 0, "vault-grand": 0 },
+          userId: null,
+        },
+        db,
+      );
+    }
+    const recent = getRecentProgressiveHits(db, 2);
+    expect(recent).toHaveLength(2);
+    expect(recent.every((h) => h.displayName === "Player")).toBe(true);
+    expect(Date.parse(recent[0]!.at)).toBeGreaterThanOrEqual(Date.parse(recent[1]!.at));
+  });
+
+  it("privacyDisplayName never invents a name", () => {
+    expect(privacyDisplayName(null)).toBe("Player");
+    expect(privacyDisplayName("")).toBe("Player");
+    expect(privacyDisplayName("Ada")).toBe("Ada");
+    expect(privacyDisplayName("Ada Lovelace")).toBe("Ada L.");
   });
 });

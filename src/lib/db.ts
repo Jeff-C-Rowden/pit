@@ -71,6 +71,15 @@ CREATE TABLE IF NOT EXISTS progressive_meters (
   last_hit_at TEXT,
   updated_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS progressive_hits (
+  id TEXT PRIMARY KEY,
+  tier_id TEXT NOT NULL,
+  tier_name TEXT NOT NULL,
+  amount_cents INTEGER NOT NULL,
+  user_id TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_progressive_hits_at ON progressive_hits(created_at DESC);
 `;
 
 let singleton: Database.Database | null = null;

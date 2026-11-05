@@ -5,7 +5,7 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | # | Area | Idea | Status |
 |---|------|------|--------|
 | 1 | Onboarding | First-visit welcome sheet: claim $100 sandbox chips (idempotent, once per account) + 4-step lobby tour with responsible-play step. Mobile-first. | Shipped cycle 1 |
-| 2 | Visuals | Game-card art: original SVG illustrations per table (felt, wheel, reels) replacing flat cards. | Next |
+| 2 | Visuals | Game-card art: original SVG illustrations per table (felt, wheel, reels) replacing flat cards. | Next (after research #2) |
 | 3 | Game feel | Haptics (navigator.vibrate) + optional sound toggle on spins, deals and wins, off by default, respects reduced motion. | |
 | 4 | Session engagement | "Session panel": time played, net result, bets placed, with a gentle break reminder every 30 min. | |
 | 5 | Onboarding | Per-game "How to play" first-seat coach marks with published RTP/house edge link. | |
@@ -16,12 +16,14 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 10 | Visuals | PWA manifest + install icon + splash so the demo feels app-like on phones. | |
 | 11 | Onboarding | Guest "try one spin" demo mode before signup with no ledger writes. | |
 
-## NEXT (top): Live Canopy Spire jackpot meter in the lobby + real last-won history (research priority #1). Meter must show the true sandbox pot from the ledger, label it "Sandbox / test chips", and list only genuine past wins (no invented winners).
+## NEXT (top): Daily free sandbox-chip claim (research priority #2) — once/day, no playthrough, no popups; clearly labeled test credits, capped.
+
+## Shipped 2026-11-05: Live Canopy Spire jackpot meter in the lobby + real last-won history (research priority #1). Floor Canopy Spire card polls true sandbox pots from GET /api/games/slot-progressive, labels the strip "Sandbox / test chips", and lists genuine progressive_hits (tier · amount · privacy-safe name · relative time) with a quiet "No jackpots hit yet" empty state — never invented winners. Hits are recorded only inside applyProgressiveSpin when a real MHB/mystery award fires. Tests: tests/progressive.test.ts history suite.
 
 ## Shipped 2026-11-04: roulette betting table fits every width with no sideways scroll (verified 320-1440 px incl. 360/390/430; all 152 bet spots tappable and correctly mapped), phone stand-on-end layout now up to 700 px, desktop columns shrink instead of clipping 2:1, chip dock fits 320 px; old Session/Hottest panel removed (collapsible "Recent numbers" kept). Tests: tests/rouletteLayout.test.ts + manual tests/e2e/roulette-layout.mjs.
 
 ## Player research priorities (from /workspace/pit-player-research.md, 2026-11-04) — rank these first
-1. Live Canopy Spire jackpot meter in lobby + real last-won history
+1. Live Canopy Spire jackpot meter in lobby + real last-won history — SHIPPED 2026-11-05
 2. Daily free sandbox-chip claim (once/day, no playthrough, no popups)
 3. Win animations scaled to real win size; sound + mute; turbo/skip
 4. Popup-free lobby with search + recently played — SHIPPED 2026-11-04 (floor search box + last-3 recently played chips, localStorage only)

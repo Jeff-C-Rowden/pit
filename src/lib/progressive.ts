@@ -1,6 +1,6 @@
 import type Database from "better-sqlite3";
 import { getDb } from "./db";
-import { randInt } from "./rng";
+import { newId, randInt } from "./rng";
 import { VS_TIERS, type TierDef, type TierId } from "./games/slotProgressive";
 
 export type ProgressiveRow = {
@@ -12,6 +12,23 @@ export type ProgressiveRow = {
   trigger_cents: number | null;
   last_hit_at: string | null;
   updated_at: string;
+};
+
+export type ProgressiveHitRow = {
+  id: string;
+  tier_id: string;
+  tier_name: string;
+  amount_cents: number;
+  user_id: string | null;
+  created_at: string;
+};
+
+export type RecentHitPublic = {
+  tier: string;
+  tierId: TierId;
+  amountCents: number;
+  at: string;
+  displayName: string;
 };
 
 function tierById(id: string): TierDef {
@@ -40,8 +57,34 @@ function migrateColumns(db: Database.Database) {
   }
 }
 
+/** Ensure progressive_hits exists (for DBs opened before the table was added to SCHEMA). */
+export function ensureHitsTable(db: Database.Database = getDb()) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS progressive_hits (
+      id TEXT PRIMARY KEY,
+      tier_id TEXT NOT NULL,
+      tier_name TEXT NOT NULL,
+      amount_cents INTEGER NOT NULL,
+      user_id TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_progressive_hits_at ON progressive_hits(created_at DESC);
+  `);
+}
+
+/** Privacy-safe winner label from a real account display name (never invented). */
+export function privacyDisplayName(raw: string | null | undefined): string {
+  if (!raw || !raw.trim()) return "Player";
+  const parts = raw.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0]!.slice(0, 16);
+  const first = parts[0]!.slice(0, 14);
+  const initial = parts[parts.length - 1]![0]!;
+  return `${first} ${initial}.`.slice(0, 18);
+}
+
 export function ensureAllTiers(db: Database.Database = getDb()): ProgressiveRow[] {
   migrateColumns(db);
+  ensureHitsTable(db);
   const now = new Date().toISOString();
   for (const t of VS_TIERS) {
     const existing = db.prepare("SELECT * FROM progressive_meters WHERE id = ?").get(t.id) as ProgressiveRow | undefined;
@@ -117,10 +160,11 @@ export type ProgressiveSpinResult = {
 
 /**
  * Apply per-tier contributions, then evaluate MHB / Grand mystery on this spin.
- * On hit: award displayed (post-contribution) amount, reseed, roll new trigger.
+ * On hit: award displayed (post-contribution) amount, reseed, roll new trigger,
+ * and append a genuine progressive_hits row (never invented).
  */
 export function applyProgressiveSpin(
-  opts: { contributionByTier: Record<TierId, number> },
+  opts: { contributionByTier: Record<TierId, number>; userId?: string | null },
   db: Database.Database = getDb(),
 ): ProgressiveSpinResult {
   ensureAllTiers(db);
@@ -148,6 +192,10 @@ export function applyProgressiveSpin(
          SET amount_cents = ?, trigger_cents = ?, last_hit_at = ?, updated_at = ?
          WHERE id = ?`,
       ).run(t.seedCents, newTrigger, now, now, t.id);
+      db.prepare(
+        `INSERT INTO progressive_hits (id, tier_id, tier_name, amount_cents, user_id, created_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      ).run(newId(), t.id, t.name, award, opts.userId ?? null, now);
       hits.push({ tierId: t.id, name: t.name, awardCents: award, reseedsTo: t.seedCents });
     } else {
       db.prepare(
@@ -181,4 +229,49 @@ export function publicMeters(rows: ProgressiveRow[]) {
       hasMustHitBy: row.ceiling_cents != null,
     };
   });
+}
+
+const RECENT_HITS_DEFAULT = 8;
+
+/**
+ * Genuine past progressive wins only — empty when nobody has hit yet.
+ * Joins users for a privacy-safe display name when user_id is present.
+ */
+export function getRecentProgressiveHits(
+  db: Database.Database = getDb(),
+  limit = RECENT_HITS_DEFAULT,
+): RecentHitPublic[] {
+  ensureHitsTable(db);
+  const cap = Math.max(0, Math.min(20, Math.floor(limit)));
+  if (cap === 0) return [];
+
+  const rows = db
+    .prepare(
+      `SELECT tier_id, tier_name, amount_cents, user_id, created_at
+       FROM progressive_hits
+       ORDER BY created_at DESC
+       LIMIT ?`,
+    )
+    .all(cap) as ProgressiveHitRow[];
+
+  const hasUsers = Boolean(
+    db.prepare("SELECT 1 AS ok FROM sqlite_master WHERE type = 'table' AND name = 'users'").get(),
+  );
+  const nameById = new Map<string, string>();
+  if (hasUsers) {
+    const lookup = db.prepare("SELECT display_name FROM users WHERE id = ?");
+    for (const r of rows) {
+      if (!r.user_id || nameById.has(r.user_id)) continue;
+      const u = lookup.get(r.user_id) as { display_name: string } | undefined;
+      if (u?.display_name) nameById.set(r.user_id, u.display_name);
+    }
+  }
+
+  return rows.map((r) => ({
+    tier: r.tier_name,
+    tierId: r.tier_id as TierId,
+    amountCents: r.amount_cents,
+    at: r.created_at,
+    displayName: privacyDisplayName(r.user_id ? nameById.get(r.user_id) : null),
+  }));
 }

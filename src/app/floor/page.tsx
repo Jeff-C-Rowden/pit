@@ -13,6 +13,23 @@ type MeterPublic = {
   progressiveCents: number;
 };
 
+type RecentHitPublic = {
+  tier: string;
+  amountCents: number;
+  at: string;
+  displayName: string;
+};
+
+function relativeHitTime(iso: string): string {
+  const ms = Date.now() - Date.parse(iso);
+  if (!Number.isFinite(ms) || ms < 45_000) return "just now";
+  const m = Math.floor(ms / 60_000);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 48) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
 const GAMES = [
   { href: "/blackjack", level: "Easy to learn", pace: "Steady", name: "Blackjack", meta: "7-spot · six-deck · S17 · BJ 3:2", line: "The pit staple.", accent: "bj" },
   { href: "/slot", level: "Easiest", pace: "Fast", name: "Gilded Track", meta: "5 reels · 9 lines · published 94–96% RTP", line: "A video slot with a real paytable.", accent: "slot" },
@@ -32,13 +49,17 @@ const GAMES = [
 
 function VaultLobbyMeters() {
   const [meters, setMeters] = useState<MeterPublic[]>([]);
+  const [recentHits, setRecentHits] = useState<RecentHitPublic[] | null>(null);
 
   useEffect(() => {
     let alive = true;
     const load = () => {
       api("/api/games/slot-progressive")
         .then((d) => {
-          if (alive && d.meters) setMeters(d.meters);
+          if (!alive) return;
+          if (d.meters) setMeters(d.meters);
+          if (Array.isArray(d.recentHits)) setRecentHits(d.recentHits);
+          else setRecentHits([]);
         })
         .catch(() => {});
     };
@@ -58,13 +79,38 @@ function VaultLobbyMeters() {
   const sorted = [...meters].sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
 
   return (
-    <div className="vault-lobby-meters" aria-label="Live progressive meters">
-      {sorted.map((m) => (
-        <div key={m.id} className={`vault-lobby-tier vault-lobby-${m.name.toLowerCase()}`}>
-          <span className="vault-lobby-tier-name">{m.name}</span>
-          <span className="vault-lobby-tier-amt">{money(m.progressiveCents)}</span>
-        </div>
-      ))}
+    <div className="vault-lobby-prog" aria-label="Live Canopy Spire progressive">
+      <div className="vault-lobby-prog-head">
+        <span className="sandbox-chip">Sandbox / test chips</span>
+        <span className="vault-lobby-live">LIVE</span>
+      </div>
+      <div className="vault-lobby-meters" aria-label="Live progressive meters">
+        {sorted.map((m) => (
+          <div key={m.id} className={`vault-lobby-tier vault-lobby-${m.name.toLowerCase()}`}>
+            <span className="vault-lobby-tier-name">{m.name}</span>
+            <span className="vault-lobby-tier-amt">{money(m.progressiveCents)}</span>
+          </div>
+        ))}
+      </div>
+      <div className="vault-lobby-lastwon" aria-label="Recent progressive wins">
+        <div className="vault-lobby-lastwon-lab">Last won</div>
+        {recentHits === null ? (
+          <p className="vault-lobby-lastwon-empty muted">…</p>
+        ) : recentHits.length === 0 ? (
+          <p className="vault-lobby-lastwon-empty muted">No jackpots hit yet</p>
+        ) : (
+          <ul className="vault-lobby-lastwon-list">
+            {recentHits.slice(0, 5).map((h, i) => (
+              <li key={`${h.at}-${h.tier}-${i}`}>
+                <span className="vault-lobby-hit-tier">{h.tier}</span>
+                <span className="vault-lobby-hit-amt">{money(h.amountCents)}</span>
+                <span className="vault-lobby-hit-who muted">{h.displayName}</span>
+                <span className="vault-lobby-hit-when muted">{relativeHitTime(h.at)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
@@ -179,6 +225,7 @@ function StartHere() {
   if (!show) return null;
   return (
     <section className="start-here" aria-label="New here">
+      <FeltThumb kind="rl" />
       <div className="start-here-k">New here? Start with one easy bet</div>
       <h2>Roulette: put a chip on Red, then Spin</h2>
       <p className="muted">Red pays even money and wins 18 of 38 spins (47.4%). Each table shows its rules before you bet.</p>

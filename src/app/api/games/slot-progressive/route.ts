@@ -11,7 +11,12 @@ import {
   VS_PAYTABLE,
   VS_PAYLINES,
 } from "@/lib/games/slotProgressive";
-import { applyProgressiveSpin, getAllProgressives, publicMeters } from "@/lib/progressive";
+import {
+  applyProgressiveSpin,
+  getAllProgressives,
+  getRecentProgressiveHits,
+  publicMeters,
+} from "@/lib/progressive";
 
 async function _GET() {
   const meters = getAllProgressives();
@@ -20,6 +25,8 @@ async function _GET() {
     paytable: VS_PAYTABLE,
     lines: VS_PAYLINES.length,
     meters: publicMeters(meters),
+    recentHits: getRecentProgressiveHits(),
+    sandbox: true,
     rtpPublished: VAULT_SPIRE_INFO.rtpNote,
   });
 }
@@ -45,7 +52,10 @@ async function _POST(req: Request) {
         db,
       );
 
-      const prog = applyProgressiveSpin({ contributionByTier: spin.contributionByTier }, db);
+      const prog = applyProgressiveSpin(
+        { contributionByTier: spin.contributionByTier, userId: user.id },
+        db,
+      );
       const winCents = spin.lineWinCents + prog.progressiveAwardCents;
       if (winCents > 0) {
         creditPayout(
@@ -76,6 +86,8 @@ async function _POST(req: Request) {
         winCents: outcome.winCents,
       }),
       meters: publicMeters(getAllProgressives(db)),
+      recentHits: getRecentProgressiveHits(db),
+      sandbox: true,
       balanceCents: getBalance(user.id, db),
     });
   });
