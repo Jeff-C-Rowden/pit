@@ -308,6 +308,7 @@ export default function CrapsPage() {
                 Auto-repeat {table?.alwaysRepeat ? "on" : "off"}
               </button>
             </div>
+            <div className="felt-total" aria-live="polite">Your felt: <b>{money(crapsFeltCents(table))}</b></div>
             <button className="btn primary hero-act" disabled={busy || !canRoll} onClick={roll}>{busy ? "Rolling…" : canRoll ? "Roll" : "Place a bet to roll"}</button>
           </ActionDock>
         </div>

@@ -1,7 +1,7 @@
 "use client";
-import { GameEmblem } from "@/components/GameEmblem";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import FeltThumb from "@/components/FeltThumb";
 import Shell from "@/components/Shell";
 import Onboarding from "@/components/Onboarding";
 import { api, money } from "@/components/useUser";
@@ -140,7 +140,7 @@ export default function Floor() {
               >
                 {g.progressive && <span className="progressive-badge">LIVE Progressive</span>}
                 {g.cash && <div className="cash-stakes">{g.stakes}</div>}
-                <GameEmblem kind={g.accent} />
+                <FeltThumb kind={g.accent} />
                 <div className="gmeta gline">{g.line}</div>
                 <h2 className="gname">{g.name}</h2>
                 <div className="gmeta">{g.meta}</div>

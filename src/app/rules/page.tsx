@@ -1,5 +1,6 @@
 import Logo from "@/components/Logo";
 import Link from "next/link";
+import ShowTipsSwitch from "@/components/ShowTipsSwitch";
 
 export default function Rules() {
   return (
@@ -9,6 +10,7 @@ export default function Rules() {
         <h1 style={{ fontSize: 48 }}>House rules</h1>
         <div className="rule" />
       </div>
+      <div className="panel"><ShowTipsSwitch /></div>
       <div className="panel">
         <p>Pit is 21+ only. The server owns every card, reel, die, pocket, and chip. Your browser cannot credit money. Bets debit before resolution; wins credit after. Each ledger row is idempotent.</p>
         <h3>Blackjack</h3>
