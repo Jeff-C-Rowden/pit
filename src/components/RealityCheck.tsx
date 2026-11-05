@@ -29,8 +29,8 @@ export default function RealityCheck() {
   if (d.breakUntil) {
     return (
       <div className="reality-note blocked" role="status">
-        <b>On a break you chose</b>
-        <span>New bets open at {chicagoTime(d.breakUntil)}. Anything already in play still finishes. This session: net {netTxt}.</span>
+        <b>{d.breakKind === "exclusion" ? "Self-exclusion you chose" : "On a break you chose"}</b>
+        <span>New bets open at {chicagoTime(d.breakUntil)}. Anything already in play still finishes. It can&apos;t be ended early. This session: net {netTxt}.</span>
         <div className="reality-acts"><Link className="btn" href="/activity">See activity</Link></div>
       </div>
     );

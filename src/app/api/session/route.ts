@@ -2,7 +2,7 @@ import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { getDb } from "@/lib/db";
 import { serverNow } from "@/lib/clock";
-import { breakUntil, takeBreak, currentSession, settingView, requestSetting, cancelSettingPending, sessionBlock, REALITY_CHOICES, SESSION_CHOICES, type SettingKind } from "@/lib/session";
+import { breakUntil, breakKind, selfExclude, EXCLUSION_CHOICES, takeBreak, currentSession, settingView, requestSetting, cancelSettingPending, sessionBlock, REALITY_CHOICES, SESSION_CHOICES, type SettingKind } from "@/lib/session";
 
 function view(userId: string) {
   const db = getDb(); const now = serverNow();
@@ -12,7 +12,8 @@ function view(userId: string) {
     sessionLimit: settingView(db, userId, "session", now),
     blocked: sessionBlock(db, userId, now),
     breakUntil: breakUntil(db, userId, now),
-    choices: { reality: REALITY_CHOICES, session: SESSION_CHOICES },
+    breakKind: breakKind(db, userId, now),
+    choices: { reality: REALITY_CHOICES, session: SESSION_CHOICES, exclusion: Object.keys(EXCLUSION_CHOICES) },
     serverNow: now.toISOString(),
   };
 }
@@ -25,6 +26,13 @@ async function _POST(req: Request) {
     if (body.takeBreak === true) {
       const until = takeBreak(db, u.id, serverNow());
       void until; return json(view(u.id));
+    }
+    if (body.selfExclude !== undefined) {
+      // Only the listed lengths; starts now; never shortened; no end-early path exists.
+      if (typeof body.selfExclude !== "string" || !Object.prototype.hasOwnProperty.call(EXCLUSION_CHOICES, body.selfExclude)) return err("selfExclude must be 24h, 7d or 30d");
+      if (body.confirm !== true) return err("confirm the self-exclusion to start it");
+      selfExclude(db, u.id, body.selfExclude, serverNow());
+      return json(view(u.id));
     }
     if (body.cancelPending !== undefined) {
       if (body.cancelPending !== "reality" && body.cancelPending !== "session") return err("cancelPending must be reality or session");

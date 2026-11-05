@@ -23,7 +23,7 @@ const COLS: Record<SettingKind, { cur: string; pv: string; pa: string }> = {
 
 export function migrateSession(db: Database.Database) {
   const have = new Set((db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map((c) => c.name));
-  for (const c of ["reality_check_min INTEGER", "reality_pending_min INTEGER", "reality_pending_at TEXT", "session_limit_min INTEGER", "session_pending_min INTEGER", "session_pending_at TEXT", "break_until TEXT"]) {
+  for (const c of ["reality_check_min INTEGER", "reality_pending_min INTEGER", "reality_pending_at TEXT", "session_limit_min INTEGER", "session_pending_min INTEGER", "session_pending_at TEXT", "break_until TEXT", "break_kind TEXT"]) {
     if (!have.has(c.split(" ")[0])) db.exec(`ALTER TABLE users ADD COLUMN ${c}`);
   }
 }
@@ -101,21 +101,55 @@ export function breakUntil(db: Database.Database, userId: string, now = new Date
   const u = db.prepare("SELECT break_until AS b FROM users WHERE id = ?").get(userId) as { b: string | null } | undefined;
   return u?.b && Date.parse(u.b) > now.getTime() ? u.b : null;
 }
-export function takeBreak(db: Database.Database, userId: string, now = new Date()): string {
+/** Self-exclusion lengths a player can choose. Same server-enforced pause as a break, just longer. */
+export const EXCLUSION_CHOICES: Record<string, number> = { "24h": 24 * 3600_000, "7d": 7 * 24 * 3600_000, "30d": 30 * 24 * 3600_000 };
+export type BreakKind = "break" | "exclusion";
+export function breakKind(db: Database.Database, userId: string, now = new Date()): BreakKind | null {
+  if (!breakUntil(db, userId, now)) return null;
+  const u = db.prepare("SELECT break_kind AS k FROM users WHERE id = ?").get(userId) as { k: string | null } | undefined;
+  return u?.k === "exclusion" ? "exclusion" : "break";
+}
+/**
+ * Start (or extend) a pause on new bets. It takes effect at once and is never shortened:
+ * if a later end time already exists it is kept. There is deliberately no way to end one early.
+ */
+export function takeBreak(db: Database.Database, userId: string, now = new Date(), durationMs = VOLUNTARY_BREAK_MS, kind: BreakKind = "break"): string {
   const cur = breakUntil(db, userId, now);
-  const next = new Date(now.getTime() + VOLUNTARY_BREAK_MS).toISOString();
-  const until = cur && cur > next ? cur : next;
-  db.prepare("UPDATE users SET break_until = ? WHERE id = ?").run(until, userId);
-  return until;
+  const next = new Date(now.getTime() + durationMs).toISOString();
+  if (cur && cur >= next) return cur;
+  db.prepare("UPDATE users SET break_until = ?, break_kind = ? WHERE id = ?").run(next, kind, userId);
+  return next;
+}
+export function selfExclude(db: Database.Database, userId: string, choice: string, now = new Date()): string {
+  const ms = Object.prototype.hasOwnProperty.call(EXCLUSION_CHOICES, choice) ? EXCLUSION_CHOICES[choice] : undefined;
+  if (!ms) throw new Error("bad exclusion length");
+  return takeBreak(db, userId, now, ms, "exclusion");
 }
 
-export type ActivityRow = { at: string; type: string; game: string | null; amountCents: number; balanceAfterCents: number };
+export type ActivityRow = { at: string; type: string; game: string | null; amountCents: number; balanceAfterCents: number; stakeBackCents?: number };
 /** This session's bets, payouts and refunds, newest first, straight from the ledger. */
 export function sessionActivity(db: Database.Database, userId: string, now = new Date()): { session: Session; rows: ActivityRow[] } {
   const session = currentSession(db, userId, now);
   if (!session.active || !session.startedAt) return { session, rows: [] };
-  const rows = db.prepare(`SELECT created_at AS at, type, game, amount_cents AS amountCents, balance_after_cents AS balanceAfterCents FROM ledger
+  const rows = db.prepare(`SELECT created_at AS at, type, game, amount_cents AS amountCents, balance_after_cents AS balanceAfterCents, meta FROM ledger
     WHERE user_id = ? AND type IN ('bet','payout','refund') AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT 500`)
-    .all(userId, session.startedAt, now.toISOString()) as ActivityRow[];
-  return { session, rows };
+    .all(userId, session.startedAt, now.toISOString()) as (ActivityRow & { meta: string | null })[];
+  return { session, rows: rows.map(({ meta, ...r }) => {
+    let back: unknown;
+    try { back = meta ? (JSON.parse(meta) as { stakeBackCents?: unknown }).stakeBackCents : undefined; } catch { back = undefined; }
+    return typeof back === "number" && r.type === "payout" ? { ...r, stakeBackCents: back } : r;
+  }) };
+}
+
+const csvCell = (v: string) => `"${v.replace(/"/g, '""')}"`;
+const dollars = (c: number) => (c < 0 ? "-" : "") + (Math.abs(c) / 100).toFixed(2);
+/** CSV of this session's ledger rows, oldest first. Times are Chicago time with the ISO UTC value alongside. */
+export function activityCsv(rows: ActivityRow[]): string {
+  const head = ["chicago_time", "utc_time", "game", "type", "amount_usd", "won_usd", "stake_back_usd", "balance_after_usd"];
+  const lines = [...rows].reverse().map((r) => {
+    const local = new Date(r.at).toLocaleString("en-US", { timeZone: "America/Chicago", year: "numeric", month: "2-digit", day: "2-digit", hour: "numeric", minute: "2-digit", second: "2-digit", timeZoneName: "short" });
+    const back = r.type === "payout" && r.stakeBackCents != null ? r.stakeBackCents : null;
+    return [local, r.at, r.game ?? "", r.type, dollars(r.amountCents), back == null ? "" : dollars(r.amountCents - back), back == null ? "" : dollars(back), dollars(r.balanceAfterCents)].map(csvCell).join(",");
+  });
+  return [head.map(csvCell).join(","), ...lines].join("\r\n") + "\r\n";
 }

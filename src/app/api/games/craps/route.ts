@@ -123,7 +123,7 @@ async function _POST(req: Request) {
       const r = resolveRoll(t.state, dice);
       const rollRef = `${t.id}-${key}`;
       if (r.payoutCents > 0) {
-        creditPayout(user.id, r.payoutCents, "craps", rollRef, `cr-pay-${t.id}-${key}`);
+        creditPayout(user.id, r.payoutCents, "craps", rollRef, `cr-pay-${t.id}-${key}`, { stakeBackCents: r.stakeBackCents, wonCents: r.payoutCents - r.stakeBackCents });
       }
       // Remember the roll for "Replay last result"; the paid amount is read back from the ledger.
       const db = getDb();
@@ -148,6 +148,7 @@ async function _POST(req: Request) {
         roll: dice,
         rollRef,
         payoutCents: r.payoutCents,
+        stakeBackCents: r.stakeBackCents,
         repeatedCents,
         balanceCents: getBalance(user.id),
       });

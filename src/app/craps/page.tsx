@@ -6,6 +6,7 @@ import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, ResultsStrip
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 import LiveAnnounce from "@/components/LiveAnnounce";
+import { paidPhrase } from "@/lib/paidPhrase";
 
 const LAST_KEY = "pit-cr-last";
 
@@ -50,6 +51,7 @@ export default function CrapsPage() {
   const [err, setErr] = useState<string | null>(null);
   useClearErrOnBalance(setErr);
   const [lastPay, setLastPay] = useState<number | null>(null);
+  const [lastBack, setLastBack] = useState<number | undefined>(undefined);
   const [lastRisk, setLastRisk] = useState(0);
   const [rollRef, setRollRef] = useState<string | null>(null);
   const hasPlayed = useHasPlayed("craps", rollRef);
@@ -117,6 +119,7 @@ export default function CrapsPage() {
       if (d.user) setUser(d.user);
       setLastRisk(crapsRiskedCents(snap));
       setLastPay(d.payoutCents);
+      setLastBack(typeof d.stakeBackCents === "number" ? d.stakeBackCents : undefined);
       setRollRef(d.rollRef || null);
       setReplay(null);
       if (d.table?.lastRound?.length) remember(d.table.lastRound);
@@ -204,7 +207,7 @@ export default function CrapsPage() {
             </div>
           </div>
           <FirstVisitTip game="craps" />
-          <LiveAnnounce text={rollRef && table?.lastRoll ? `Rolled ${table.lastRoll[0]} and ${table.lastRoll[1]}, total ${table.lastTotal}. ${lastPay ? `Paid ${money(lastPay)}.` : "No payout this roll."}` : null} />
+          <LiveAnnounce text={rollRef && table?.lastRoll ? `Rolled ${table.lastRoll[0]} and ${table.lastRoll[1]}, total ${table.lastTotal}. ${lastPay ? `You ${paidPhrase(lastPay, lastBack, money)}.` : "No payout this roll."}` : null} />
           <ResultsStrip game="craps" refreshKey={rollRef} />
           {replay ? (
             <ReplayCard onClose={closeReplay} cageHref={cageHref("craps", replay.ref)}>
@@ -228,7 +231,7 @@ export default function CrapsPage() {
               amountCents={lastPay}
               stakeCents={lastRisk}
               cageHref={cageHref("craps", rollRef)}
-              subtitle={`${money(lastPay)} added to your stack`}
+              subtitle={`${money(lastPay)} added to your stack: ${paidPhrase(lastPay, lastBack, money)}`}
             />
           )}
           {lastPay === 0 && lastRisk === 0 && (

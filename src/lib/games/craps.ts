@@ -385,39 +385,41 @@ export function rollDice(): [number, number] {
   return [randInt(6) + 1, randInt(6) + 1];
 }
 
-export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCents: number; notes: string[] } {
+export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCents: number; stakeBackCents: number; notes: string[] } {
   const [d1, d2] = dice;
   const t = d1 + d2;
   s.lastRoll = [d1, d2];
   s.lastTotal = t;
   const notes: string[] = [];
   let pay = 0;
+  // Part of `pay` that is the player's own stake coming back off the felt (the rest is winnings).
+  let back = 0;
   const hard = d1 === d2;
 
   // one-roll props always working
   if (s.field) {
     if ([3, 4, 9, 10, 11].includes(t)) {
-      pay += s.field * 2;
+      pay += s.field * 2; back += s.field;
       notes.push("field wins");
     } else if (t === 2) {
-      pay += s.field * 3;
+      pay += s.field * 3; back += s.field;
       notes.push("field 2 pays 2:1");
     } else if (t === 12) {
-      pay += s.field * 4;
+      pay += s.field * 4; back += s.field;
       notes.push("field 12 pays 3:1");
     } else notes.push("field loses");
     s.field = 0;
   }
   if (s.anySeven) {
-    if (t === 7) { pay += s.anySeven * 5; notes.push("any 7"); } else notes.push("any 7 loses");
+    if (t === 7) { pay += s.anySeven * 5; back += s.anySeven; notes.push("any 7"); } else notes.push("any 7 loses");
     s.anySeven = 0;
   }
   if (s.anyCraps) {
-    if ([2, 3, 12].includes(t)) { pay += s.anyCraps * 8; notes.push("any craps"); } else notes.push("any craps loses");
+    if ([2, 3, 12].includes(t)) { pay += s.anyCraps * 8; back += s.anyCraps; notes.push("any craps"); } else notes.push("any craps loses");
     s.anyCraps = 0;
   }
   if (s.yo) {
-    if (t === 11) { pay += s.yo * 16; notes.push("yo 11"); } else notes.push("yo loses");
+    if (t === 11) { pay += s.yo * 16; back += s.yo; notes.push("yo 11"); } else notes.push("yo loses");
     s.yo = 0;
   }
   for (const n of [4, 6, 8, 10]) {
@@ -426,7 +428,7 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
     if (t === 7) { s.hard[String(n)] = 0; notes.push(`hard ${n} seven-out`); }
     else if (t === n && hard) {
       const odds = n === 4 || n === 10 ? 7 : 9;
-      pay += amt * (odds + 1);
+      pay += amt * (odds + 1); back += amt;
       s.hard[String(n)] = 0;
       notes.push(`hard ${n} hits`);
     } else if (t === n && !hard) {
@@ -464,7 +466,7 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
       notes.push("seven-out");
       if (s.pass) { s.pass = 0; s.passOdds = 0; notes.push("pass loses"); }
       if (s.dontPass) {
-        pay += s.dontPass + (s.dontPassOdds ? oddsPay(s.point!, s.dontPassOdds, true) : 0);
+        pay += s.dontPass + (s.dontPassOdds ? oddsPay(s.point!, s.dontPassOdds, true) : 0); back += s.dontPassOdds || 0;
         notes.push("don't pass wins");
         s.dontPassOdds = 0;
       }
@@ -476,14 +478,14 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
       for (const c of s.come) {
         if (c.point != null) notes.push("come point loses");
         else {
-          pay += c.amount * 2;
+          pay += c.amount * 2; back += c.amount;
           notes.push("come wins 7 (taken down)");
         }
       }
       s.come = [];
       for (const c of s.dontCome) {
         if (c.point != null) {
-          pay += c.amount * 2 + (c.odds ? oddsPay(c.point, c.odds, true) : 0);
+          pay += c.amount * 2 + (c.odds ? oddsPay(c.point, c.odds, true) : 0); back += c.amount + (c.odds || 0);
           notes.push("don't come number wins");
         } else notes.push("don't come loses 7");
       }
@@ -492,7 +494,7 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
     } else if (t === s.point) {
       notes.push("point hit");
       if (s.pass) {
-        pay += s.pass + (s.passOdds ? oddsPay(s.point, s.passOdds, false) : 0);
+        pay += s.pass + (s.passOdds ? oddsPay(s.point, s.passOdds, false) : 0); back += s.passOdds || 0;
         notes.push("pass wins 1:1 (bet stays)");
       }
       if (s.dontPass) { s.dontPass = 0; s.dontPassOdds = 0; notes.push("don't pass loses"); }
@@ -500,7 +502,7 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
       const remainC: ComeBet[] = [];
       for (const c of s.come) {
         if (c.point === t) {
-          pay += c.amount * 2 + (c.odds ? oddsPay(c.point, c.odds, false) : 0);
+          pay += c.amount * 2 + (c.odds ? oddsPay(c.point, c.odds, false) : 0); back += c.amount + (c.odds || 0);
           notes.push("come point wins");
         } else remainC.push(c);
       }
@@ -526,7 +528,7 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
       for (const c of s.come) {
         if (c.point != null) { nextCome.push(c); continue; }
         if (t === 7 || t === 11) {
-          pay += c.amount * 2;
+          pay += c.amount * 2; back += c.amount;
           notes.push("come wins");
         } else if ([2, 3, 12].includes(t)) {
           notes.push("come loses craps");
@@ -543,7 +545,7 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
         if (t === 7 || t === 11) {
           notes.push("don't come loses");
         } else if (t === 2 || t === 3) {
-          pay += c.amount * 2;
+          pay += c.amount * 2; back += c.amount;
           notes.push("don't come wins");
         } else if (t === 12) {
           notes.push("don't come bar 12");
@@ -560,7 +562,7 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
 
   s.log.push(`Roll ${d1}+${d2}=${t}. ${notes.join("; ") || "no action"}`);
   if (s.log.length > 40) s.log = s.log.slice(-40);
-  return { payoutCents: pay, notes };
+  return { payoutCents: pay, stakeBackCents: back, notes };
 }
 
 export function publicCraps(s: CrapsState) {

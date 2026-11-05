@@ -82,7 +82,10 @@ export function applyLedger(opts: {
         // Session time limit stops new rounds only; a double/split on a round already in play goes through.
         const inFlight = (opts.game === "blackjack" || opts.game === "holdem") && !!opts.ref && !!db.prepare("SELECT 1 FROM ledger WHERE user_id = ? AND ref = ? AND type = 'bet' LIMIT 1").get(opts.userId, opts.ref);
         const br = inFlight ? null : breakUntil(db, opts.userId, now);
-        if (br) throw new LedgerError("ON_BREAK", `you're on a break you chose; new bets open at ${chicagoTime(br)}`);
+        if (br) {
+          const excl = (db.prepare("SELECT break_kind AS k FROM users WHERE id = ?").get(opts.userId) as { k: string | null } | undefined)?.k === "exclusion";
+          throw new LedgerError("ON_BREAK", excl ? `you've excluded yourself from betting; new bets open at ${chicagoTime(br)}` : `you're on a break you chose; new bets open at ${chicagoTime(br)}`);
+        }
         const sb = inFlight ? null : sessionBlock(db, opts.userId, now);
         if (sb) throw new LedgerError("SESSION_LIMIT", `your session time limit is up; new bets open after a 30-minute break, at ${chicagoTime(sb.breakEndsAt)}`);
         const v = limitView(db, opts.userId, "loss", now);

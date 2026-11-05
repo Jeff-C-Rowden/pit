@@ -1,4 +1,5 @@
 "use client";
+import PauseStatus from "@/components/PauseStatus";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
 import { previewBets } from "@/lib/games/roulettePreview";
@@ -384,6 +385,7 @@ export default function RoulettePage() {
               </div>
             ) : (
               <>
+                <PauseStatus />
                 <div className="rl-dock-chips" role="group" aria-label="Chip value">
                   <span className="rl-dock-lab">Chip<b>{money(chip)}</b></span>
                   {CHIPS.map((c) => (

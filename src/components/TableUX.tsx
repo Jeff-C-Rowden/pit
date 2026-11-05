@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { money, useUser } from "./useUser";
+import PauseStatus from "./PauseStatus";
 import { celebrationLevel, playChip, playPayout, shouldSlidePayout, TABLE_TIPS } from "@/lib/feel";
 
 const LOADED_AT = typeof performance !== "undefined" ? performance.now() : 0;
@@ -22,6 +23,7 @@ export function ActionDock({ hint, children, busy }: { hint?: string; children: 
   return (
     <div ref={ref} className={`action-dock${busy ? " is-busy" : ""}`} aria-busy={busy || undefined}>
       <div className="action-dock-inner">
+        <PauseStatus />
         {hint && <p className="table-hint">{hint}</p>}
         <div className="action-dock-row">{children}</div>
       </div>

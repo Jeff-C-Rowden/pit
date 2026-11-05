@@ -3256,3 +3256,17 @@ button.zone:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px;
 .activity-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 .activity-table .pos { color: #8fd6a4; } .activity-table .neg { color: #e7a2a2; }
 .break-box { margin-top: 14px; padding: 12px; border: 1px solid rgba(230,196,110,.25); border-radius: 10px; }
+
+/* R27: calm paused-bets line on every game's bottom bar */
+.pause-status{margin:0 0 6px;padding:6px 10px;border-radius:10px;background:rgba(120,150,190,.14);border:1px solid rgba(150,180,220,.35);color:var(--ink,#e8eef6);font-size:.82rem;line-height:1.35}
+.pause-status a{color:inherit;text-decoration:underline}
+.pause-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#9fb8d8;margin-right:6px;vertical-align:middle}
+.excl-box{margin-top:12px}
+.excl-confirm{padding:10px;border-radius:10px;border:1px solid rgba(150,180,220,.4);background:rgba(120,150,190,.1)}
+.activity-split{display:block;font-size:.78rem;opacity:.8}
+/* R27: Pai Gow seat hands (7 cards) fan tightly so they stay over their own seat and never cover a neighbour */
+.pg-table .table-seat .seat-cards { flex-wrap: nowrap; max-width: 96px; margin-inline: auto; position: relative; z-index: 1; }
+.pg-table .table-seat .seat-cards > * { flex: none; }
+.pg-table .table-seat .seat-cards > * + * { margin-left: -24px; }
+.pg-table .table-seat.you .seat-cards { max-width: 124px; }
+.pg-table .table-seat.you .seat-cards > * + * { margin-left: -20px; }
