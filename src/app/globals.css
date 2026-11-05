@@ -2632,3 +2632,15 @@ body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-even
 .game-card:hover .game-emblem, .game-card:focus-visible .game-emblem { opacity: .9; transform: translateY(-1px); }
 .game-card .gline, .game-card .gname { padding-right: 56px; }
 @media (prefers-reduced-motion: reduce) { .game-card .game-emblem { transition: none; } }
+/* aes-3: dark form controls everywhere + chip-style Cage amounts */
+input:not([type]), input[type="search"], input[type="tel"], input[type="url"], select, textarea {
+  width: 100%; background: #0d0f0e; border: 1px solid rgba(201,162,39,.3);
+  color: var(--ivory); padding: 10px 12px; border-radius: 2px; color-scheme: dark;
+}
+input, select, textarea { transition: border-color .15s, box-shadow .15s; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,162,39,.18); }
+input::placeholder, textarea::placeholder { color: rgba(203,191,159,.55); }
+.cage-amts .cage-amt { border-radius: 999px; border: 2px dashed rgba(255,246,216,.55);
+  background: radial-gradient(circle at 50% 40%, #e6c65a, #b8901d 70%); color: #1a1208;
+  box-shadow: inset 0 0 0 3px #9c7a14, 0 3px 8px rgba(0,0,0,.45); font-weight: 700; min-height: 48px; }
+.cage-amts .cage-amt:hover { filter: brightness(1.08); }
