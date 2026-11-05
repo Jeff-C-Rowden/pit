@@ -111,6 +111,13 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
             {game?.dealer?.cards?.map((c: any, i: number) => <PlayingCard key={i} card={c} />)}
           </div>
         </DealerBooth>
+        <div className="bj-felt-rules" aria-label="Table rules: Blackjack pays 3 to 2. Dealer stands on all 17s. Insurance pays 2 to 1.">
+          <svg viewBox="0 0 300 70" aria-hidden>
+            <defs><path id="bjArc" d="M10,12 Q150,72 290,12" /></defs>
+            <text className="bj-arc-big"><textPath href="#bjArc" startOffset="50%" textAnchor="middle">BLACKJACK PAYS 3 TO 2</textPath></text>
+          </svg>
+          <div className="bj-felt-sub">Dealer stands on all 17s · Insurance pays 2 to 1</div>
+        </div>
         <TableHeart>
           {game?.phase === "insurance" && (
             <OutcomeBanner message="Dealer shows an Ace — insurance?" />

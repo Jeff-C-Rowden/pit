@@ -2740,3 +2740,37 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
   .pit-shell .hero.game-hero h1 { font-size: 30px !important; letter-spacing: .12em !important; line-height: 1.1; }
   .felt-table.seated:not(.bj-table):not(.holdem-table) { min-height: 440px; }
 }
+/* r11-4: roulette one-line dismissible tip */
+.rl-hint.rl-tip { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; font-size: 12px; line-height: 1.35; border-radius: 999px; margin: 6px 0; }
+.rl-tip span { flex: 1; color: var(--ivory-dim); }
+.rl-tip b { color: var(--gold-hi); }
+.rl-tip-x { flex: none; width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(201,162,39,.4); background: transparent; color: var(--gold-hi); font-size: 18px; line-height: 1; cursor: pointer; }
+/* r11-5: paytable symbol art */
+.paytable td.pt-sym { display: flex; align-items: center; gap: 10px; }
+.pt-art { display: inline-grid; place-items: center; width: 34px; height: 34px; flex: none; border-radius: 6px; overflow: hidden;
+  background: rgba(255,246,216,.06); border: 1px solid rgba(201,162,39,.25); }
+.pt-art svg { width: 28px; height: 28px; }
+.paytable td.pt-sym span:last-child { font-size: 12px; letter-spacing: .1em; }
+/* r11-2: printed blackjack felt rules (real table rules, decorative) */
+.bj-felt-rules { position: absolute; left: 50%; top: 27%; transform: translateX(-50%); width: min(78%, 420px); text-align: center; pointer-events: none; z-index: 1; }
+.bj-felt-rules svg { width: 100%; height: auto; display: block; overflow: visible; }
+.bj-arc-big { fill: rgba(232,213,163,.78); font-family: Palatino, "Palatino Linotype", Georgia, serif; font-size: 17px; letter-spacing: 3px; }
+.bj-felt-sub { margin-top: -6px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: rgba(232,213,163,.55); }
+.bj-table .felt-wordmark { opacity: .5; }
+/* r11-3: Canopy Spire dock fits 390px */
+@media (max-width: 640px) {
+  .vault-page .action-dock .clay-chip-btn .clay-face { width: 40px !important; height: 40px !important; }
+  .vault-page .action-dock .chip-row .custom-wager { flex: 1 1 104px !important; min-width: 104px; }
+  .vault-page .action-dock .custom-wager-label { font-size: 8px; }
+  .vault-page .action-dock .custom-wager-input { width: auto !important; flex: 1; min-width: 48px; text-align: right; }
+  .vault-page .vault-total-bet { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .vault-page .vault-total-bet .muted { font-size: 10px; }
+}
+/* r11-1: Pai Gow fits a phone screen */
+@media (max-width: 640px) {
+  .paigow-page-fit .hero.game-hero p.lede { margin: 0; }
+  .felt-table.seated:not(.bj-table):not(.holdem-table) { min-height: 360px; padding-top: 10px; }
+  .pit-shell .hero.game-hero h1 { font-size: 26px !important; margin: 2px 0; }
+}
+@media (max-width: 640px) { .bj-table.felt-rect.felt-table.seated { min-height: 390px; } }
+.bj-table:has(.bj-felt-rules) .felt-wordmark { display: none; }
