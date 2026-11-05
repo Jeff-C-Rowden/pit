@@ -2,8 +2,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import SlotMachine, { type SlotMachineHandle, type WinCell } from "@/components/SlotMachine";
-import { ActionDock, ChipRow, ChipStack, OutcomeBanner } from "@/components/TableUX";
-import { StandingRail } from "@/components/Seating";
+import { ActionDock, ChipRow, OutcomeBanner } from "@/components/TableUX";
 import { api, money, useUser } from "@/components/useUser";
 import { PAYLINES, type Symbol } from "@/lib/games/slot";
 
@@ -108,11 +107,10 @@ export default function SlotPage() {
             />
           </div>
 
-          <div className="slot-coin-meta">
-            <div className="felt-spot" style={{ minWidth: 72 }}>
-              <ChipStack cents={coinIn} size={32} winning={!!(showOutcome && spin && spin.winCents > 0)} />
-              <div className="felt-spot-cap">Coin-in</div>
-            </div>
+          <div className="slot-meter" aria-live="polite">
+            <div><span>Your chips</span><strong>{money(u.balanceCents)}</strong></div>
+            <div><span>Bet</span><strong>{money(coinIn)}</strong></div>
+            <div><span>Last win</span><strong>{showOutcome && spin ? money(spin.winCents) : "—"}</strong></div>
           </div>
 
           {showOutcome && spin && spin.winCents > 0 && (
@@ -129,8 +127,6 @@ export default function SlotPage() {
               subtitle="You lose this spin."
             />
           )}
-
-          <StandingRail youName={u.displayName} youStack={u.balanceCents} coinIn={coinIn} />
 
           {info && (
             <div className="panel" style={{ marginTop: 20 }}>

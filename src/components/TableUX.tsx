@@ -3,8 +3,20 @@ import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "rea
 import { money } from "./useUser";
 
 export function ActionDock({ hint, children, busy }: { hint?: string; children: ReactNode; busy?: boolean }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // Publish the dock's real height so the page can always scroll clear of it.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const root = document.documentElement;
+    const set = () => root.style.setProperty("--dock-h", `${Math.ceil(el.getBoundingClientRect().height)}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => { ro.disconnect(); root.style.removeProperty("--dock-h"); };
+  }, []);
   return (
-    <div className={`action-dock${busy ? " is-busy" : ""}`} aria-busy={busy || undefined}>
+    <div ref={ref} className={`action-dock${busy ? " is-busy" : ""}`} aria-busy={busy || undefined}>
       <div className="action-dock-inner">
         {hint && <p className="table-hint">{hint}</p>}
         <div className="action-dock-row">{children}</div>
