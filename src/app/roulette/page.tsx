@@ -205,6 +205,28 @@ export default function RoulettePage() {
     setBets(lastStake.map((b) => ({ ...b })));
   }
 
+  async function replayLast() {
+    if (busy || spinning) return;
+    setErr(null);
+    setBusy(true);
+    try {
+      const d = await api("/api/games/roulette/history");
+      if (!d.last) { setToast("No settled spin to replay yet."); return; }
+      setSpin(null);
+      setLivePocket(d.last.pocket);
+      setSkipped(false);
+      wheelRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+      const p = planSpin(d.last.pocket, rotorRef.current, { turbo: true });
+      rotorRef.current = p.frames[p.frames.length - 1]!.rotor % 360;
+      setPlan(p);
+      setSpinning(true);
+      await waitSpin(reduced ? 0 : p.durationMs);
+      setSpinning(false);
+      setSpin({ ...d.last, replay: true });
+    } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
+    finally { setBusy(false); }
+  }
+
   async function go() {
     setErr(null);
     setBusy(true);
@@ -246,7 +268,7 @@ export default function RoulettePage() {
   const prevStake = useRef(stake);
   useEffect(() => { if (stake > prevStake.current) playChip(); prevStake.current = stake; }, [stake]);
   useEffect(() => {
-    if (spin && !spinning && tone === "win") playPayout(celebrationLevel(staked, paid));
+    if (spin && !spin.replay && !spinning && tone === "win") playPayout(celebrationLevel(staked, paid));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spin, spinning]);
   const shownWin = useCountUp(tone === "win" && !spinning ? net : 0, reduced || skipped);
@@ -270,6 +292,12 @@ export default function RoulettePage() {
               {lastWin == null ? "—" : `${lastWin > 0 ? "+" : ""}${money(lastWin)}`}</strong></div>
           </div>
 
+          {history.length > 0 && (
+            <div className="rl-replay-row">
+              <button type="button" className="rl-replay" onClick={replayLast} disabled={busy || spinning}>↺ Replay last result</button>
+            </div>
+          )}
+
           {showHint && (
             <div className="rl-hint rl-tip" role="note">
               <span>Pick a chip, tap the table, press <b>Spin</b>. Hold a chip or tap <b>Undo</b> to take it back.</span>
@@ -287,13 +315,15 @@ export default function RoulettePage() {
                   <div className={`rl-result rl-result-ov ${tone}`} role="status" aria-live="polite">
                     <span className={`rl-pocket-pip ${pocketColor(spin.pocket)}`}>{spin.pocket}</span>
                     <div>
+                      {spin.replay && <span className="rl-replay-tag">Replay · already settled</span>}
                       <div className="rl-result-h">
                         {tone === "win" ? `You won ${money(shownWin)}` : tone === "push" ? "You broke even" : `You lost ${money(-net)}`}
                       </div>
                       <div className="rl-result-d">
                         Ball landed on {spin.pocket} {colorName(spin.pocket)}. You bet {money(staked)}, got back {money(paid)}.
                       </div>
-                      {showSettled && lastStake.length > 0 && (
+                      {spin.replay && <div className="rl-result-d">From your ledger. No chips moved.</div>}
+                      {!spin.replay && showSettled && lastStake.length > 0 && (
                         <button type="button" className="rl-result-see" onClick={() => feltRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" })}>
                           {paidCount} of {spots.length} spot{spots.length === 1 ? "" : "s"} paid · see table ↓
                         </button>

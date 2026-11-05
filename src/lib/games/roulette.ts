@@ -141,4 +141,22 @@ export function recentSpins(db: import("better-sqlite3").Database, userId: strin
   return rows.map((r) => r.pocket);
 }
 
+/**
+ * The player's most recent settled spin, with money read back from the ledger
+ * (bet debits and payout credits for that spin's ref). Read-only: nothing moves.
+ */
+export function lastSettledSpin(db: import("better-sqlite3").Database, userId: string):
+  { id: string; pocket: string; stakeCents: number; payoutCents: number; netCents: number; at: string } | null {
+  const row = db.prepare("SELECT id, pocket, created_at FROM roulette_spins WHERE user_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1")
+    .get(userId) as { id: string; pocket: string; created_at: string } | undefined;
+  if (!row) return null;
+  const sums = db.prepare(
+    "SELECT COALESCE(SUM(CASE WHEN type = 'bet' THEN -amount_cents ELSE 0 END), 0) AS stake, " +
+    "COALESCE(SUM(CASE WHEN type = 'payout' THEN amount_cents ELSE 0 END), 0) AS paid " +
+    "FROM ledger WHERE user_id = ? AND game = 'roulette' AND ref = ?",
+  ).get(userId, row.id) as { stake: number; paid: number };
+  if (!sums.stake) return null;
+  return { id: row.id, pocket: row.pocket, stakeCents: sums.stake, payoutCents: sums.paid, netCents: sums.paid - sums.stake, at: row.created_at };
+}
+
 export { PAY, nset, range, newId };
