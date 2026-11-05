@@ -207,6 +207,7 @@ export function TableSeat({
   status,
   onSit,
   winning,
+  betAction,
 }: {
   occ: Occupant;
   layout: "holdem" | "blackjack" | "paigow";
@@ -220,6 +221,8 @@ export function TableSeat({
   status?: string;
   onSit?: (seat: number) => void;
   winning?: boolean;
+  /** Makes "your" bet spot a real button (e.g. tap the spot to deal with the selected chip). */
+  betAction?: { label: string; onPress: () => void; disabled?: boolean };
 }) {
   const empty = occ.kind === "empty";
   const you = occ.kind === "you";
@@ -230,15 +233,23 @@ export function TableSeat({
       onClick={() => empty && onSit?.(occ.seat)}
       role={empty ? "button" : undefined}
       tabIndex={empty ? 0 : undefined}
+      aria-label={empty ? `Sit in seat ${occ.seat + 1}` : undefined}
       onKeyDown={(e) => {
         if (empty && (e.key === "Enter" || e.key === " ")) onSit?.(occ.seat);
       }}
     >
       <div className="seat-bet">
         {you && layout !== "holdem" && (
-          <span className={`bet-spot${(betCents || 0) > 0 ? " filled" : ""}`} aria-hidden="true">
-            {!(betCents || 0) && <span className="bet-spot-lbl">Bet</span>}
-          </span>
+          betAction ? (
+            <button type="button" className={`bet-spot bet-spot-btn${(betCents || 0) > 0 ? " filled" : ""}`} aria-label={betAction.label}
+              disabled={betAction.disabled} onClick={(e) => { e.stopPropagation(); betAction.onPress(); }}>
+              {!(betCents || 0) && <span className="bet-spot-lbl" aria-hidden="true">Bet</span>}
+            </button>
+          ) : (
+            <span className={`bet-spot${(betCents || 0) > 0 ? " filled" : ""}`} aria-label={(betCents || 0) > 0 ? `Your bet ${(betCents! / 100).toFixed(2)} dollars` : "Your bet spot, empty"} role="img">
+              {!(betCents || 0) && <span className="bet-spot-lbl" aria-hidden="true">Bet</span>}
+            </span>
+          )
         )}
         {(betCents || 0) > 0 && !folded && (
           <ChipStack cents={betCents!} size={28} maxChips={8} showTotal winning={!!winning} />

@@ -202,6 +202,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
               status={status}
               onSit={setYouSeat}
               winning={isYou && isWin}
+              betAction={isYou && betting ? { label: canAfford ? `Your bet spot. Tap to deal a hand for ${money(bet)}` : `Your bet spot. ${money(bet)} is more than your balance`, onPress: () => act("deal"), disabled: busy || !canAfford } : undefined}
             />
           );
         })}

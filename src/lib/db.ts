@@ -1,4 +1,5 @@
 import fs from "fs";
+import { migrateSession } from "./session";
 import { migrateLimits } from "./limits";
 import path from "path";
 import Database from "better-sqlite3";
@@ -111,6 +112,7 @@ function finish(db: Database.Database, wal: boolean): Database.Database {
   db.pragma("foreign_keys = ON");
   db.exec(SCHEMA);
   migrateLimits(db);
+    migrateSession(db);
   return instrument(db);
 }
 

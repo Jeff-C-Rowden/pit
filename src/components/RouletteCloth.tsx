@@ -357,6 +357,18 @@ export function RouletteWheel({
   );
 }
 
+const BET_ARIA: Record<string, string> = {
+  "0": "0 green, straight up pays 35 to 1", "00": "00 green, straight up pays 35 to 1",
+  "1st 12": "First dozen, 1 to 12, pays 2 to 1", "2nd 12": "Second dozen, 13 to 24, pays 2 to 1", "3rd 12": "Third dozen, 25 to 36, pays 2 to 1",
+  "1-18": "Low, 1 to 18, pays even money", "19-36": "High, 19 to 36, pays even money",
+  even: "Even, pays even money", odd: "Odd, pays even money", red: "Red, pays even money", black: "Black, pays even money",
+  "col 1": "Column 1, pays 2 to 1", "col 2": "Column 2, pays 2 to 1", "col 3": "Column 3, pays 2 to 1",
+};
+function betAria(key: string, on: number): string {
+  const base = BET_ARIA[key] ?? key;
+  return on > 0 ? `${base}, your bet ${money(on)}` : base;
+}
+
 export default function RouletteCloth({
   onAdd,
   onAmount,
@@ -437,7 +449,7 @@ export default function RouletteCloth({
           className={`rl-cell green zero00 ${hit === "00" ? "hit" : ""}${cv("00")}`}
           {...hov({ kind: "straight", numbers: ["00"], label: "00" })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("00"); }}
-          data-bet={"00"}
+          data-bet={"00"} aria-label={betAria("00", onAmount("00"))} aria-pressed={onAmount("00") > 0}
 onClick={() => tap({ kind: "straight", numbers: ["00"], label: "00" })}
         >
           00
@@ -448,7 +460,7 @@ onClick={() => tap({ kind: "straight", numbers: ["00"], label: "00" })}
           className={`rl-cell green zero0 ${hit === "0" ? "hit" : ""}${cv("0")}`}
           {...hov({ kind: "straight", numbers: ["0"], label: "0" })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("0"); }}
-          data-bet={"0"}
+          data-bet={"0"} aria-label={betAria("0", onAmount("0"))} aria-pressed={onAmount("0") > 0}
 onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
         >
           0
@@ -467,7 +479,7 @@ onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
                 aria-label={`${n} ${col}, straight up pays 35 to 1${onAmount(label) ? `, your bet ${money(onAmount(label))}` : ""}`}
                 {...hov({ kind: "straight", numbers: [label], label })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.(label); }}
-          data-bet={label}
+          data-bet={label} aria-pressed={onAmount(label) > 0}
           onClick={() => tap({ kind: "straight", numbers: [label], label })}
               >
                 {n}
@@ -498,7 +510,7 @@ onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
                     type="button"
                     className="rl-spot split-h"
                     {...hov({ kind: "split", numbers: [String(n), String(right)], label: "" })}
-                    title={`Split ${Math.min(n, right)}-${Math.max(n, right)} · 17:1`}
+                    title={`Split ${Math.min(n, right)}-${Math.max(n, right)} · 17:1`} aria-label={`Split ${Math.min(n, right)}-${Math.max(n, right)} · 17:1`.replace("·", "pays")}
                     onClick={(e) => {
                       e.stopPropagation();
                       const nums = [n, right].sort((a, b) => a - b);
@@ -513,7 +525,7 @@ onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
                     type="button"
                     className="rl-spot split-v"
                     {...hov({ kind: "split", numbers: [String(n), String(below)], label: "" })}
-                    title={`Split ${Math.min(n, below)}-${Math.max(n, below)} · 17:1`}
+                    title={`Split ${Math.min(n, below)}-${Math.max(n, below)} · 17:1`} aria-label={`Split ${Math.min(n, below)}-${Math.max(n, below)} · 17:1`.replace("·", "pays")}
                     onClick={(e) => {
                       e.stopPropagation();
                       const nums = [n, below].sort((a, b) => a - b);
@@ -528,7 +540,7 @@ onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
                     type="button"
                     className="rl-spot corner"
                     {...hov({ kind: "corner", numbers: [n, right, below, belowRight].map(String), label: "" })}
-                    title={`Corner ${[n, right, below, belowRight].sort((a, b) => a - b).join("-")} · 8:1`}
+                    title={`Corner ${[n, right, below, belowRight].sort((a, b) => a - b).join("-")} · 8:1`} aria-label={`Corner ${[n, right, below, belowRight].sort((a, b) => a - b).join("-")} · 8:1`.replace("·", "pays")}
                     onClick={(e) => {
                       e.stopPropagation();
                       const nums = [n, right, below, belowRight].sort((a, b) => a - b);
@@ -543,7 +555,7 @@ onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
                     type="button"
                     className="rl-spot street"
                     {...hov({ kind: "street", numbers: streetNums.map(String), label: "" })}
-                    title={`Street ${streetNums[0]}-${streetNums[1]}-${streetNums[2]} · 11:1`}
+                    title={`Street ${streetNums[0]}-${streetNums[1]}-${streetNums[2]} · 11:1`} aria-label={`Street ${streetNums[0]}-${streetNums[1]}-${streetNums[2]} · 11:1`.replace("·", "pays")}
                     onClick={(e) => {
                       e.stopPropagation();
                       tap({ kind: "street", numbers: streetNums.map(String), label: `street ${streetNums.join("-")}` });
@@ -557,7 +569,7 @@ onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
                     type="button"
                     className="rl-spot sixline"
                     {...hov({ kind: "six", numbers: [...streetNums, ...nextStreet].map(String), label: "" })}
-                    title={`Six-line ${streetNums[0]}-${nextStreet[2]} · 5:1`}
+                    title={`Six-line ${streetNums[0]}-${nextStreet[2]} · 5:1`} aria-label={`Six-line ${streetNums[0]}-${nextStreet[2]} · 5:1`.replace("·", "pays")}
                     onClick={(e) => {
                       e.stopPropagation();
                       const nums = [...streetNums, ...nextStreet];
@@ -579,7 +591,7 @@ onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
             className={`rl-cell outside col21 col-r${i}`}
             {...hov({ kind: "column", which, label: "" })}
             onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.(`col ${which}`); }}
-          data-bet={`col ${which}`}
+          data-bet={`col ${which}`} aria-label={betAria(`col ${which}`, onAmount(`col ${which}`))} aria-pressed={onAmount(`col ${which}`) > 0}
 onClick={() => tap({ kind: "column", which, label: `col ${which}` })}
           >
             2:1
@@ -590,7 +602,7 @@ onClick={() => tap({ kind: "column", which, label: `col ${which}` })}
 
         <button type="button" className="rl-cell outside dozen d1" {...hov({ kind: "dozen", which: 1, label: "1st 12" })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("1st 12"); }}
-          data-bet={"1st 12"}
+          data-bet={"1st 12"} aria-label={betAria("1st 12", onAmount("1st 12"))} aria-pressed={onAmount("1st 12") > 0}
 onClick={() => tap({ kind: "dozen", which: 1, label: "1st 12" })}>
           1st 12
           <OnChip cents={onAmount("1st 12")} paid={paidOf("1st 12")} />
@@ -598,7 +610,7 @@ onClick={() => tap({ kind: "dozen", which: 1, label: "1st 12" })}>
         </button>
         <button type="button" className="rl-cell outside dozen d2" {...hov({ kind: "dozen", which: 2, label: "2nd 12" })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("2nd 12"); }}
-          data-bet={"2nd 12"}
+          data-bet={"2nd 12"} aria-label={betAria("2nd 12", onAmount("2nd 12"))} aria-pressed={onAmount("2nd 12") > 0}
 onClick={() => tap({ kind: "dozen", which: 2, label: "2nd 12" })}>
           2nd 12
           <OnChip cents={onAmount("2nd 12")} paid={paidOf("2nd 12")} />
@@ -606,7 +618,7 @@ onClick={() => tap({ kind: "dozen", which: 2, label: "2nd 12" })}>
         </button>
         <button type="button" className="rl-cell outside dozen d3" {...hov({ kind: "dozen", which: 3, label: "3rd 12" })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("3rd 12"); }}
-          data-bet={"3rd 12"}
+          data-bet={"3rd 12"} aria-label={betAria("3rd 12", onAmount("3rd 12"))} aria-pressed={onAmount("3rd 12") > 0}
 onClick={() => tap({ kind: "dozen", which: 3, label: "3rd 12" })}>
           3rd 12
           <OnChip cents={onAmount("3rd 12")} paid={paidOf("3rd 12")} />
@@ -615,7 +627,7 @@ onClick={() => tap({ kind: "dozen", which: 3, label: "3rd 12" })}>
 
         <button type="button" className="rl-cell outside even-money e-low" {...hov({ kind: "low", numbers: [], label: "1-18" })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("1-18"); }}
-          data-bet={"1-18"}
+          data-bet={"1-18"} aria-label={betAria("1-18", onAmount("1-18"))} aria-pressed={onAmount("1-18") > 0}
 onClick={() => tap({ kind: "low", numbers: [], label: "1-18" })}>
           1 to 18
           <OnChip cents={onAmount("1-18")} paid={paidOf("1-18")} />
@@ -623,7 +635,7 @@ onClick={() => tap({ kind: "low", numbers: [], label: "1-18" })}>
         </button>
         <button type="button" className="rl-cell outside even-money e-even" {...hov({ kind: "even", numbers: [], label: "even" })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("even"); }}
-          data-bet={"even"}
+          data-bet={"even"} aria-label={betAria("even", onAmount("even"))} aria-pressed={onAmount("even") > 0}
 onClick={() => tap({ kind: "even", numbers: [], label: "even" })}>
           Even
           <OnChip cents={onAmount("even")} paid={paidOf("even")} />
@@ -631,7 +643,7 @@ onClick={() => tap({ kind: "even", numbers: [], label: "even" })}>
         </button>
         <button type="button" className="rl-cell outside even-money e-red" {...hov({ kind: "red", numbers: [], label: "red" })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("red"); }}
-          data-bet={"red"}
+          data-bet={"red"} aria-label={betAria("red", onAmount("red"))} aria-pressed={onAmount("red") > 0}
 onClick={() => tap({ kind: "red", numbers: [], label: "red" })}>
           <Diamond color="red" /> Red
           <OnChip cents={onAmount("red")} paid={paidOf("red")} />
@@ -639,7 +651,7 @@ onClick={() => tap({ kind: "red", numbers: [], label: "red" })}>
         </button>
         <button type="button" className="rl-cell outside even-money e-black" {...hov({ kind: "black", numbers: [], label: "black" })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("black"); }}
-          data-bet={"black"}
+          data-bet={"black"} aria-label={betAria("black", onAmount("black"))} aria-pressed={onAmount("black") > 0}
 onClick={() => tap({ kind: "black", numbers: [], label: "black" })}>
           <Diamond color="black" /> Black
           <OnChip cents={onAmount("black")} paid={paidOf("black")} />
@@ -647,7 +659,7 @@ onClick={() => tap({ kind: "black", numbers: [], label: "black" })}>
         </button>
         <button type="button" className="rl-cell outside even-money e-odd" {...hov({ kind: "odd", numbers: [], label: "odd" })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("odd"); }}
-          data-bet={"odd"}
+          data-bet={"odd"} aria-label={betAria("odd", onAmount("odd"))} aria-pressed={onAmount("odd") > 0}
 onClick={() => tap({ kind: "odd", numbers: [], label: "odd" })}>
           Odd
           <OnChip cents={onAmount("odd")} paid={paidOf("odd")} />
@@ -655,7 +667,7 @@ onClick={() => tap({ kind: "odd", numbers: [], label: "odd" })}>
         </button>
         <button type="button" className="rl-cell outside even-money e-high" {...hov({ kind: "high", numbers: [], label: "19-36" })}
           onContextMenu={(e) => { e.preventDefault(); if (!locked && Date.now() - lastLP.current > 900) onRemove?.("19-36"); }}
-          data-bet={"19-36"}
+          data-bet={"19-36"} aria-label={betAria("19-36", onAmount("19-36"))} aria-pressed={onAmount("19-36") > 0}
 onClick={() => tap({ kind: "high", numbers: [], label: "19-36" })}>
           19 to 36
           <OnChip cents={onAmount("19-36")} paid={paidOf("19-36")} />

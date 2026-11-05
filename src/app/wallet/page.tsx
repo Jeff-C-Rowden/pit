@@ -4,6 +4,7 @@ import Shell from "@/components/Shell";
 import { groupByDay, toDate } from "@/lib/ledgerDays";
 import { api, money, useUser, type User } from "@/components/useUser";
 import LimitsPanel from "@/components/LimitsPanel";
+import SessionPanel from "@/components/SessionPanel";
 import { parseDollarsInput, centsToInput } from "@/lib/money";
 
 const AMTS = [1000, 2500, 5000, 10000, 25000, 50000, 100000];
@@ -160,6 +161,7 @@ export default function WalletPage() {
           <div className="panel cage-panel">
             <h3>Responsible play</h3>
             <LimitsPanel />
+            <SessionPanel />
           <CageLedger />
           </div>
         </div>

@@ -2,7 +2,7 @@ import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { getDb } from "@/lib/db";
 import { toPublic } from "@/lib/auth";
-import { limitView, requestLimit, PERIODS, type Limit, type Period } from "@/lib/limits";
+import { limitView, requestLimit, cancelPending, PERIODS, type Limit, type Period } from "@/lib/limits";
 
 function views(userId: string) {
   const db = getDb();
@@ -22,6 +22,11 @@ async function _GET(req: Request) {
 async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
+    if (body.cancelPending !== undefined) {
+      if (body.cancelPending !== "deposit" && body.cancelPending !== "loss") return err("cancelPending must be deposit or loss");
+      cancelPending(getDb(), user.id, body.cancelPending);
+      return json({ cancelled: body.cancelPending, limits: views(user.id) });
+    }
     const dep = parse(body.depositLimitCents, body.depositPeriod, "deposit");
     const loss = parse(body.lossLimitCents, body.lossPeriod, "loss");
     if (typeof dep === "string") return err(dep);

@@ -154,6 +154,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
               betCents={betCents}
               onSit={setYouSeat}
               winning={isYou && won}
+              betAction={isYou && betting ? { label: `Your bet spot. Tap to deal a hand for ${money(bet)}`, onPress: () => act("deal"), disabled: busy } : undefined}
             />
           );
         })}
@@ -163,9 +164,11 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
           <div className="muted">Tap two cards for the low hand</div>
           <div className="hand" style={{ flexWrap: "wrap" }}>
             {game.playerCards.map((c: any, i: number) => (
-              <div key={i} onClick={() => toggle(i)} style={{ outline: sel.includes(i) ? "2px solid var(--gold)" : undefined, cursor: "pointer" }}>
+              <button type="button" key={i} className="pg-pick" onClick={() => toggle(i)} aria-pressed={sel.includes(i)}
+                aria-label={`${pgCardName(c)}${sel.includes(i) ? ", in your low hand" : ", in your high hand"}`}
+                style={{ outline: sel.includes(i) ? "2px solid var(--gold)" : undefined }}>
                 <PlayingCard card={c} size="lg" />
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -199,4 +202,11 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
       </ActionDock>
     </>
   );
+}
+
+const PG_RANKS: Record<string, string> = { A: "Ace", K: "King", Q: "Queen", J: "Jack", T: "10" };
+const PG_SUITS: Record<string, string> = { s: "spades", h: "hearts", d: "diamonds", c: "clubs" };
+function pgCardName(c: any): string {
+  if (c?.joker) return "Joker";
+  return `${PG_RANKS[c?.rank] ?? c?.rank} of ${PG_SUITS[c?.suit] ?? c?.suit}`;
 }

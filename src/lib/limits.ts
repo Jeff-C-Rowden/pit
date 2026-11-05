@@ -157,3 +157,10 @@ export function requestLimit(db: Database.Database, userId: string, kind: LimitK
 export function roomCents(v: LimitView): number {
   return v.cents == null ? Infinity : v.cents - v.usedCents;
 }
+
+/** "Keep my current limit": drop a queued loosening at once (cancelling is never a loosening). */
+export function cancelPending(db: Database.Database, userId: string, kind: LimitKind, now = new Date()) {
+  settlePending(db, userId, now);
+  const k = COLS[kind];
+  db.prepare(`UPDATE users SET ${k.pc} = NULL, ${k.pp} = NULL, ${k.pa} = NULL WHERE id = ?`).run(userId);
+}

@@ -3023,7 +3023,7 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
 @media (max-width: 640px) {
   .pit-shell .hero.game-hero.pg-hero { padding: 2px 0 0 !important; margin: 0 !important; }
   .pit-shell .hero.game-hero.pg-hero h1 { font-size: 17px !important; letter-spacing: .22em; margin: 0 0 2px !important; opacity: .9; }
-  .pit-shell:has(.action-dock) .footer { margin-top: 100svh; }
+  .pit-shell:has(.action-dock) .footer { margin-top: 24px; /* r25: was 100svh, left an empty band above the dock */ }
 }
 
 /* r15-2: Hold'em empty seats sit further in */
@@ -3227,3 +3227,24 @@ button.zone:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px;
 .floor-jp-toggle.on .floor-jp-knob::after { transform: translateX(16px); }
 @media (prefers-reduced-motion: reduce) { .floor-jp-knob::after { transition: none; } }
 .floor-jp-toggle:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+/* R25: limit usage bars, keep-current buttons, reality check */
+.lim-bar-wrap { display: grid; gap: 4px; margin: 4px 0 6px; }
+.lim-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; }
+.lim-bar > span { display: block; height: 100%; background: #6fbf8e; border-radius: inherit; }
+.lim-bar.near > span { background: #e6c46e; }
+.lim-bar.full > span { background: #d9826b; }
+.lim-bar-txt { font-size: 12.5px; opacity: .85; }
+.lim-keep { display: block; margin-top: 6px; min-height: 40px; font-size: 12px; }
+.session-panel h4 { margin: 14px 0 4px; }
+.session-panel select { width: 100%; min-height: 44px; font: inherit; }
+.lim-help { font-size: 12.5px; margin: 0 0 4px; }
+.reality-note { position: sticky; top: var(--topbar-h, 88px); z-index: 14; display: grid; gap: 4px; margin: 8px 0; padding: 10px 12px; border-radius: 10px;
+  border: 1px solid rgba(230,196,110,.45); background: #14201a; font-size: 14px; }
+.reality-note.blocked { border-color: rgba(217,130,107,.6); }
+.reality-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.reality-acts .btn { flex: 1 1 0; min-height: 44px; font-size: 12px; text-align: center; }
+/* r25: bet spots / card picks as real buttons */
+.bet-spot-btn { padding: 0; border: 0; font: inherit; color: inherit; cursor: pointer; }
+.bet-spot-btn:disabled { cursor: default; opacity: .7; }
+.pg-pick { background: none; border: 0; padding: 0; border-radius: 8px; cursor: pointer; }
+.bet-spot-btn:focus-visible, .pg-pick:focus-visible, .rl-cell:focus-visible, .rl-spot:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }

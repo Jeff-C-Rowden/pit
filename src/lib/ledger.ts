@@ -1,5 +1,6 @@
 import { chicagoTime } from "./limitText";
 import { limitView } from "./limits";
+import { sessionBlock } from "./session";
 import { getDb, type LedgerRow, type UserRow } from "./db";
 import { newId } from "./rng";
 import { assertPositiveCents } from "./money";
@@ -77,6 +78,10 @@ export function applyLedger(opts: {
           throw new LedgerError("DEPOSIT_LIMIT", "deposit would exceed your limit" + (v.resetsAt ? `; it resets ${chicagoTime(v.resetsAt)}` : ""));
         }
       } else {
+        // Session time limit stops new rounds only; a double/split on a round already in play goes through.
+        const inFlight = (opts.game === "blackjack" || opts.game === "holdem") && !!opts.ref && !!db.prepare("SELECT 1 FROM ledger WHERE user_id = ? AND ref = ? AND type = 'bet' LIMIT 1").get(opts.userId, opts.ref);
+        const sb = inFlight ? null : sessionBlock(db, opts.userId, now);
+        if (sb) throw new LedgerError("SESSION_LIMIT", `your session time limit is up; new bets open after a 30-minute break, at ${chicagoTime(sb.breakEndsAt)}`);
         const v = limitView(db, opts.userId, "loss", now);
         if (v.cents != null && v.usedCents + -amount > v.cents) {
           throw new LedgerError("LOSS_LIMIT", "this wager would exceed your loss limit" + (v.resetsAt ? `; it resets ${chicagoTime(v.resetsAt)}` : ""));

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { api, money, useUser, type User } from "./useUser";
 import { recordRecent } from "@/lib/lobby";
+import RealityCheck from "./RealityCheck";
 import RefillBar from "./RefillBar";
 import { playChip, setSoundOn, soundOn } from "@/lib/feel";
 
@@ -120,6 +121,7 @@ export default function Shell({ children, requireAuth = true }: { children: Reac
         </div>
       </header>
       {user && path !== "/wallet" && <RefillBar />}
+      {user && <RealityCheck />}
       {typeof children === "function" ? (user ? children(user) : null) : children}
       <footer className="footer">
         <p className="footer-line">Adults 21+ only. Sandbox wallet — no live charges.</p>
