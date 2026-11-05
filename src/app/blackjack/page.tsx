@@ -5,6 +5,7 @@ import { blackjackResultLabel } from "@/lib/feel";
 import PlayingCard from "@/components/PlayingCard";
 import { ActionDock, ChipRow, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { DealerBooth, TableHeart, TableSeat, botBlackjackHand, botHandValue, useTableSeats } from "@/components/Seating";
+import LiveAnnounce from "@/components/LiveAnnounce";
 import { api, money, useUser } from "@/components/useUser";
 
 export default function BlackjackPage() {
@@ -121,7 +122,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
   return (
     <>
       <div className="rail-label" style={{ marginTop: 20 }}>Blackjack · 7-spot · 6 decks · S17 · 3:2</div>
-      <FirstVisitTip game="blackjack" />
+      <LiveAnnounce text={game?.phase === "settled" && result !== "hand closed" ? `Hand over: ${result}. ${(game.payoutCents || 0) > 0 ? `Paid ${money(game.payoutCents)}.` : "No payout."}` : null} />
       <ResultsStrip game="blackjack" refreshKey={`${game?.id}-${game?.phase}`} />
       <div className="felt-table seated bj-table">
         <DealerBooth>
@@ -207,6 +208,8 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
           );
         })}
       </div>
+      {/* r26: tip sits below the felt so the bet circle stays above the dock */}
+      <FirstVisitTip game="blackjack" />
       <ActionDock hint={dealHint} busy={busy}>
         {err && <p className="err dock-err">{err}</p>}
         {betting && replay && (

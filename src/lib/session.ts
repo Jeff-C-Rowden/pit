@@ -23,7 +23,7 @@ const COLS: Record<SettingKind, { cur: string; pv: string; pa: string }> = {
 
 export function migrateSession(db: Database.Database) {
   const have = new Set((db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map((c) => c.name));
-  for (const c of ["reality_check_min INTEGER", "reality_pending_min INTEGER", "reality_pending_at TEXT", "session_limit_min INTEGER", "session_pending_min INTEGER", "session_pending_at TEXT"]) {
+  for (const c of ["reality_check_min INTEGER", "reality_pending_min INTEGER", "reality_pending_at TEXT", "session_limit_min INTEGER", "session_pending_min INTEGER", "session_pending_at TEXT", "break_until TEXT"]) {
     if (!have.has(c.split(" ")[0])) db.exec(`ALTER TABLE users ADD COLUMN ${c}`);
   }
 }
@@ -93,4 +93,29 @@ export function sessionBlock(db: Database.Database, userId: string, now = new Da
   if (!s.active || !s.startedAt) return null;
   const endsAt = Date.parse(s.startedAt) + lim * 60000;
   return now.getTime() >= endsAt ? { endsAt: new Date(endsAt).toISOString(), breakEndsAt: s.breakEndsAt! } : null;
+}
+
+/** "Take a break now": a voluntary pause that starts at once. Repeating it never shortens a break. */
+export const VOLUNTARY_BREAK_MS = BREAK_MS;
+export function breakUntil(db: Database.Database, userId: string, now = new Date()): string | null {
+  const u = db.prepare("SELECT break_until AS b FROM users WHERE id = ?").get(userId) as { b: string | null } | undefined;
+  return u?.b && Date.parse(u.b) > now.getTime() ? u.b : null;
+}
+export function takeBreak(db: Database.Database, userId: string, now = new Date()): string {
+  const cur = breakUntil(db, userId, now);
+  const next = new Date(now.getTime() + VOLUNTARY_BREAK_MS).toISOString();
+  const until = cur && cur > next ? cur : next;
+  db.prepare("UPDATE users SET break_until = ? WHERE id = ?").run(until, userId);
+  return until;
+}
+
+export type ActivityRow = { at: string; type: string; game: string | null; amountCents: number; balanceAfterCents: number };
+/** This session's bets, payouts and refunds, newest first, straight from the ledger. */
+export function sessionActivity(db: Database.Database, userId: string, now = new Date()): { session: Session; rows: ActivityRow[] } {
+  const session = currentSession(db, userId, now);
+  if (!session.active || !session.startedAt) return { session, rows: [] };
+  const rows = db.prepare(`SELECT created_at AS at, type, game, amount_cents AS amountCents, balance_after_cents AS balanceAfterCents FROM ledger
+    WHERE user_id = ? AND type IN ('bet','payout','refund') AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT 500`)
+    .all(userId, session.startedAt, now.toISOString()) as ActivityRow[];
+  return { session, rows };
 }

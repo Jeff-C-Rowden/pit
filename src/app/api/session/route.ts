@@ -1,15 +1,17 @@
 import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { getDb } from "@/lib/db";
-import { currentSession, settingView, requestSetting, cancelSettingPending, sessionBlock, REALITY_CHOICES, SESSION_CHOICES, type SettingKind } from "@/lib/session";
+import { serverNow } from "@/lib/clock";
+import { breakUntil, takeBreak, currentSession, settingView, requestSetting, cancelSettingPending, sessionBlock, REALITY_CHOICES, SESSION_CHOICES, type SettingKind } from "@/lib/session";
 
 function view(userId: string) {
-  const db = getDb(); const now = new Date();
+  const db = getDb(); const now = serverNow();
   return {
     session: currentSession(db, userId, now),
     reality: settingView(db, userId, "reality", now),
     sessionLimit: settingView(db, userId, "session", now),
     blocked: sessionBlock(db, userId, now),
+    breakUntil: breakUntil(db, userId, now),
     choices: { reality: REALITY_CHOICES, session: SESSION_CHOICES },
     serverNow: now.toISOString(),
   };
@@ -20,6 +22,10 @@ async function _GET(req: Request) { return withUser(req, async (u) => json(view(
 async function _POST(req: Request) {
   return withUser(req, async (u) => {
     const body = await req.json(); const db = getDb();
+    if (body.takeBreak === true) {
+      const until = takeBreak(db, u.id, serverNow());
+      void until; return json(view(u.id));
+    }
     if (body.cancelPending !== undefined) {
       if (body.cancelPending !== "reality" && body.cancelPending !== "session") return err("cancelPending must be reality or session");
       cancelSettingPending(db, u.id, body.cancelPending as SettingKind);
@@ -27,8 +33,8 @@ async function _POST(req: Request) {
     }
     try {
       const result = db.transaction(() => ({
-        reality: requestSetting(db, u.id, "reality", num(body.realityMin)),
-        session: requestSetting(db, u.id, "session", num(body.sessionMin)),
+        reality: requestSetting(db, u.id, "reality", num(body.realityMin), serverNow()),
+        session: requestSetting(db, u.id, "session", num(body.sessionMin), serverNow()),
       }))();
       return json({ result, ...view(u.id) });
     } catch (e) { return err(e instanceof Error ? e.message : "bad request"); }

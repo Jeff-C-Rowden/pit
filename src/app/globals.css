@@ -3244,7 +3244,15 @@ button.zone:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px;
 .reality-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
 .reality-acts .btn { flex: 1 1 0; min-height: 44px; font-size: 12px; text-align: center; }
 /* r25: bet spots / card picks as real buttons */
-.bet-spot-btn { padding: 0; border: 0; font: inherit; color: inherit; cursor: pointer; }
+.bet-spot.bet-spot-btn { padding: 0; font: inherit; color: inherit; cursor: pointer; pointer-events: auto; z-index: 2; background: rgba(0,0,0,.12); min-width: 44px; min-height: 44px; touch-action: manipulation; }
+.seat-bet:has(.bet-spot-btn) > :not(.bet-spot) { pointer-events: none; }
 .bet-spot-btn:disabled { cursor: default; opacity: .7; }
 .pg-pick { background: none; border: 0; padding: 0; border-radius: 8px; cursor: pointer; }
 .bet-spot-btn:focus-visible, .pg-pick:focus-visible, .rl-cell:focus-visible, .rl-spot:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+/* r26: activity page, break box */
+.activity-sum { font-size: 16px; line-height: 1.5; }
+.activity-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+.activity-table th, .activity-table td { text-align: left; padding: 8px 4px; border-bottom: 1px solid rgba(230,196,110,.15); }
+.activity-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.activity-table .pos { color: #8fd6a4; } .activity-table .neg { color: #e7a2a2; }
+.break-box { margin-top: 14px; padding: 12px; border: 1px solid rgba(230,196,110,.25); border-radius: 10px; }

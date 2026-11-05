@@ -5,6 +5,7 @@ import { crapsFeltCents, crapsRiskedCents } from "@/lib/feel";
 import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
+import LiveAnnounce from "@/components/LiveAnnounce";
 
 const LAST_KEY = "pit-cr-last";
 
@@ -203,6 +204,7 @@ export default function CrapsPage() {
             </div>
           </div>
           <FirstVisitTip game="craps" />
+          <LiveAnnounce text={rollRef && table?.lastRoll ? `Rolled ${table.lastRoll[0]} and ${table.lastRoll[1]}, total ${table.lastTotal}. ${lastPay ? `Paid ${money(lastPay)}.` : "No payout this roll."}` : null} />
           <ResultsStrip game="craps" refreshKey={rollRef} />
           {replay ? (
             <ReplayCard onClose={closeReplay} cageHref={cageHref("craps", replay.ref)}>

@@ -8,6 +8,7 @@ import { Chip, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, 
 import { celebrationLevel, playChip, playPayout } from "@/lib/feel";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
+import LiveAnnounce, { resultPhrase } from "@/components/LiveAnnounce";
 import RouletteCloth, {
   PIT_ROULETTE_BOTS,
   RouletteBots,
@@ -295,6 +296,7 @@ export default function RoulettePage() {
               {lastWin == null ? "—" : `${lastWin > 0 ? "+" : ""}${money(lastWin)}`}</strong></div>
           </div>
 
+          <LiveAnnounce text={spin && !spinning && !spin.replay ? `Ball landed on ${spin.pocket} ${colorName(spin.pocket)}. ${resultPhrase(staked, paid, money)}` : null} />
           <ResultsStrip game="roulette" refreshKey={history.length + ":" + (spin?.id || "")} />
           {history.length > 0 && !spin?.replay && (
             <div className="rl-replay-row">
@@ -311,7 +313,7 @@ export default function RoulettePage() {
               <div className="rl-wheel-wrap">
                 <RouletteWheel pocket={displayPocket} spinning={spinning} plan={plan} instant={reduced || skipped} />
                 {spin && !spinning && tone && !spin.replay && (
-                  <div className={`rl-result rl-result-ov ${tone}`} role="status" aria-live="polite">
+                  <div className={`rl-result rl-result-ov ${tone}`}>
                     <span className={`rl-pocket-pip ${pocketColor(spin.pocket)}`}>{spin.pocket}</span>
                     <div>
                       <div className="rl-result-h">

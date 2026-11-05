@@ -1,6 +1,7 @@
 import { chicagoTime } from "./limitText";
 import { limitView } from "./limits";
-import { sessionBlock } from "./session";
+import { sessionBlock, breakUntil } from "./session";
+import { serverNow } from "./clock";
 import { getDb, type LedgerRow, type UserRow } from "./db";
 import { newId } from "./rng";
 import { assertPositiveCents } from "./money";
@@ -71,7 +72,7 @@ export function applyLedger(opts: {
     if (!user) throw new LedgerError("NO_USER", "user not found");
 
     if (opts.type === "deposit" || opts.type === "bet") {
-      const now = new Date();
+      const now = serverNow();
       if (opts.type === "deposit") {
         const v = limitView(db, opts.userId, "deposit", now);
         if (v.cents != null && v.usedCents + amount > v.cents) {
@@ -80,6 +81,8 @@ export function applyLedger(opts: {
       } else {
         // Session time limit stops new rounds only; a double/split on a round already in play goes through.
         const inFlight = (opts.game === "blackjack" || opts.game === "holdem") && !!opts.ref && !!db.prepare("SELECT 1 FROM ledger WHERE user_id = ? AND ref = ? AND type = 'bet' LIMIT 1").get(opts.userId, opts.ref);
+        const br = inFlight ? null : breakUntil(db, opts.userId, now);
+        if (br) throw new LedgerError("ON_BREAK", `you're on a break you chose; new bets open at ${chicagoTime(br)}`);
         const sb = inFlight ? null : sessionBlock(db, opts.userId, now);
         if (sb) throw new LedgerError("SESSION_LIMIT", `your session time limit is up; new bets open after a 30-minute break, at ${chicagoTime(sb.breakEndsAt)}`);
         const v = limitView(db, opts.userId, "loss", now);
@@ -103,7 +106,7 @@ export function applyLedger(opts: {
       ref: opts.ref ?? null,
       idempotency_key: opts.idempotencyKey,
       meta: opts.meta == null ? null : JSON.stringify(opts.meta),
-      created_at: new Date().toISOString(),
+      created_at: serverNow().toISOString(),
     };
     try {
       db.prepare(

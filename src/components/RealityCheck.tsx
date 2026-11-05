@@ -26,12 +26,21 @@ export default function RealityCheck() {
   if (!d) return null;
   const net = d.session.netCents;
   const netTxt = `${net >= 0 ? "+" : "−"}${money(Math.abs(net))}`;
+  if (d.breakUntil) {
+    return (
+      <div className="reality-note blocked" role="status">
+        <b>On a break you chose</b>
+        <span>New bets open at {chicagoTime(d.breakUntil)}. Anything already in play still finishes. This session: net {netTxt}.</span>
+        <div className="reality-acts"><Link className="btn" href="/activity">See activity</Link></div>
+      </div>
+    );
+  }
   if (d.blocked) {
     return (
       <div className="reality-note blocked" role="status">
         <b>Session time limit reached</b>
         <span>You set this limit. New bets open after a 30-minute break, at {chicagoTime(d.blocked.breakEndsAt)}. Anything already in play still settles. This session: net {netTxt}.</span>
-        <div className="reality-acts"><Link className="btn" href="/wallet">Your activity</Link></div>
+        <div className="reality-acts"><Link className="btn" href="/activity">See activity</Link></div>
       </div>
     );
   }
@@ -46,7 +55,7 @@ export default function RealityCheck() {
       <span>Reality check every {every} min. Net is wins minus bets this session, from your ledger. Sandbox chips only.</span>
       <div className="reality-acts">
         <button type="button" className="btn" onClick={ack}>Keep playing</button>
-        <Link className="btn" href="/wallet" onClick={ack}>Take a break · see activity</Link>
+        <Link className="btn" href="/activity" onClick={ack}>Take a break · see activity</Link>
       </div>
     </div>
   );

@@ -79,7 +79,6 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
         <p className="lede">House banks · 5% commission on wins · 6 seats</p>
         <h1 style={{ fontSize: 48 }}>Pai Gow Poker</h1>
       </div>
-      <FirstVisitTip game="paigow" />
       <ResultsStrip game="paigow" refreshKey={`${game?.id}-${game?.phase}`} />
       {err && <p className="err">{err}</p>}
       <div className="felt-table seated felt-rect bj-table pg-table">
@@ -173,6 +172,8 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
           </div>
         </div>
       )}
+      {/* r26: tip sits below the felt so the bet circle stays above the dock */}
+      <FirstVisitTip game="paigow" />
       <ActionDock hint={hint} busy={busy}>
         <TableReplay game="paigow" show={betting} resetKey={`${game?.id}-${game?.phase}`} render={(r) => (
           <>

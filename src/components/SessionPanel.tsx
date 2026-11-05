@@ -6,7 +6,7 @@ import { chicagoTime } from "@/lib/limitText";
 type SV = { minutes: number | null; pending: { minutes: number | null; effectiveAt: string } | null };
 export type SessionData = {
   session: { active: boolean; startedAt: string | null; minutes: number; netCents: number; breakEndsAt: string | null };
-  reality: SV; sessionLimit: SV; blocked: { endsAt: string; breakEndsAt: string } | null;
+  reality: SV; sessionLimit: SV; blocked: { endsAt: string; breakEndsAt: string } | null; breakUntil?: string | null;
   choices: { reality: number[]; session: number[] };
 };
 const mins = (m: number | null) => (m == null ? "Off" : m < 60 || m % 60 ? `${m} min` : `${m / 60} hr`);
@@ -58,6 +58,15 @@ export default function SessionPanel() {
       {row("session", "Session time limit", "When time is up, new bets stop until you take a 30-minute break. Hands already dealt still finish and pay.", d.sessionLimit, sl, setSl, d.choices.session)}
       {err && <p className="err" role="alert">{err}</p>}
       {msg && <p className="ok" role="status">{msg}</p>}
+      <div className="break-box">
+        {d.breakUntil
+          ? <p className="lim-help" role="status">You&apos;re on a break you chose. New bets open at {chicagoTime(d.breakUntil)}. Anything already in play still finishes.</p>
+          : <p className="lim-help">Take a break now: new bets stop for 30 minutes, starting right away. Hands and rolls already in play still finish and pay. This can&apos;t be cut short.</p>}
+        <div className="btn-row">
+          {!d.breakUntil && <button type="button" className="btn" onClick={() => post({ takeBreak: true }, () => "Break started. New bets are paused for 30 minutes.")}>Take a break now</button>}
+          <a className="btn" href="/activity">This session&apos;s activity</a>
+        </div>
+      </div>
       <div className="btn-row cage-actions">
         <button type="button" className="btn" onClick={() => post({ realityMin: rc || null, sessionMin: sl || null }, (r) => [res(r, "reality", "Reality check"), res(r, "session", "Session limit")].filter(Boolean).join(" ") || "No changes.")}>Save time settings</button>
       </div>
