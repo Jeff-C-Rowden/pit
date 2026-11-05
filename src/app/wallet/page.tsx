@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { api, money, useUser, type User } from "@/components/useUser";
+import { parseDollarsInput, centsToInput } from "@/lib/money";
 
 const AMTS = [1000, 2500, 5000, 10000, 25000, 50000, 100000];
 
@@ -16,7 +17,7 @@ export default function WalletPage() {
   const { setUser } = useUser();
   const [msg, setMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
-  const [wd, setWd] = useState(10000);
+  const [wd, setWd] = useState("100.00");
   const [depLim, setDepLim] = useState("");
   const [lossLim, setLossLim] = useState("");
   const [list, setList] = useState<unknown[]>([]);
@@ -104,34 +105,49 @@ export default function WalletPage() {
           <div className="panel cage-panel">
             <h3>Withdrawal request</h3>
             <p className="muted">Marks funds pending. Nothing is sent to a bank.</p>
-            <label htmlFor="wd-cents">Amount (cents)</label>
-            <input id="wd-cents" type="number" value={wd} onChange={(e) => setWd(Number(e.target.value))} />
+            <label htmlFor="wd-amt">Amount</label>
+            <div className="cage-money-input"><span aria-hidden="true">$</span>
+              <input id="wd-amt" inputMode="decimal" autoComplete="off" value={wd} onChange={(e) => setWd(e.target.value)} placeholder="10.00" aria-describedby="wd-help" />
+            </div>
+            <p id="wd-help" className="muted cage-help">Minimum $10.00. Up to your balance of {money(u.balanceCents)}.</p>
             <div className="btn-row cage-actions">
               <button type="button" className="btn" onClick={async () => {
-                setErr(null);
+                setErr(null); setMsg(null);
+                const cents = parseDollarsInput(wd);
+                if (cents == null) { setErr("Enter a dollar amount, like 25 or 25.50."); return; }
                 try {
-                  const d = await api("/api/wallet/withdraw", { method: "POST", body: JSON.stringify({ amountCents: wd }) });
+                  const d = await api("/api/wallet/withdraw", { method: "POST", body: JSON.stringify({ amountCents: cents }) });
                   if (d.user) setUser(d.user);
-                  setMsg(`Withdrawal ${money(wd)} is pending (${d.withdrawal.id.slice(0,8)}…).`);
+                  setMsg(`Withdrawal ${money(cents)} is pending (${d.withdrawal.id.slice(0,8)}…).`);
                   setList((x) => [d.withdrawal, ...x]);
                 } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
               }}>Request withdrawal</button>
             </div>
-            {!!list.length && <pre className="log">{JSON.stringify(list, null, 2)}</pre>}
+            {!!list.length && (
+              <ul className="cage-wd-list">
+                {(list as any[]).map((w) => (
+                  <li key={w.id}><span>{money(w.amount_cents ?? w.amountCents)}</span><span className="muted">{w.status}</span><span className="muted">{w.created_at ? new Date(w.created_at).toLocaleDateString() : "just now"}</span></li>
+                ))}
+              </ul>
+            )}
           </div>
           <div className="panel cage-panel">
             <h3>Responsible play</h3>
             <p className="muted">Optional limits. Leave blank for none. Enforced on the server.</p>
-            <label htmlFor="dep-lim">Deposit limit (cents, lifetime in this sandbox)</label>
-            <input id="dep-lim" value={depLim} onChange={(e) => setDepLim(e.target.value)} placeholder={u.depositLimitCents == null ? "none" : String(u.depositLimitCents)} />
-            <label htmlFor="loss-lim">Loss limit (cents)</label>
-            <input id="loss-lim" value={lossLim} onChange={(e) => setLossLim(e.target.value)} placeholder={u.lossLimitCents == null ? "none" : String(u.lossLimitCents)} />
+            <label htmlFor="dep-lim">Deposit limit ($, lifetime in this sandbox)</label>
+            <input id="dep-lim" value={depLim} onChange={(e) => setDepLim(e.target.value)} inputMode="decimal" placeholder={u.depositLimitCents == null ? "none" : centsToInput(u.depositLimitCents)} />
+            <label htmlFor="loss-lim">Loss limit ($)</label>
+            <input id="loss-lim" value={lossLim} onChange={(e) => setLossLim(e.target.value)} inputMode="decimal" placeholder={u.lossLimitCents == null ? "none" : centsToInput(u.lossLimitCents)} />
             <div className="btn-row cage-actions">
               <button type="button" className="btn" onClick={async () => {
+                setErr(null);
+                const dl = depLim.trim() === "" ? null : parseDollarsInput(depLim);
+                const ll = lossLim.trim() === "" ? null : parseDollarsInput(lossLim);
+                if ((depLim.trim() !== "" && dl == null) || (lossLim.trim() !== "" && ll == null)) { setErr("Limits are dollar amounts, like 200 or 200.50."); return; }
                 try {
                   await api("/api/wallet/limits", { method: "POST", body: JSON.stringify({
-                    depositLimitCents: depLim === "" ? null : Number(depLim),
-                    lossLimitCents: lossLim === "" ? null : Number(lossLim),
+                    depositLimitCents: dl,
+                    lossLimitCents: ll,
                   }) });
                   setMsg("Limits saved.");
                   location.reload();

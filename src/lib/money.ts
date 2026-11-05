@@ -24,3 +24,21 @@ export function assertNonNegativeCents(cents: number): void {
     throw new Error("amount must be a non-negative integer (cents)");
   }
 }
+
+/**
+ * Parse a dollar amount typed by a person ("25", "25.5", "$1,000.00") into integer cents.
+ * Returns null for blank or invalid input (negative, more than 2 decimals, not a number).
+ * The server still validates the resulting cents; this only converts the UI's input.
+ */
+export function parseDollarsInput(raw: string): number | null {
+  const s = String(raw ?? "").trim().replace(/^\$/, "").replace(/,/g, "");
+  if (!/^\d+(\.\d{1,2})?$|^\.\d{1,2}$/.test(s)) return null;
+  const [whole, frac = ""] = s.split(".");
+  const cents = Number(whole || "0") * 100 + Number((frac + "00").slice(0, 2));
+  return Number.isSafeInteger(cents) ? cents : null;
+}
+
+export function centsToInput(cents: number | null | undefined): string {
+  if (cents == null) return "";
+  return (cents / 100).toFixed(2);
+}
