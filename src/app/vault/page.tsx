@@ -8,6 +8,7 @@ import ProgressiveMeterStrip, { type MeterPublic } from "@/components/Progressiv
 import { ActionDock, ChipRow, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { api, money, useUser } from "@/components/useUser";
 import { VS_PAYLINES, VS_TOTAL_CONTRIBUTION_BPS, type VsSymbol } from "@/lib/games/slotProgressive";
+import { slotGlowTier, soundOn, reducedMotion } from "@/lib/feel";
 
 type LineWin = { line: number; symbol: VsSymbol | null; count: number; pay: number; winCents: number };
 type ProgHit = { tierId: string; name: string; awardCents: number; reseedsTo?: number };
@@ -70,6 +71,13 @@ export default function VaultPage() {
   const [reseedBeat, setReseedBeat] = useState(false);
   const [infoSheet, setInfoSheet] = useState<MeterPublic | "game" | null>(null);
   const [maxArmed, setMaxArmed] = useState(false);
+  const [feelLive, setFeelLive] = useState(false);
+  useEffect(() => {
+    const f = () => setFeelLive(soundOn() && !reducedMotion());
+    f();
+    window.addEventListener("pit-sound", f);
+    return () => window.removeEventListener("pit-sound", f);
+  }, []);
 
   const spinRef = useRef<any>(null);
   spinRef.current = spin;
@@ -232,6 +240,8 @@ export default function VaultPage() {
                 spinning={spinning}
                 winCells={winCells}
                 onSpinComplete={onSpinComplete}
+                glow={showOutcome ? slotGlowTier(coinIn, lastWinCents) : 0}
+                glowLive={feelLive}
               />
             </div>
 

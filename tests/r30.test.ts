@@ -49,3 +49,21 @@ describe("sparkline running net", () => {
     ])).toEqual([0, -200, -300, 0]);
   });
 });
+
+describe("Canopy Spire glow uses the same honest tiers on coin×9 bets", () => {
+  // Vault coin-in is coin × 9 paylines; glow must stay dark on loss/push/sub-bet.
+  it("tier 0 for loss, push, and return under the bet", () => {
+    expect(slotGlowTier(900, 0)).toBe(0);
+    expect(slotGlowTier(900, 450)).toBe(0);
+    expect(slotGlowTier(900, 900)).toBe(0);
+    expect(slotGlowTier(0, 5000)).toBe(0);
+    expect(slotGlowTier(null, 5000)).toBe(0);
+    expect(slotGlowTier(900, null)).toBe(0);
+  });
+  it("scales glow-t1…glow-t4 by real return multiple of the spin bet", () => {
+    expect(slotGlowTier(900, 901)).toBe(1);   // profit under 1×
+    expect(slotGlowTier(900, 1800)).toBe(2);  // ≥2×
+    expect(slotGlowTier(900, 5400)).toBe(3);  // ≥6×
+    expect(slotGlowTier(900, 18900)).toBe(4); // ≥21×
+  });
+});

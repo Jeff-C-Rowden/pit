@@ -500,8 +500,12 @@ const VaultSpireMachine = forwardRef<
     winCells?: WinCell[];
     onSpinComplete?: () => void;
     theme?: VaultTheme;
+    /** 0–4 from slotGlowTier on the real paid return; lights only after the reels settle. */
+    glow?: number;
+    /** Animate the lights (Sound & feel on and no reduced motion). Otherwise they light steadily. */
+    glowLive?: boolean;
   }
->(function VaultSpireMachine({ grid, spinning, winCells, onSpinComplete, theme }, ref) {
+>(function VaultSpireMachine({ grid, spinning, winCells, onSpinComplete, theme, glow = 0, glowLive = false }, ref) {
   const t = { ...DEFAULT_THEME, ...theme, kickLabels: theme?.kickLabels ?? DEFAULT_THEME.kickLabels };
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
@@ -560,11 +564,13 @@ const VaultSpireMachine = forwardRef<
   return (
     <SymHCtx.Provider value={symH}>
       <div
-        className={`slot-cabinet ${t.cabinetClass}`}
+        className={`slot-cabinet ${t.cabinetClass}${settled && !spinning && glow > 0 ? ` glow-t${glow}${glowLive ? " glow-live" : ""}` : ""}`}
+        data-glow={settled && !spinning ? glow : 0}
         style={{ ["--sym-h" as string]: `${symH}px` }}
         data-theme="vault-spire"
       >
         <div className="slot-lamp" aria-hidden />
+        <div className="slot-win-halo" aria-hidden />
         <div className="slot-top-lights" aria-hidden>
           <span /><span /><span /><span /><span /><span /><span />
         </div>
