@@ -232,7 +232,7 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
       {game?.log && <div className="panel log" style={{ marginTop: 16 }}>{game.log.map((l: string, i: number) => <div key={i}>{l}</div>)}</div>}
       <ActionDock hint={hint} busy={busy}>
         {hole.length > 0 && (
-          <div className="hero-hole in-dock">
+          <div className={`hero-hole in-dock${youActing ? " acting" : ""}`}>
             <div className="hand hole-fan">
               {hole.map((c: any, i: number) => (
                 <PlayingCard key={i} card={c} size="lg" />

@@ -50,7 +50,7 @@ function SoundToggle() {
   }, []);
   return (
     <button type="button" className={`nav-sound${on ? " on" : ""}`} aria-pressed={on} onClick={() => { setSoundOn(!on); if (!on) setTimeout(playChip, 30); }}>
-      Sound {on ? "on" : "off"}
+      Sound &amp; feel {on ? "on" : "off"}
     </button>
   );
 }

@@ -3020,3 +3020,37 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
 .pg-ghost-card { width: 18px; height: 26px; border-radius: 3px; }
 @media (max-width: 640px) { .pit-shell .pg-table .table-heart { top: 50%; } }
 .pg-ghost-lbl { white-space: nowrap; }
+
+/* ---- Round 18: replay card, Cage links, ledger, compact Hold'em dock ---- */
+.cage-link { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--gold, #e6c36a); text-decoration: underline; text-underline-offset: 2px; }
+.replay-row { display: flex; justify-content: center; margin: 6px 0; }
+.replay-card { position: relative; margin: 8px auto; max-width: 420px; padding: 10px 12px; border-radius: 12px; background: rgba(12,16,14,.92); border: 1px dashed rgba(230,195,106,.55); color: #f3ecd8; }
+.replay-card-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.replay-x { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255,255,255,.25); background: transparent; color: inherit; font-size: 18px; line-height: 1; cursor: pointer; }
+.replay-card-foot { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px; margin-top: 6px; font-size: 12px; }
+.replay-card-foot .cage-link { margin-top: 0; }
+.replay-body { display: flex; align-items: center; gap: 10px; }
+.replay-h { font-weight: 800; }
+.replay-bj { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 4px; }
+.replay-hand .hand { display: flex; gap: 4px; min-height: 0; }
+.action-dock .replay-card { width: 100%; flex-basis: 100%; }
+.cage-ledger { margin-top: 16px; scroll-margin-top: 70px; }
+.ledger-list { list-style: none; margin: 0; padding: 0; }
+.ledger-line { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 8px 6px; border-bottom: 1px solid rgba(255,255,255,.08); font-size: 13px; }
+.ledger-line.hit { background: rgba(230,195,106,.14); border-left: 3px solid var(--gold, #e6c36a); }
+.ledger-bal, .ledger-at { font-size: 11px; }
+.ledger-at { text-align: right; }
+.ledger-line .up { color: #7fdc9a; } .ledger-line .down { color: #f08a8a; }
+@media (max-width: 640px) {
+  body .action-dock .hero-hole.in-dock.acting { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0 auto 4px; }
+  body .action-dock .hero-hole.in-dock.acting .hand { min-height: 0; }
+  body .action-dock .hero-hole.in-dock.acting .pcard.lg { width: 54px; height: 76px; border-radius: 7px; }
+  body .action-dock .hero-hole.in-dock.acting .pcard.lg .cr { font-size: 14px; }
+  body .action-dock .hero-hole.in-dock.acting .pcard.lg .cs { font-size: 18px; }
+  body .action-dock .hero-hole.in-dock.acting .your-action { display: none; }
+  body .action-dock .he-dock .he-sizes { margin-bottom: 4px; gap: 4px; }
+  body .action-dock .he-dock .he-sizes .btn { padding: 5px 8px; font-size: 11px; min-height: 30px; }
+  body .action-dock .he-dock .he-slider { margin: 0 0 4px; }
+  body .action-dock .he-dock .he-slots { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  body .action-dock .he-dock .he-slot .btn { min-height: 44px; font-size: 12px; letter-spacing: .04em; padding: 0 4px; }
+}
