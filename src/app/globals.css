@@ -2652,3 +2652,12 @@ input::placeholder, textarea::placeholder { color: rgba(203,191,159,.55); }
   border-bottom: 1px solid transparent;
   border-image: linear-gradient(90deg, rgba(201,162,39,.55), transparent 70%) 1; }
 main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
+/* aes-5: motion polish (disabled under reduced motion) */
+@media (prefers-reduced-motion: no-preference) {
+  main { animation: pit-enter .35s ease-out both; }
+  @keyframes pit-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .game-card { transition: transform .18s ease, box-shadow .18s ease, border-color .18s; }
+  .game-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(232,213,163,.25); }
+  .game-card:active, .btn:active { transform: translateY(1px) scale(.985); }
+  .btn { transition: filter .15s, transform .1s, box-shadow .15s; }
+}
