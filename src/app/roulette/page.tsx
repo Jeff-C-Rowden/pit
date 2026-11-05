@@ -1,10 +1,10 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
 import { previewBets } from "@/lib/games/roulettePreview";
 import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
-import { Chip } from "@/components/TableUX";
+import { Chip, ReplayCard, cageHref } from "@/components/TableUX";
 import { celebrationLevel, playChip, playPayout } from "@/lib/feel";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
@@ -205,6 +205,7 @@ export default function RoulettePage() {
     setBets(lastStake.map((b) => ({ ...b })));
   }
 
+  const closeReplay = useCallback(() => setSpin((s: any) => (s?.replay ? null : s)), []);
   async function replayLast() {
     if (busy || spinning) return;
     setErr(null);
@@ -292,7 +293,7 @@ export default function RoulettePage() {
               {lastWin == null ? "—" : `${lastWin > 0 ? "+" : ""}${money(lastWin)}`}</strong></div>
           </div>
 
-          {history.length > 0 && (
+          {history.length > 0 && !spin?.replay && (
             <div className="rl-replay-row">
               <button type="button" className="rl-replay" onClick={replayLast} disabled={busy || spinning}>↺ Replay last result</button>
             </div>
@@ -311,18 +312,17 @@ export default function RoulettePage() {
             <div className="rl-star" ref={wheelRef}>
               <div className="rl-wheel-wrap">
                 <RouletteWheel pocket={displayPocket} spinning={spinning} plan={plan} instant={reduced || skipped} />
-                {spin && !spinning && tone && (
+                {spin && !spinning && tone && !spin.replay && (
                   <div className={`rl-result rl-result-ov ${tone}`} role="status" aria-live="polite">
                     <span className={`rl-pocket-pip ${pocketColor(spin.pocket)}`}>{spin.pocket}</span>
                     <div>
-                      {spin.replay && <span className="rl-replay-tag">Replay · already settled</span>}
                       <div className="rl-result-h">
                         {tone === "win" ? `You won ${money(shownWin)}` : tone === "push" ? "You broke even" : `You lost ${money(-net)}`}
                       </div>
                       <div className="rl-result-d">
                         Ball landed on {spin.pocket} {colorName(spin.pocket)}. You bet {money(staked)}, got back {money(paid)}.
                       </div>
-                      {spin.replay && <div className="rl-result-d">From your ledger. No chips moved.</div>}
+                      {cageHref("roulette", spin.id) && <a className="cage-link" href={cageHref("roulette", spin.id)!}>View in Cage →</a>}
                       {!spin.replay && showSettled && lastStake.length > 0 && (
                         <button type="button" className="rl-result-see" onClick={() => feltRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" })}>
                           {paidCount} of {spots.length} spot{spots.length === 1 ? "" : "s"} paid · see table ↓
@@ -332,6 +332,17 @@ export default function RoulettePage() {
                   </div>
                 )}
               </div>
+              {spin && !spinning && spin.replay && (
+                <ReplayCard onClose={closeReplay} cageHref={cageHref("roulette", spin.id)}>
+                  <div className="replay-body">
+                    <span className={`rl-pocket-pip ${pocketColor(spin.pocket)}`}>{spin.pocket}</span>
+                    <div>
+                      <div className="replay-h">Ball landed on {spin.pocket} {colorName(spin.pocket)}</div>
+                      <div className="muted">You bet {money(spin.stakeCents)}, got back {money(spin.payoutCents)} ({spin.netCents >= 0 ? "+" : "−"}{money(Math.abs(spin.netCents))})</div>
+                    </div>
+                  </div>
+                </ReplayCard>
+              )}
               <div className="rl-tools">
                 <label className="rl-toggle"><input type="checkbox" checked={turbo} onChange={(e) => setTurbo(e.target.checked)} /> Turbo spin</label>
                 {reduced && <span className="muted">Reduced motion: results show instantly</span>}

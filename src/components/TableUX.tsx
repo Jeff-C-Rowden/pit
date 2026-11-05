@@ -39,7 +39,10 @@ export function OutcomeBanner({
   title,
   subtitle,
   stakeCents,
+  cageHref,
 }: {
+  /** Link to the matching ledger lines in the Cage. */
+  cageHref?: string | null;
   /** What was risked on this result; lets effects scale with real profit. */
   stakeCents?: number | null;
   win?: boolean;
@@ -92,6 +95,7 @@ export function OutcomeBanner({
     >
       <div className="result-banner-title">{headline}</div>
       {detail ? <div className="result-banner-sub">{detail}</div> : null}
+      {cageHref ? <a className="cage-link" href={cageHref}>View in Cage →</a> : null}
       {slide && (
         <div className="pay-slide" aria-hidden>
           <ChipStack cents={amountCents || 0} size={24} maxChips={6} showTotal={false} quiet />
@@ -513,4 +517,35 @@ export function FeltSpot({
       {cents > 0 && <div className="chip-stack-total">{money(cents)}</div>}
     </div>
   );
+}
+
+/**
+ * Re-shows a result that already settled. Clearly labelled, closable, hides itself.
+ * Never plays payout effects and never moves chips.
+ */
+export function ReplayCard({ children, onClose, cageHref, autoHideMs = 9000 }: {
+  children: ReactNode; onClose: () => void; cageHref?: string | null; autoHideMs?: number;
+}) {
+  useEffect(() => {
+    if (!autoHideMs) return;
+    const t = window.setTimeout(onClose, autoHideMs);
+    return () => window.clearTimeout(t);
+  }, [autoHideMs, onClose]);
+  return (
+    <div className="replay-card" role="status" aria-live="polite">
+      <div className="replay-card-top">
+        <span className="rl-replay-tag">Replay · already settled</span>
+        <button type="button" className="replay-x" onClick={onClose} aria-label="Close replay">×</button>
+      </div>
+      {children}
+      <div className="replay-card-foot">
+        <span className="muted">From your ledger. No chips moved.</span>
+        {cageHref ? <a className="cage-link" href={cageHref}>View in Cage →</a> : null}
+      </div>
+    </div>
+  );
+}
+
+export function cageHref(game: string, ref: string | null | undefined) {
+  return ref ? `/wallet?game=${encodeURIComponent(game)}&ref=${encodeURIComponent(ref)}#ledger` : null;
 }

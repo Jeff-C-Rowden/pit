@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { crapsRiskedCents } from "@/lib/feel";
-import { ActionDock, ChipRow, ChipStack, OutcomeBanner } from "@/components/TableUX";
+import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, cageHref } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -49,6 +49,17 @@ export default function CrapsPage() {
   const [err, setErr] = useState<string | null>(null);
   const [lastPay, setLastPay] = useState<number | null>(null);
   const [lastRisk, setLastRisk] = useState(0);
+  const [rollRef, setRollRef] = useState<string | null>(null);
+  const [replay, setReplay] = useState<any>(null);
+  const closeReplay = useCallback(() => setReplay(null), []);
+  async function replayLast() {
+    setErr(null);
+    try {
+      const d = await api("/api/replay?game=craps");
+      if (!d.last) { setErr("No settled roll to replay yet."); return; }
+      setReplay(d.last);
+    } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
+  }
   const [repeatNote, setRepeatNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [lastPattern, setLastPattern] = useState<PatternBet[]>([]);
@@ -102,6 +113,8 @@ export default function CrapsPage() {
       if (d.user) setUser(d.user);
       setLastRisk(crapsRiskedCents(snap));
       setLastPay(d.payoutCents);
+      setRollRef(d.rollRef || null);
+      setReplay(null);
       if (d.table?.lastRound?.length) remember(d.table.lastRound);
       if (d.repeatedCents) setRepeatNote(`Last bet back on the felt · ${money(d.repeatedCents)}`);
     } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
@@ -186,6 +199,20 @@ export default function CrapsPage() {
               )}
             </div>
           </div>
+          {replay ? (
+            <ReplayCard onClose={closeReplay} cageHref={cageHref("craps", replay.ref)}>
+              <div className="replay-body">
+                <span className="dice cr-die">{replay.dice[0]}</span>
+                <span className="dice cr-die">{replay.dice[1]}</span>
+                <div>
+                  <div className="replay-h">Rolled {replay.total}</div>
+                  <div className="muted">On the felt {money(replay.riskedCents)} · paid {money(replay.payoutCents)}</div>
+                </div>
+              </div>
+            </ReplayCard>
+          ) : (
+            <div className="replay-row"><button type="button" className="rl-replay" onClick={replayLast} disabled={busy}>↺ Replay last result</button></div>
+          )}
           {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
           {lastPay != null && lastPay > 0 && (
             <OutcomeBanner
@@ -193,6 +220,7 @@ export default function CrapsPage() {
               title="YOU WIN"
               amountCents={lastPay}
               stakeCents={lastRisk}
+              cageHref={cageHref("craps", rollRef)}
               subtitle={`${money(lastPay)} added to your stack`}
             />
           )}
@@ -200,6 +228,7 @@ export default function CrapsPage() {
             <OutcomeBanner
               title="NOTHING PAID"
               subtitle="Nothing paid on that roll."
+              cageHref={cageHref("craps", rollRef)}
             />
           )}
           {repeatNote && (

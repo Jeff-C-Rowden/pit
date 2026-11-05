@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import PlayingCard from "@/components/PlayingCard";
-import { ActionDock, ChipRow, OutcomeBanner } from "@/components/TableUX";
+import { ActionDock, ChipRow, OutcomeBanner, ReplayCard, cageHref } from "@/components/TableUX";
 import { DealerBooth, TableHeart, TableSeat, botBlackjackHand, botHandValue, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -12,6 +12,16 @@ export default function BlackjackPage() {
   const [bet, setBet] = useState(1000);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [replay, setReplay] = useState<any>(null);
+  const closeReplay = useCallback(() => setReplay(null), []);
+  async function replayLast() {
+    setErr(null);
+    try {
+      const d = await api("/api/replay?game=blackjack");
+      if (!d.last) { setErr("No settled hand to replay yet."); return; }
+      setReplay(d.last);
+    } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
+  }
   const settledFor = useRef<string | null>(null);
 
   async function load() {
@@ -23,6 +33,7 @@ export default function BlackjackPage() {
 
   async function act(action: string, extra: Record<string, unknown> = {}) {
     setErr(null);
+    setReplay(null);
     setBusy(true);
     try {
       const d = await api("/api/games/blackjack", {
@@ -50,6 +61,9 @@ export default function BlackjackPage() {
       {(u) => (
         <BlackjackFelt
           u={u}
+          replay={replay}
+          closeReplay={closeReplay}
+          replayLast={replayLast}
           game={game}
           bet={bet}
           setBet={setBet}
@@ -69,7 +83,7 @@ export default function BlackjackPage() {
   );
 }
 
-function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, isWin, isLoss, result, hint, settledFor }: any) {
+function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, err, busy, act, betting, isPush, isWin, isLoss, result, hint, settledFor }: any) {
   const { occupants, setYouSeat, n, nudgeBot } = useTableSeats("blackjack", u.displayName, u.balanceCents);
   const dealerRank = game?.dealer?.cards?.[0]?.rank;
   const youBet = game?.playerHands?.reduce((s: number, h: any) => s + (h.betCents || 0), 0)
@@ -126,6 +140,7 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
             <OutcomeBanner
               win
               title="YOU WIN"
+              cageHref={cageHref("blackjack", game?.id)}
               amountCents={game.payoutCents}
               stakeCents={youBet}
               subtitle={`${money(game.payoutCents)} added to your stack`}
@@ -135,6 +150,7 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
             <OutcomeBanner
               push
               title="PUSH"
+              cageHref={cageHref("blackjack", game?.id)}
               amountCents={game.payoutCents}
               subtitle={`${money(game.payoutCents || 0)} returned to your stack`}
             />
@@ -142,6 +158,7 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
           {isLoss && (
             <OutcomeBanner
               title="DEALER WINS"
+              cageHref={cageHref("blackjack", game?.id)}
               subtitle={result || "You lost this hand."}
             />
           )}
@@ -186,6 +203,22 @@ function BlackjackFelt({ u, game, bet, setBet, err, busy, act, betting, isPush, 
       </div>
       <ActionDock hint={dealHint} busy={busy}>
         {err && <p className="err dock-err">{err}</p>}
+        {betting && replay && (
+          <ReplayCard onClose={closeReplay} cageHref={cageHref("blackjack", replay.ref)}>
+            <div className="replay-bj">
+              <div className="replay-hand"><span className="muted">Dealer {replay.dealer?.value?.total ?? ""}</span>
+                <div className="hand">{replay.dealer?.cards?.map((c: any, i: number) => <PlayingCard key={i} card={c} size="sm" />)}</div></div>
+              {replay.playerHands?.map((h: any, i: number) => (
+                <div className="replay-hand" key={i}><span className="muted">You {h.value?.total}</span>
+                  <div className="hand">{h.cards.map((c: any, j: number) => <PlayingCard key={j} card={c} size="sm" />)}</div></div>
+              ))}
+            </div>
+            <div className="replay-h">{({ lose: "Dealer won", win: "You won", push: "Push", blackjack: "Blackjack" } as Record<string, string>)[replay.result] || replay.result || "Settled"} · bet {money(replay.stakeCents)} · paid {money(replay.payoutCents)}</div>
+          </ReplayCard>
+        )}
+        {betting && !replay && (
+          <button type="button" className="rl-replay" onClick={replayLast} disabled={busy}>↺ Replay last result</button>
+        )}
         {betting && (
           <>
             <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} minCents={100} maxCents={500_000} />

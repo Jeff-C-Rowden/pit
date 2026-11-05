@@ -182,9 +182,55 @@ export default function WalletPage() {
                 } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
               }}>Save limits</button>
             </div>
+          <CageLedger />
           </div>
         </div>
       )}
     </Shell>
+  );
+}
+
+type Line = { id: string; type: string; amountCents: number; balanceAfterCents: number; game: string | null; ref: string | null; at: string };
+
+const TYPE_LABEL: Record<string, string> = { bet: "Bet", payout: "Paid", refund: "Returned", deposit: "Added", withdrawal: "Withdrawn" };
+
+/** Recent ledger lines. When the URL carries game & ref (from "View in Cage"), those lines are shown and highlighted. */
+function CageLedger() {
+  const [recent, setRecent] = useState<Line[]>([]);
+  const [matched, setMatched] = useState<Line[]>([]);
+  const [focus, setFocus] = useState<{ game: string; ref: string } | null>(null);
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    const game = q.get("game"), ref = q.get("ref");
+    const f = game && ref ? { game, ref } : null;
+    setFocus(f);
+    const qs = f ? `?game=${encodeURIComponent(f.game)}&ref=${encodeURIComponent(f.ref)}` : "";
+    api(`/api/wallet/ledger${qs}`).then((d) => {
+      setRecent(d.recent || []);
+      setMatched(d.matched || []);
+      if (f) setTimeout(() => document.getElementById("ledger")?.scrollIntoView({ block: "start" }), 60);
+    }).catch(() => null);
+  }, []);
+  const ids = new Set(matched.map((l) => l.id));
+  const row = (l: Line) => (
+    <li key={l.id} className={`ledger-line${ids.has(l.id) ? " hit" : ""}`}>
+      <span className="ledger-what">{TYPE_LABEL[l.type] || l.type}{l.game ? ` · ${l.game}` : ""}</span>
+      <span className={`mono ${l.amountCents > 0 ? "up" : l.amountCents < 0 ? "down" : ""}`}>{l.amountCents > 0 ? "+" : l.amountCents < 0 ? "−" : ""}{money(Math.abs(l.amountCents))}</span>
+      <span className="ledger-bal muted mono">bal {money(l.balanceAfterCents)}</span>
+      <span className="ledger-at muted">{new Date(l.at.endsWith("Z") || l.at.includes("T") ? l.at : l.at.replace(" ", "T") + "Z").toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</span>
+    </li>
+  );
+  return (
+    <div className="panel cage-ledger" id="ledger">
+      <h2>Recent activity</h2>
+      {focus && (
+        <div className="ledger-focus">
+          <p className="muted">Ledger lines for that {focus.game} result.</p>
+          {matched.length ? <ul className="ledger-list">{matched.map(row)}</ul> : <p className="muted">No payout line for that result: nothing was paid, so no money moved on it. Your bets are in the full list.</p>}
+        </div>
+      )}
+      {focus && <h3 className="muted" style={{ fontSize: 13, margin: "12px 0 4px" }}>All recent</h3>}
+      {(recent.length ? <ul className="ledger-list">{recent.map(row)}</ul> : <p className="muted">No activity yet.</p>)}
+    </div>
   );
 }
