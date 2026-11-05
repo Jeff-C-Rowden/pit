@@ -59,19 +59,27 @@ export default function WalletPage() {
               <span className="cage-balance-sub muted">ledger · no card · no ACH</span>
             </div>
           </div>
-          <div className="notice cage-notice" role="note">
-            <strong className="cage-notice-title">{isSandbox ? "Practice money only" : "Partner not connected"}</strong>
-            {isSandbox ? (
+          {isSandbox ? (
+            <details className="notice cage-notice cage-notice-fold">
+              <summary><strong className="cage-notice-title">Practice money only</strong> <span className="muted">· no card, nothing is ever sent</span></summary>
               <ul className="cage-notice-list">
                 <li><b>Add test funds</b> gives you free practice chips.</li>
                 <li><b>Withdrawals</b> just set chips aside as pending. No money is ever sent.</li>
                 <li><b>No card, no bank,</b> nothing to pay, ever.</li>
               </ul>
-            ) : status && <p>{status.message}</p>}
-            {status?.adapter && (
-              <span className="muted cage-notice-meta">Wallet: {status.adapter} · {status.mode}{status.live ? " · LIVE" : ""}</span>
-            )}
-          </div>
+              {status?.adapter && (
+                <span className="muted cage-notice-meta">Wallet: {status.adapter} · {status.mode}{status.live ? " · LIVE" : ""}</span>
+              )}
+            </details>
+          ) : (
+            <div className="notice cage-notice" role="note">
+              <strong className="cage-notice-title">Partner not connected</strong>
+              {status && <p>{status.message}</p>}
+              {status?.adapter && (
+                <span className="muted cage-notice-meta">Wallet: {status.adapter} · {status.mode}{status.live ? " · LIVE" : ""}</span>
+              )}
+            </div>
+          )}
           {msg && <p className="ok cage-flash" role="status">{msg}</p>}
           {err && <p className="err">{err}</p>}
           {isSandbox && (

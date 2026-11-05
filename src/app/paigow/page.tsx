@@ -78,7 +78,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
         <h1 style={{ fontSize: 48 }}>Pai Gow Poker</h1>
       </div>
       {err && <p className="err">{err}</p>}
-      <div className="felt-table seated felt-rect bj-table">
+      <div className="felt-table seated felt-rect bj-table pg-table">
         <DealerBooth>
           <div className="muted">Dealer high / low</div>
           <div className="hand">{(game?.dealerHigh || game?.dealerCards || []).map((c: any, i: number) => <PlayingCard key={"d"+i} card={c} size="sm" />)}</div>
@@ -101,6 +101,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
               win
               title="YOU WIN"
               amountCents={pay}
+              stakeCents={game.betCents}
               subtitle={`You won ${money(pay)}${game.commissionCents ? ` (commission ${money(game.commissionCents)})` : ""} — added to your stack`}
             />
           )}

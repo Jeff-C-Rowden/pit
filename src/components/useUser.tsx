@@ -1,5 +1,6 @@
 "use client";
 import { friendlyError } from "@/lib/friendlyError";
+import { formatCents } from "@/lib/money";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
 
 export type User = {
@@ -13,11 +14,7 @@ export type User = {
   lossLimitCents: number | null;
 };
 
-export function money(cents: number) {
-  const sign = cents < 0 ? "-" : "";
-  const abs = Math.abs(cents);
-  return `${sign}$${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, "0")}`;
-}
+export const money = formatCents;
 
 export async function api(path: string, init?: RequestInit) {
   const res = await fetch(path, {

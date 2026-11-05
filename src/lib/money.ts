@@ -5,13 +5,15 @@ export function dollarsToCents(d: number): number {
   return Math.round(d * 100);
 }
 
-export function centsToLabel(cents: number): string {
+/** The one money formatter: "$1,000.00", "-$12.50". */
+export function formatCents(cents: number): string {
   const sign = cents < 0 ? "-" : "";
-  const abs = Math.abs(cents);
-  const d = Math.floor(abs / 100);
-  const c = abs % 100;
-  return `${sign}$${d}.${c.toString().padStart(2, "0")}`;
+  const abs = Math.abs(Math.trunc(cents));
+  const d = Math.floor(abs / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${sign}$${d}.${(abs % 100).toString().padStart(2, "0")}`;
 }
+
+export const centsToLabel = formatCents;
 
 export function assertPositiveCents(cents: number): void {
   if (!Number.isInteger(cents) || cents <= 0) {
