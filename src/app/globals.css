@@ -2970,3 +2970,34 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
   .cr-more .cr-prop-grid { grid-template-columns: repeat(3, 1fr); gap: 5px; }
   .cr-more .cr-prop-grid .zone.cr-prop { min-height: 44px; font-size: 12px; padding: 4px 3px; }
 }
+
+/* r16-1: leftovers */
+.cr-status { position: sticky; top: var(--topbar-h, 88px); z-index: 15; background: #0d1512; }
+.cage-notice-fold > summary { cursor: pointer; list-style: none; display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; min-height: 32px; }
+.cage-notice-fold > summary::-webkit-details-marker { display: none; }
+.cage-notice-fold > summary::after { content: "▾"; margin-left: auto; opacity: .7; }
+.cage-notice-fold[open] > summary::after { content: "▴"; }
+.cage-notice-fold > summary .muted { font-size: 12px; }
+.cage-notice-fold[open] .cage-notice-list { margin-top: 6px; }
+@media (max-width: 640px) {
+  .cage-amts .cage-amt:last-child { grid-column: span 2 !important; }
+  .he-felt-blinds { margin-bottom: 16px !important; }
+  .pg-felt-rules .bj-felt-sub { font-size: 11px; letter-spacing: .08em; opacity: .95; }
+  .pit-shell .felt-table.bj-table.pg-table { min-height: max(385px, calc(100svh - var(--dock-h, 205px) - 156px)); }
+}
+
+/* r16-2: tactile feel (motion only when allowed) */
+.nav-sound { background: none; border: 1px solid rgba(232,213,163,.3); color: inherit; font: inherit; font-size: 11px; letter-spacing: .14em; text-transform: uppercase; border-radius: 999px; padding: 0 7px; cursor: pointer; min-height: 0; line-height: 16px; font-size: 10px; margin-left: 4px; }
+.nav-sound.on { border-color: #d7b45a; color: #f1d98a; }
+.pay-slide { display: flex; justify-content: center; margin-top: 6px; }
+@media (prefers-reduced-motion: no-preference) {
+  .chip-stack-unit.chip-drop { animation: chip-drop .28s cubic-bezier(.2,.9,.3,1.2) both; }
+  .pay-slide { animation: pay-slide .6s cubic-bezier(.2,.8,.2,1) both .1s; }
+  .result-banner.fx-l1 { animation: fx-glow 1.2s ease-out 1; }
+  .result-banner.fx-l2 { animation: fx-glow 1.2s ease-out 2; }
+  .result-banner.fx-l3 { animation: fx-glow 1.2s ease-out 3; }
+}
+@keyframes chip-drop { from { transform: translateY(-18px) scale(1.06); opacity: 0; } 70% { opacity: 1; } to { transform: none; opacity: 1; } }
+@keyframes pay-slide { from { transform: translateY(-26px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fx-glow { 0% { box-shadow: 0 0 0 0 rgba(241,217,138,.0); } 30% { box-shadow: 0 0 24px 4px rgba(241,217,138,.45); } 100% { box-shadow: 0 0 0 0 rgba(241,217,138,0); } }
+.result-banner.fx-l2, .result-banner.fx-l3 { border-color: #f1d98a; }
