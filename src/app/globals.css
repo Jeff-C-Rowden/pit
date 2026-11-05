@@ -3270,3 +3270,6 @@ button.zone:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px;
 .pg-table .table-seat .seat-cards > * + * { margin-left: -24px; }
 .pg-table .table-seat.you .seat-cards { max-width: 124px; }
 .pg-table .table-seat.you .seat-cards > * + * { margin-left: -20px; }
+.pg-table .table-seat:not(.you) .seat-cards { max-width: 76px; transform: scale(.82); transform-origin: top center; }
+.pg-table .table-seat:not(.you) .seat-cards > * + * { margin-left: -30px; }
+.pg-table .table-seat.you .seat-cards > * + * { margin-left: -30px; }
