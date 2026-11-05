@@ -16,7 +16,9 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 10 | Visuals | PWA manifest + install icon + splash so the demo feels app-like on phones. | |
 | 11 | Onboarding | Guest "try one spin" demo mode before signup with no ledger writes. | |
 
-## NEXT (top): roulette betting table must fit phone width without sideways scroll; remove redundant old Session/Hottest panel on roulette.
+## NEXT (top): Live Canopy Spire jackpot meter in the lobby + real last-won history (research priority #1). Meter must show the true sandbox pot from the ledger, label it "Sandbox / test chips", and list only genuine past wins (no invented winners).
+
+## Shipped 2026-11-04: roulette betting table fits every width with no sideways scroll (verified 320-1440 px incl. 360/390/430; all 152 bet spots tappable and correctly mapped), phone stand-on-end layout now up to 700 px, desktop columns shrink instead of clipping 2:1, chip dock fits 320 px; old Session/Hottest panel removed (collapsible "Recent numbers" kept). Tests: tests/rouletteLayout.test.ts + manual tests/e2e/roulette-layout.mjs.
 
 ## Player research priorities (from /workspace/pit-player-research.md, 2026-11-04) — rank these first
 1. Live Canopy Spire jackpot meter in lobby + real last-won history
