@@ -2938,3 +2938,35 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
   .cage-amts .cage-amt:last-child { grid-column: auto; }
   .cage-panel { padding-top: 12px !important; padding-bottom: 12px !important; }
 }
+
+/* r15-1: Pai Gow title + footer kept below the first screen on game pages */
+@media (max-width: 640px) {
+  .pit-shell .hero.game-hero.pg-hero { padding: 2px 0 0 !important; margin: 0 !important; }
+  .pit-shell .hero.game-hero.pg-hero h1 { font-size: 17px !important; letter-spacing: .22em; margin: 0 0 2px !important; opacity: .9; }
+  .pit-shell:has(.action-dock) .footer { margin-top: 100svh; }
+}
+
+/* r15-2: Hold'em empty seats sit further in */
+@media (max-width: 640px) {
+  .holdem-table .table-seat.empty { --seat-rx: .72; }
+}
+
+/* r15-3: compact Cage title block */
+.cage-kicker { font-size: .45em; letter-spacing: .3em; opacity: .7; vertical-align: middle; }
+.cage-balance-sub { font-size: 11px; letter-spacing: .04em; }
+@media (max-width: 640px) {
+  .cage-hero { padding: 6px 0 4px !important; }
+  .cage-hero h1 { font-size: 22px !important; margin: 0 0 6px !important; }
+  .cage-hero .cage-balance { padding: 6px 14px !important; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .cage-hero .cage-balance-amt { font-size: 22px !important; }
+  .cage-hero .cage-balance-sub { flex-basis: 100%; text-align: center; margin-top: -2px; }
+}
+
+/* r15-4: Craps prop tiles: readable text, clear odds, 44px targets */
+.cr-prop { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: inherit; color: inherit; background: transparent; cursor: pointer; position: relative; }
+.cr-prop-name { font-size: 12px; font-weight: 600; letter-spacing: .04em; }
+.cr-prop-pay { font-size: 10.5px; opacity: .75; letter-spacing: .02em; }
+@media (max-width: 640px) {
+  .cr-more .cr-prop-grid { grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .cr-more .cr-prop-grid .zone.cr-prop { min-height: 44px; font-size: 12px; padding: 4px 3px; }
+}
