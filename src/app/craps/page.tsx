@@ -237,16 +237,20 @@ export default function CrapsPage() {
             <details className="cr-more" onToggle={(e) => { const d = e.currentTarget; if (d.open) requestAnimationFrame(() => d.scrollIntoView({ block: "nearest", behavior: "smooth" })); }}>
               <summary>More bets{propsCents ? ` · ${money(propsCents)} on` : ""} <span className="muted">· one-roll, hardways, odds</span></summary>
               <div className="cr-prop-grid">
-              <div className="zone" onClick={() => bet({ type: "anySeven" })}>Any 7 4:1<BoxChip cents={table?.anySeven || 0} /></div>
-              <div className="zone" onClick={() => bet({ type: "anyCraps" })}>Any craps 7:1<BoxChip cents={table?.anyCraps || 0} /></div>
-              <div className="zone" onClick={() => bet({ type: "yo" })}>Yo 11 15:1<BoxChip cents={table?.yo || 0} /></div>
-              {[4,6,8,10].map((n) => (
-                <div key={n} className="zone" onClick={() => bet({ type: "hard", number: n })}>
-                  Hard {n}<BoxChip cents={table?.hard?.[String(n)] || 0} />
-                </div>
+              {([
+                [{ type: "anySeven" }, "Any 7", "pays 4:1", table?.anySeven],
+                [{ type: "anyCraps" }, "Any craps", "2, 3, 12 · 7:1", table?.anyCraps],
+                [{ type: "yo" }, "Yo 11", "pays 15:1", table?.yo],
+                ...[4, 6, 8, 10].map((n) => [{ type: "hard", number: n }, `Hard ${n}`, `${n / 2}+${n / 2} · ${n === 4 || n === 10 ? 7 : 9}:1`, table?.hard?.[String(n)]]),
+                [{ type: "passOdds" }, "Pass odds", "behind pass · true odds", table?.passOdds],
+                [{ type: "dontPassOdds" }, "Don't pass odds", "lay · true odds", table?.dontPassOdds],
+              ] as [any, string, string, number | undefined][]).map(([b, name, pay, cents]) => (
+                <button type="button" key={name} className="zone cr-prop" onClick={() => bet(b)}>
+                  <span className="cr-prop-name">{name}</span>
+                  <span className="cr-prop-pay">{pay}</span>
+                  <BoxChip cents={cents || 0} />
+                </button>
               ))}
-              <div className="zone" onClick={() => bet({ type: "passOdds" })}>Pass odds<BoxChip cents={table?.passOdds || 0} /></div>
-              <div className="zone" onClick={() => bet({ type: "dontPassOdds" })}>Don&apos;t odds<BoxChip cents={table?.dontPassOdds || 0} /></div>
             </div>
             </details>
           </div>

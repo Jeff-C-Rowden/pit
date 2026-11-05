@@ -52,13 +52,12 @@ export default function WalletPage() {
       {(u) => (
         <div className="cage-page">
           <div className="hero cage-hero">
-            <p className="lede">The cage</p>
-            <h1>Wallet</h1>
+            <h1><span className="cage-kicker">The cage · </span>Wallet</h1>
             <div className="cage-balance" aria-live="polite">
               <span className="sandbox-chip">Sandbox</span>
               <span className="cage-balance-amt">{money(u.balanceCents)}</span>
+              <span className="cage-balance-sub muted">ledger · no card · no ACH</span>
             </div>
-            <p className="muted">Ledger balance · no card · no ACH</p>
           </div>
           <div className="notice cage-notice" role="note">
             <strong className="cage-notice-title">{isSandbox ? "Practice money only" : "Partner not connected"}</strong>
