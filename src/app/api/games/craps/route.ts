@@ -126,7 +126,15 @@ async function _POST(req: Request) {
         creditPayout(user.id, r.payoutCents, "craps", rollRef, `cr-pay-${t.id}-${key}`);
       }
       // Remember the roll for "Replay last result"; the paid amount is read back from the ledger.
-      t.state.lastRollRecord = { ref: rollRef, dice: [dice[0], dice[1]], riskedCents, at: new Date().toISOString() };
+      const db = getDb();
+      // Tables that rolled before marks existed can't tell which bets belong to this roll; skip rather than guess.
+      const mark = t.state.ledgerMark ?? (t.state.lastRollRecord ? Number.MAX_SAFE_INTEGER : 0);
+      const betRows = db.prepare("SELECT id, rowid AS rid FROM ledger WHERE user_id = ? AND game = 'craps' AND type = 'bet' AND ref = ? AND rowid > ? ORDER BY rowid")
+        .all(user.id, t.id, mark) as { id: string; rid: number }[];
+      const rec = { ref: rollRef, dice: [dice[0], dice[1]] as [number, number], riskedCents, at: new Date().toISOString(), betLineIds: betRows.map((b) => b.id) };
+      t.state.lastRollRecord = rec;
+      t.state.rollLog = [...(t.state.rollLog || []), rec].slice(-20);
+      t.state.ledgerMark = (db.prepare("SELECT COALESCE(MAX(rowid), 0) AS m FROM ledger WHERE user_id = ?").get(user.id) as { m: number }).m;
       let repeatedCents = 0;
       if (t.state.alwaysRepeat && (t.state.lastRound || []).length) {
         const again = applyRepeat(user.id, t, `${key}-auto`);

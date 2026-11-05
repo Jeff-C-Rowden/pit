@@ -7,10 +7,16 @@ export type PlaceAction =
   | { type: "place" | "hard"; number: 4 | 5 | 6 | 8 | 9 | 10; amount: number }
   | { type: "comeOdds" | "dontComeOdds"; id: string; amount: number };
 
+export type CrapsRollRecord = { ref: string; dice: [number, number]; riskedCents: number; at: string; betLineIds?: string[] };
+
 export type CrapsState = {
   id: string;
   /** The most recent settled roll, kept so it can be replayed. Money comes from the ledger. */
-  lastRollRecord?: { ref: string; dice: [number, number]; riskedCents: number; at: string };
+  lastRollRecord?: CrapsRollRecord;
+  /** Recent settled rolls (newest last, max 20). betLineIds = bet lines placed since the previous roll. */
+  rollLog?: CrapsRollRecord[];
+  /** Highest ledger rowid seen at the last roll; bets after it belong to the next roll. */
+  ledgerMark?: number;
   point: number | null;
   pass: number;
   passOdds: number;
