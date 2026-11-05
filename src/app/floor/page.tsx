@@ -7,6 +7,7 @@ import Onboarding from "@/components/Onboarding";
 import { api, money } from "@/components/useUser";
 import { filterGames, readRecent } from "@/lib/lobby";
 import { usePauseInfo } from "@/components/PauseStatus";
+import { ExclusionEndedNote } from "@/components/ExclusionReminder";
 import { exclusionNote } from "@/lib/pauseText";
 
 type MeterPublic = {
@@ -147,11 +148,25 @@ export default function Floor() {
       {(u) => (
         <>
           <Onboarding user={u} />
-          <div className="hero floor-hero">
+          <div className="hero floor-hero marquee-hero">
+            <div className="marquee-bulbs" aria-hidden="true" />
+            <svg className="marquee-art" viewBox="0 0 240 90" aria-hidden="true">
+              <defs>
+                <radialGradient id="mqChipR" cx="50%" cy="40%" r="60%"><stop offset="0" stopColor="#e2534b" /><stop offset="1" stopColor="#8e1d1a" /></radialGradient>
+                <radialGradient id="mqChipG" cx="50%" cy="40%" r="60%"><stop offset="0" stopColor="#2fae7a" /><stop offset="1" stopColor="#0e5a3c" /></radialGradient>
+                <linearGradient id="mqCard" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#fffaf0" /><stop offset="1" stopColor="#e9dfc8" /></linearGradient>
+              </defs>
+              <g transform="translate(88 14) rotate(-12)"><rect width="38" height="54" rx="5" fill="url(#mqCard)" stroke="#b9a777" /><text x="7" y="17" fontSize="13" fill="#1a1a1a" fontFamily="Georgia">A</text><path d="M19 27 l6 9 -6 9 -6 -9z" fill="#1a1a1a" /></g>
+              <g transform="translate(116 10) rotate(10)"><rect width="38" height="54" rx="5" fill="url(#mqCard)" stroke="#b9a777" /><text x="7" y="17" fontSize="13" fill="#b3261e" fontFamily="Georgia">K</text><path d="M19 30 c-6 -8 -12 0 0 10 c12 -10 6 -18 0 -10z" fill="#b3261e" /></g>
+              {[[60, 66, "R"], [74, 60, "G"], [178, 64, "G"], [166, 70, "R"]].map(([x, y, c], i) => (
+                <g key={i} transform={`translate(${x} ${y})`}><ellipse rx="15" ry="6" fill={c === "R" ? "url(#mqChipR)" : "url(#mqChipG)"} stroke="#f5e6bf" strokeWidth="1.2" strokeDasharray="4 3" /></g>
+              ))}
+            </svg>
             <p className="lede">Good evening, {u.displayName}</p>
-            <h1>The floor</h1>
+            <h1 className="foil">The floor</h1>
             <div className="rule" />
             <p className="muted">Tables open. The cage keeps the ledger. Sandbox credits only.</p>
+            {!excl && <ExclusionEndedNote />}
             {excl && (
               <aside className="excl-note" role="note" aria-label="Self-exclusion">
                 <p><b>You're taking time away.</b> {excl} You can still look around, see your history and use the cage; new bets stay closed until then, and the end time can't be shortened.</p>

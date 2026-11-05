@@ -241,7 +241,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
               onClick={() => act("deal")}
             >
               {paused || (busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal")}
-            </button>
+            </button>{paused && <a className="paused-why" href="/wallet#time">Why is this paused?</a>}
           </>
         )}
         {game?.phase === "insurance" && (

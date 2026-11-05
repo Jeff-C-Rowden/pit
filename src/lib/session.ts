@@ -167,6 +167,20 @@ export function historyRange(from: string | null, to: string | null): { start: D
   if ((end.getTime() - start.getTime()) / 86_400_000 > HISTORY_MAX_DAYS + 1) return { error: `Please pick at most ${HISTORY_MAX_DAYS} days at a time.` };
   return { start, end };
 }
+/** activityCsv plus closing TOTALS rows: total bet, total won, total stake back, and net (payouts + refunds − bets). */
+export function historyCsv(rows: ActivityRow[]): string {
+  let bet = 0, won = 0, back = 0, refund = 0, paid = 0;
+  for (const r of rows) {
+    if (r.type === "bet") bet += -r.amountCents;
+    else if (r.type === "payout") { paid += r.amountCents; const b = r.stakeBackCents ?? 0; back += b; won += r.amountCents - b; }
+    else if (r.type === "refund") refund += r.amountCents;
+  }
+  const net = paid + refund - bet;
+  // One row per total: the label sits in the "type" column and the dollar value in "amount_usd".
+  const tail = [["total_bet", -bet], ["total_won", won], ["total_stake_back", back], ["net", net]]
+    .map(([k, v]) => ["TOTALS", "", "", k as string, dollars(v as number), "", "", ""].map(csvCell).join(","));
+  return activityCsv(rows) + tail.join("\r\n") + "\r\n";
+}
 /** Every ledger row for this player in [start, end), newest first, same shape as sessionActivity. */
 export function historyActivity(db: Database.Database, userId: string, start: Date, end: Date): ActivityRow[] {
   const rows = db.prepare(`SELECT created_at AS at, type, game, amount_cents AS amountCents, balance_after_cents AS balanceAfterCents, meta FROM ledger

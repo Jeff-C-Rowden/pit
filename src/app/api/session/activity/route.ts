@@ -2,7 +2,7 @@ import { withDbSync } from "@/lib/dbSync";
 import { withUser, json } from "@/lib/http";
 import { getDb } from "@/lib/db";
 import { serverNow } from "@/lib/clock";
-import { sessionActivity, activityCsv, historyRange, historyActivity } from "@/lib/session";
+import { sessionActivity, activityCsv, historyRange, historyActivity, historyCsv } from "@/lib/session";
 
 async function _GET(req: Request) {
   return withUser(req, async (u) => {
@@ -10,7 +10,7 @@ async function _GET(req: Request) {
     if (sp.get("scope") === "all") {
       const r = historyRange(sp.get("from"), sp.get("to"));
       if ("error" in r) return json({ error: r.error }, 400);
-      return new Response(activityCsv(historyActivity(getDb(), u.id, r.start, r.end)), {
+      return new Response(historyCsv(historyActivity(getDb(), u.id, r.start, r.end)), {
         headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="pit-history-${sp.get("from")}-to-${sp.get("to")}.csv"`, "cache-control": "no-store" },
       });
     }

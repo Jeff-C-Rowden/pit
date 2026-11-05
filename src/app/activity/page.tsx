@@ -77,12 +77,16 @@ function HistoryExport() {
   return (
     <fieldset className="hist-export">
       <legend>Download all my history</legend>
+      <div className="hist-quick" role="group" aria-label="Quick ranges">
+        {[7, 30, 90].map((n) => { const f = chiDay(Date.now() - (n - 1) * 86_400_000); const on = from === f && to === today;
+          return <button key={n} type="button" className={`btn chip-btn${on ? " on" : ""}`} aria-pressed={on} onClick={() => { setFrom(f); setTo(today); }}>Last {n} days</button>; })}
+      </div>
       <div className="hist-dates">
         <label>From <input type="date" value={from} max={to || today} onChange={(e) => setFrom(e.target.value)} /></label>
         <label>To <input type="date" value={to} min={from} max={today} onChange={(e) => setTo(e.target.value)} /></label>
       </div>
       {bad ? <p className="lim-help" role="alert">{bad}</p> : <a className="btn" href={href} download>Download all my history (CSV)</a>}
-      <p className="lim-help">Every ledger row in those Chicago dates, all sessions, oldest first. Up to 366 days per file.</p>
+      <p className="lim-help">Every ledger row in those Chicago dates, all sessions, oldest first, with a totals row at the end. Up to 366 days per file.</p>
     </fieldset>
   );
 }

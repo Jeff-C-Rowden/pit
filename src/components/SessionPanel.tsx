@@ -1,4 +1,5 @@
 "use client";
+import { RemindToggle } from "./ExclusionReminder";
 import { useEffect, useState } from "react";
 import { api, money } from "./useUser";
 import { chicagoTime } from "@/lib/limitText";
@@ -61,7 +62,7 @@ export default function SessionPanel() {
       {msg && <p className="ok" role="status">{msg}</p>}
       <div className="break-box">
         {d.breakUntil
-          ? <p className="lim-help" role="status">{d.breakKind === "exclusion" ? "You've excluded yourself from betting." : "You're on a break you chose."} New bets open at {chicagoTime(d.breakUntil)}. Anything already in play still finishes. This can&apos;t be ended early.</p>
+          ? <><p className="lim-help" role="status">{d.breakKind === "exclusion" ? "You've excluded yourself from betting." : "You're on a break you chose."} New bets open at {chicagoTime(d.breakUntil)}. Anything already in play still finishes. This can&apos;t be ended early.</p>{d.breakKind === "exclusion" && <RemindToggle until={d.breakUntil} />}</>
           : <p className="lim-help">Take a break now: new bets stop for 30 minutes, starting right away. Hands and rolls already in play still finish and pay. This can&apos;t be cut short.</p>}
         <div className="btn-row">
           {!d.breakUntil && <button type="button" className="btn" onClick={() => post({ takeBreak: true }, () => "Break started. New bets are paused for 30 minutes.")}>Take a break now</button>}

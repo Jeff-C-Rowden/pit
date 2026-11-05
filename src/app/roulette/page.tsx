@@ -429,7 +429,7 @@ export default function RoulettePage() {
                   <button className="btn primary rl-spin" onClick={go} disabled={!bets.length || busy || !!paused} data-paused={paused ? "1" : undefined} aria-describedby="rl-spin-hint">
                     {paused || (busy ? "Spinning…" : "Spin")}
                     <small>{bets.length ? `${money(stake)} bet` : "No bets yet"}</small>
-                  </button>
+                  </button>{paused && <a className="paused-why" href="/wallet#time">Why is this paused?</a>}
                 </div>
                 {bets.length > 0 && (() => { const pv = previewBets(bets); return (
                   <div className="rl-preview" aria-label="Bet preview">

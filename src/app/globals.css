@@ -3296,3 +3296,35 @@ button[data-paused="1"], button[data-paused="1"]:disabled { background: rgba(238
 .rl-spin[data-paused="1"] { font-size: 15px !important; line-height: 1.2; letter-spacing: .02em; }
 .hist-export .btn { display: inline-block; margin-bottom: 10px; }
 .hist-export .lim-help { margin-top: 6px; }
+/* R29: smaller High/Low rows for bot seats */
+.pg-table .seat-card-rows.sm .seat-card-row > :not(.seat-row-lbl) { transform: scale(.6); margin-block: -10px; }
+.pg-table .seat-card-rows.sm .seat-card-row > :not(.seat-row-lbl) + :not(.seat-row-lbl) { margin-left: -22px; }
+.pg-table .seat-card-rows.sm .seat-row-lbl { font-size: 7px; width: 18px; }
+.pg-rows-toggle { display: flex; align-items: center; gap: 8px; justify-content: center; font-size: 13px; color: #cfd8e3; min-height: 44px; }
+.pg-rows-toggle input { width: 20px; height: 20px; }
+.remind-toggle { display: flex; gap: 10px; align-items: flex-start; margin: 8px 0; font-size: 14px; min-height: 44px; }
+.remind-toggle input { width: 20px; height: 20px; margin-top: 2px; flex: none; }
+.remind-toggle small { display: block; color: #aeb9c6; }
+.paused-why { display: block; text-align: center; font-size: 13px; color: #e8d5a3; text-decoration: underline; padding: 8px 4px; min-height: 36px; }
+.rl-dock .paused-why { position: absolute; right: 12px; bottom: 2px; padding: 2px 4px; min-height: 0; font-size: 12px; }
+.hist-quick { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.hist-quick .chip-btn { min-height: 40px; padding: 6px 12px; font-size: 13px; }
+.hist-quick .chip-btn.on { background: rgba(232,213,163,.18); border-color: #e8d5a3; color: #fff4d6; }
+/* R29: Floor marquee hero — lit bulb arch, gold-foil title, original chip & card art */
+.marquee-hero { position: relative; margin: 18px 10px 6px; padding: 22px 18px 22px !important; border-radius: 120px 120px 22px 22px / 70px 70px 22px 22px;
+  background: radial-gradient(120% 80% at 50% 0%, rgba(255,214,140,.22), transparent 60%), radial-gradient(90% 70% at 50% 110%, rgba(20,110,70,.55), transparent 70%), linear-gradient(180deg, #13251c, #0b1712);
+  border: 2px solid #b8934a; box-shadow: 0 0 0 4px #1c120a, 0 0 0 5px rgba(232,213,163,.35), 0 18px 40px rgba(0,0,0,.55), inset 0 0 40px rgba(0,0,0,.45); overflow: hidden; isolation: isolate; }
+.marquee-bulbs { position: absolute; inset: 6px; border-radius: inherit; pointer-events: none; z-index: -1;
+  background:
+    radial-gradient(circle, #fff3c4 0 2.2px, rgba(255,205,110,.55) 3px, transparent 5.5px) 0 0 / 18px 18px repeat-x,
+    radial-gradient(circle, #fff3c4 0 2.2px, rgba(255,205,110,.55) 3px, transparent 5.5px) 0 100% / 18px 18px repeat-x;
+  -webkit-mask: linear-gradient(#000 0 0) top / 100% 18px no-repeat, linear-gradient(#000 0 0) bottom / 100% 18px no-repeat;
+  mask: linear-gradient(#000 0 0) top / 100% 18px no-repeat, linear-gradient(#000 0 0) bottom / 100% 18px no-repeat;
+  animation: mq-chase 1.6s steps(2) infinite; }
+@keyframes mq-chase { 0% { background-position: 0 0, 0 100%; } 100% { background-position: 18px 0, -18px 100%; } }
+.marquee-art { display: block; width: min(240px, 70%); height: auto; margin: 4px auto 2px; filter: drop-shadow(0 6px 10px rgba(0,0,0,.5)); }
+.marquee-hero .lede { margin-top: 4px; color: #f1dfb0; }
+.marquee-hero h1.foil { background: linear-gradient(180deg, #fff6d8 0%, #f0cf7a 42%, #a97a2c 58%, #f6dc93 100%); -webkit-background-clip: text; background-clip: text; color: transparent; text-shadow: none; filter: drop-shadow(0 2px 0 #3a250c) drop-shadow(0 0 14px rgba(255,200,110,.35)); }
+.marquee-hero .muted { color: #d9e2d6; }
+@media (prefers-reduced-motion: reduce) { .marquee-bulbs { animation: none; } }
+html[data-reduced-motion="1"] .marquee-bulbs { animation: none; }

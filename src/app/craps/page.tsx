@@ -323,7 +323,7 @@ export default function CrapsPage() {
               </button>
             </div>
             <div className="felt-total" aria-live="polite">Your felt: <b key={crapsFeltCents(table)} className="felt-amt">{money(crapsFeltCents(table))}</b></div>
-            <button className="btn primary hero-act" disabled={busy || !canRoll || (!!paused && !hasWorking)} data-paused={paused && !hasWorking ? "1" : undefined} onClick={roll}>{busy ? "Rolling…" : paused && !hasWorking ? paused : canRoll ? "Roll" : "Place a bet to roll"}</button>
+            <button className="btn primary hero-act" disabled={busy || !canRoll || (!!paused && !hasWorking)} data-paused={paused && !hasWorking ? "1" : undefined} onClick={roll}>{busy ? "Rolling…" : paused && !hasWorking ? paused : canRoll ? "Roll" : "Place a bet to roll"}</button>{paused && !hasWorking && <a className="paused-why" href="/wallet#time">Why is this paused?</a>}
           </ActionDock>
         </div>
       )}

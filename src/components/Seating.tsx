@@ -200,6 +200,7 @@ export function TableSeat({
   total,
   cards,
   cardRows,
+  cardRowsSmall,
   betCents,
   dealer,
   blind,
@@ -216,6 +217,8 @@ export function TableSeat({
   cards?: PubCard[];
   /** Optional labelled rows (e.g. Pai Gow high / low) shown instead of one fan. */
   cardRows?: { label: string; cards: PubCard[] }[];
+  /** Smaller rows for other seats. */
+  cardRowsSmall?: boolean;
   betCents?: number;
   dealer?: boolean;
   blind?: "SB" | "BB" | null;
@@ -259,7 +262,7 @@ export function TableSeat({
         )}
       </div>
       {cardRows && cardRows.length > 0 ? (
-        <div className="seat-card-rows">
+        <div className={`seat-card-rows${cardRowsSmall ? " sm" : ""}`}>
           {cardRows.map((r) => (
             <div key={r.label} className="seat-card-row" aria-label={`${r.label} hand`}>
               <span className="seat-row-lbl">{r.label}</span>

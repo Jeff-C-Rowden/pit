@@ -74,6 +74,9 @@ export default function PaiGowPage() {
 
 function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualSet, betting, pay, won, push, lost, hint }: any) {
   const paused = usePausedLabel();
+  const [botRows, setBotRows] = useState(true);
+  useEffect(() => { try { setBotRows(localStorage.getItem("pit.pgBotRows") !== "0"); } catch {} }, []);
+  const toggleBotRows = () => { const v = !botRows; setBotRows(v); try { localStorage.setItem("pit.pgBotRows", v ? "1" : "0"); } catch {} };
   const { occupants, setYouSeat, n } = useTableSeats("paigow", u.displayName, u.balanceCents);
   return (
     <>
@@ -144,6 +147,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
             betCents = 1000;
             const dealt = botPaiGowCards(`${game.id}-${occ.seat}`, game.phase === "settled");
             if (Array.isArray(dealt)) cards = Array.from({ length: 7 }, () => CARD_BACK);
+            else if (botRows) cardRows = [{ label: "High", cards: dealt.high }, { label: "Low", cards: dealt.low }];
             else cards = [...dealt.high, ...dealt.low];
           }
           return (
@@ -154,6 +158,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
               total={n}
               cards={cards}
               cardRows={cardRows}
+              cardRowsSmall={!isYou}
               betCents={betCents}
               onSit={setYouSeat}
               winning={isYou && won}
@@ -162,6 +167,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
           );
         })}
       </div>
+      <label className="pg-rows-toggle"><input type="checkbox" checked={botRows} onChange={toggleBotRows} /> Show other seats' hands as High / Low rows</label>
       {game?.phase === "set" && (
         <div className="hero-hole">
           <div className="muted">Tap two cards for the low hand</div>
@@ -195,7 +201,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
             <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} minCents={500} maxCents={500_000} />
             <button className="btn primary hero-act" disabled={busy || !!paused} data-paused={paused ? "1" : undefined} onClick={() => act("deal")}>
               {paused || (busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal")}
-            </button>
+            </button>{paused && <a className="paused-why" href="/wallet#time">Why is this paused?</a>}
           </>
         )}
         {game?.phase === "set" && (
