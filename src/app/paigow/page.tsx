@@ -81,6 +81,12 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
       <div className="felt-table seated felt-rect bj-table pg-table">
         <DealerBooth>
           <div className="muted">Dealer high / low</div>
+          {!(game?.dealerHigh || game?.dealerCards || []).length && (
+            <div className="pg-ghost-hands" aria-label="Dealer will set a five-card high hand and a two-card low hand">
+              <div className="pg-ghost-row"><span className="pg-ghost-lbl">High · 5</span>{[0,1,2,3,4].map((i) => <span key={i} className="pg-ghost-card" aria-hidden />)}</div>
+              <div className="pg-ghost-row"><span className="pg-ghost-lbl">Low · 2</span>{[0,1].map((i) => <span key={i} className="pg-ghost-card" aria-hidden />)}</div>
+            </div>
+          )}
           <div className="hand">{(game?.dealerHigh || game?.dealerCards || []).map((c: any, i: number) => <PlayingCard key={"d"+i} card={c} size="sm" />)}</div>
           {game?.dealerLow && <div className="hand" style={{ marginTop: 8 }}>{game.dealerLow.map((c: any, i: number) => <PlayingCard key={"dl"+i} card={c} size="sm" />)}</div>}
         </DealerBooth>

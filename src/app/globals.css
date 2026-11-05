@@ -3001,3 +3001,22 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
 @keyframes pay-slide { from { transform: translateY(-26px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes fx-glow { 0% { box-shadow: 0 0 0 0 rgba(241,217,138,.0); } 30% { box-shadow: 0 0 24px 4px rgba(241,217,138,.45); } 100% { box-shadow: 0 0 0 0 rgba(241,217,138,0); } }
 .result-banner.fx-l2, .result-banner.fx-l3 { border-color: #f1d98a; }
+
+/* r17: Pai Gow dealer ghost hands, Hold'em board higher */
+.pg-ghost-hands { display: flex; flex-direction: column; align-items: center; gap: 6px; margin-top: 8px; }
+.pg-ghost-row { display: flex; align-items: center; gap: 5px; }
+.pg-ghost-lbl { font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: rgba(232,213,163,.55); width: 52px; text-align: right; margin-right: 4px; }
+.pg-ghost-card { width: 26px; height: 37px; border-radius: 4px; border: 1.5px dashed rgba(232,213,163,.32); background: rgba(0,0,0,.08); }
+@media (max-width: 640px) {
+  .pit-shell .holdem-table .table-heart { top: 46%; }
+  .holdem-table .he-board { margin-bottom: 10px; }
+}
+.rl-replay { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; background: transparent; border: 1px solid rgba(232,213,163,.4); color: #e8d5a3; border-radius: 999px; padding: 4px 10px; min-height: 30px; }
+.rl-replay-tag { display: inline-block; font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: #0d1512; background: #e8d5a3; border-radius: 3px; padding: 1px 5px; margin-bottom: 3px; }
+.rl-replay-row { display: flex; justify-content: center; margin: 6px 0 4px; }
+.pg-ghost-hands { flex-direction: row; gap: 10px; margin-top: 6px; }
+.pg-ghost-row { gap: 3px; }
+.pg-ghost-lbl { width: auto; margin-right: 3px; font-size: 8px; }
+.pg-ghost-card { width: 18px; height: 26px; border-radius: 3px; }
+@media (max-width: 640px) { .pit-shell .pg-table .table-heart { top: 50%; } }
+.pg-ghost-lbl { white-space: nowrap; }
