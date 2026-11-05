@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
+import { crapsRiskedCents } from "@/lib/feel";
 import { ActionDock, ChipRow, ChipStack, OutcomeBanner } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
@@ -47,6 +48,7 @@ export default function CrapsPage() {
   const [chip, setChip] = useState(500);
   const [err, setErr] = useState<string | null>(null);
   const [lastPay, setLastPay] = useState<number | null>(null);
+  const [lastRisk, setLastRisk] = useState(0);
   const [repeatNote, setRepeatNote] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [lastPattern, setLastPattern] = useState<PatternBet[]>([]);
@@ -98,6 +100,7 @@ export default function CrapsPage() {
       const d = await api("/api/games/craps", { method: "POST", body: JSON.stringify({ action: "roll", idempotencyKey: crypto.randomUUID() }) });
       setTable(d.table);
       if (d.user) setUser(d.user);
+      setLastRisk(crapsRiskedCents(snap));
       setLastPay(d.payoutCents);
       if (d.table?.lastRound?.length) remember(d.table.lastRound);
       if (d.repeatedCents) setRepeatNote(`Last bet back on the felt · ${money(d.repeatedCents)}`);
@@ -189,6 +192,7 @@ export default function CrapsPage() {
               win
               title="YOU WIN"
               amountCents={lastPay}
+              stakeCents={lastRisk}
               subtitle={`${money(lastPay)} added to your stack`}
             />
           )}

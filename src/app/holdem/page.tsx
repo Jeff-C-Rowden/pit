@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Shell from "@/components/Shell";
 import PlayingCard from "@/components/PlayingCard";
+import { holdemRiskedCents } from "@/lib/feel";
 import { ActionDock, ChipStack, OutcomeBanner } from "@/components/TableUX";
 import { CARD_BACK, TableHeart, TableSeat, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
@@ -122,8 +123,8 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
           </div>
         )}
         <TableHeart>
-          <div className="hand">
-            {board.map((c: any, i: number) => <PlayingCard key={i} card={c} />)}
+          <div className="hand he-board">
+            {board.map((c: any, i: number) => <PlayingCard key={i} card={c} size="sm" />)}
           </div>
           {!board.length && <p className="he-felt-blinds" aria-label="Blinds one and two dollars, no limit, house banks">Blinds $1 / $2 · No limit</p>}
           <div className={`he-pot${pot ? " live" : ""}`} aria-live="polite">
@@ -205,6 +206,7 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
           win
           title="YOU WIN"
           amountCents={game.payoutCents}
+          stakeCents={holdemRiskedCents(game)}
           subtitle={`${money(game.payoutCents)} — pot added to your stack`}
         />
       )}

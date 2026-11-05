@@ -402,6 +402,7 @@ export function publicHoldem(s: HoldemState) {
     toAct: s.toAct,
     currentBet: s.currentBet,
     playerBet: s.playerBet,
+    playerCommittedCents: s.playerStackCommitted,
     houseBet: s.houseBet,
     toCall: Math.max(0, s.currentBet - s.playerBet),
     minRaiseTo: s.currentBet === 0 ? BB : s.currentBet + s.lastRaise,

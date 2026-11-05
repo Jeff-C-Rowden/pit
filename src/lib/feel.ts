@@ -70,10 +70,15 @@ function clack(c: AudioContext, at: number, gain = 0.12) {
 }
 
 /** One chip placed. */
-export function playChip() { const c = ac(); if (c) clack(c, 0); }
+let lastChipAt = 0;
+export function playChip() {
+  const now = Date.now(); if (now - lastChipAt < 150) return; lastChipAt = now;
+  buzz(vibratePattern("chip")); const c = ac(); if (c) clack(c, 0);
+}
 
 /** Chips paid to the player; size follows the level. Never called for losses. */
 export function playPayout(level: FeelLevel) {
+  buzz(vibratePattern("pay", level));
   const c = ac(); if (!c) return;
   const clacks = [2, 3, 4, 5][level];
   for (let i = 0; i < clacks; i++) clack(c, i * 0.06, 0.09);
@@ -81,4 +86,26 @@ export function playPayout(level: FeelLevel) {
     const notes = [[660], [660, 880], [660, 880, 1100], [660, 880, 1100, 1320]][level];
     notes.forEach((f, i) => tone(c, f, 0.12 + i * 0.09, 0.35, 0.05, "triangle"));
   }
+}
+
+/** Total chips the player had riding on a craps roll (from the layout snapshot). */
+export function crapsRiskedCents(pattern: { amount?: number }[] | null | undefined): number {
+  return (pattern || []).reduce((n, b) => n + Math.max(0, Number(b.amount) || 0), 0);
+}
+
+/** Total the player put in a Hold'em pot, as reported by the server. */
+export function holdemRiskedCents(game: { playerCommittedCents?: number } | null | undefined): number {
+  return Math.max(0, Number(game?.playerCommittedCents) || 0);
+}
+
+/** Vibration patterns (ms). Same scaling as the visuals: nothing for level-0 results. */
+export function vibratePattern(kind: "chip" | "pay", level: FeelLevel = 0): number[] {
+  if (kind === "chip") return [8];
+  return [[], [18], [18, 50, 18], [24, 50, 24, 50, 48]][level];
+}
+
+/** Buzz only when the feel setting is on, motion is allowed and the phone supports it. */
+export function buzz(pattern: number[]) {
+  if (!pattern.length || !soundOn() || reducedMotion()) return;
+  try { (navigator as Navigator & { vibrate?: (p: number[]) => boolean }).vibrate?.(pattern); } catch {}
 }
