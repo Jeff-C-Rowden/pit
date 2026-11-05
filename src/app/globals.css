@@ -2835,3 +2835,60 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
 
 /* r12-1b: dock is solid behind its hint so page text never shows through */
 .action-dock { background: linear-gradient(180deg, rgba(7,8,7,.9) 0%, rgba(7,8,7,.985) 10px, rgba(7,8,7,.99) 100%) !important; }
+
+/* r13-1/2: Craps fits a phone; puck + last roll up top; legible Field */
+.cr-status { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; margin: 12px auto 8px; max-width: 760px; padding: 6px 10px; border: 1px solid rgba(230,196,110,.22); border-radius: 10px; background: rgba(0,0,0,.3); }
+.cr-puck { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; align-content: center; font-weight: 800; letter-spacing: .08em; box-shadow: 0 2px 6px rgba(0,0,0,.5); }
+.cr-puck.off { background: #141414; color: #f2efe6; border: 3px solid #f2efe6; }
+.cr-puck.on { background: #f7f3e8; color: #141414; border: 3px solid #141414; outline: 2px solid #f7f3e8; }
+.cr-puck-word { font-size: 10px; line-height: 1; }
+.cr-puck-num { font-size: 16px; line-height: 1; }
+.cr-status-txt { display: grid; gap: 2px; min-width: 0; }
+.cr-status-txt b { font-size: 14px; letter-spacing: .04em; }
+.cr-status-txt .muted { font-size: 11px; }
+.cr-last { display: flex; align-items: center; gap: 4px; }
+.cr-die.dice { width: 34px; height: 34px; font-size: 18px; margin: 0; }
+.cr-total { font-size: 20px; font-weight: 800; color: var(--gold, #e6c46e); min-width: 22px; text-align: center; }
+.cr-noroll { font-size: 11px; }
+.cr-field { margin: 6px 0; display: grid; gap: 1px; justify-items: center; }
+.cr-field-name { font-size: 13px; font-weight: 700; letter-spacing: .18em; }
+.cr-field-nums { font-size: 15px; font-weight: 700; letter-spacing: .04em; color: #f4efe2; }
+.cr-field-pay { font-size: 10px; letter-spacing: .1em; opacity: .8; }
+.cr-two { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 6px 0; }
+.cr-come { min-height: 56px; display: grid; place-items: center; }
+.cr-more { margin-top: 8px; border: 1px solid rgba(232,213,163,.3); border-radius: 6px; }
+.cr-more > summary { cursor: pointer; padding: 10px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; list-style: none; text-align: center; }
+.cr-more > summary::-webkit-details-marker { display: none; }
+.cr-more > summary::after { content: " ▾"; }
+.cr-more[open] > summary::after { content: " ▴"; }
+.cr-more .cr-prop-grid { margin: 0 8px 8px; }
+@media (max-width: 640px) {
+  .cr-status { margin: 8px 0 6px; }
+  .craps-felt { margin-top: 0 !important; }
+  .cr-place-grid .zone { min-height: 42px; padding: 3px 2px; }
+  .craps-felt .zone { min-height: 38px; padding: 6px 4px; }
+  .cr-come { min-height: 44px; }
+  .cr-field { padding: 4px !important; }
+}
+
+/* r13-3: Pai Gow printed rules */
+.pg-felt-rules { position: static !important; transform: none !important; margin: 0 auto; width: min(300px, 86%); }
+.pg-felt-rules .bj-felt-sub { margin-top: 2px; }
+
+/* r13-4: Hold'em blinds line and pot area */
+.he-felt-blinds { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: rgba(232,213,163,.7); margin: 0 0 8px; text-align: center; }
+.he-pot { display: inline-grid; justify-items: center; gap: 2px; padding: 8px 18px; border: 1px solid rgba(232,213,163,.35); border-radius: 999px; background: rgba(0,0,0,.25); min-width: 120px; }
+.he-pot.live { border-color: rgba(230,196,110,.7); box-shadow: 0 0 14px rgba(230,196,110,.18); }
+.he-pot-lbl { font-size: 9px; letter-spacing: .24em; text-transform: uppercase; color: rgba(232,213,163,.75); }
+.he-pot-amt { font-size: 18px; font-weight: 700; color: #f4efe2; }
+.he-pot-street { font-size: 10px; letter-spacing: .12em; text-transform: uppercase; opacity: .7; }
+@media (max-width: 640px) { .rail-label.he-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: .14em !important; } }
+
+/* r13-5: Cage notice + confirm */
+.cage-notice-title { display: block; font-size: 15px; margin-bottom: 4px; }
+.cage-notice-list { margin: 4px 0 6px; padding-left: 18px; display: grid; gap: 3px; font-size: 13px; line-height: 1.4; }
+.cage-notice-meta { display: block; font-size: 11px; }
+.cage-confirm { margin-top: 10px; padding: 12px; border: 1px solid rgba(230,196,110,.55); border-radius: 8px; background: rgba(230,196,110,.07); }
+.cage-confirm p { margin: 0 0 6px; }
+.cage-wd-status { text-transform: capitalize; font-size: 12px; }
+.cage-wd-status.st-pending { color: #e6c46e; }

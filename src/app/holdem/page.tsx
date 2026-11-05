@@ -113,7 +113,7 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
 
   return (
     <>
-      <div className="rail-label" style={{ marginTop: 20 }}>Texas Hold&apos;em · 8-max felt · $1 / $2 NL · house banks</div>
+      <div className="rail-label he-label" style={{ marginTop: 20 }}>Texas Hold&apos;em · $1/$2 No-limit</div>
       {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
       <div className="felt-table seated holdem-table">
         {flyPot != null && won && (
@@ -125,8 +125,13 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
           <div className="hand">
             {board.map((c: any, i: number) => <PlayingCard key={i} card={c} />)}
           </div>
-          <ChipStack cents={pot} size={36} winning={!!won} />
-          <p className="pot-meta">Pot {game ? money(game.pot) : "$0.00"} · {game?.street || "waiting"}</p>
+          {!board.length && <p className="he-felt-blinds" aria-label="Blinds one and two dollars, no limit, house banks">Blinds $1 / $2 · No limit</p>}
+          <div className={`he-pot${pot ? " live" : ""}`} aria-live="polite">
+            <span className="he-pot-lbl">Pot</span>
+            {pot > 0 && <ChipStack cents={pot} size={28} winning={!!won} showTotal={false} />}
+            <span className="he-pot-amt">{game ? money(game.pot) : "$0.00"}</span>
+            <span className="he-pot-street">{game?.street || "Waiting for the deal"}</span>
+          </div>
           {live && <p className="pot-meta">To call {money(toCall)}</p>}
         </TableHeart>
         {occupants.map((occ) => {

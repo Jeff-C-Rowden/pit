@@ -85,7 +85,16 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
           {game?.dealerLow && <div className="hand" style={{ marginTop: 8 }}>{game.dealerLow.map((c: any, i: number) => <PlayingCard key={"dl"+i} card={c} size="sm" />)}</div>}
         </DealerBooth>
         <TableHeart>
-          <p className="rail-label">{game?.result || "Set high (5) and low (2). Both must beat the house."}</p>
+          {game?.result ? <p className="rail-label">{game.result}</p> : (
+            <div className="bj-felt-rules pg-felt-rules" aria-label="Table rules: Copies go to the house. Win both hands to win. 5% commission on wins. Joker plays as an ace, or fills a straight or flush.">
+              <svg viewBox="0 0 300 70" aria-hidden>
+                <defs><path id="pgArc" d="M10,12 Q150,72 290,12" /></defs>
+                <text className="bj-arc-big"><textPath href="#pgArc" startOffset="50%" textAnchor="middle">WIN BOTH HANDS TO WIN</textPath></text>
+              </svg>
+              <div className="bj-felt-sub">Copies go to the house · 5% on wins</div>
+              <div className="bj-felt-sub">Joker: ace, straight or flush</div>
+            </div>
+          )}
           {won && (
             <OutcomeBanner
               win
