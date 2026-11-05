@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { groupByDay, toDate } from "@/lib/ledgerDays";
 import { api, money, useUser, type User } from "@/components/useUser";
+import LimitsPanel from "@/components/LimitsPanel";
 import { parseDollarsInput, centsToInput } from "@/lib/money";
 
 const AMTS = [1000, 2500, 5000, 10000, 25000, 50000, 100000];
@@ -158,31 +159,7 @@ export default function WalletPage() {
           </div>
           <div className="panel cage-panel">
             <h3>Responsible play</h3>
-            <p className="muted">Optional limits, enforced on the server. Minimum $10. Clear a box to remove that limit.</p>
-            <label htmlFor="dep-lim">Deposit limit ($, lifetime in this sandbox)</label>
-            <p className="cage-cur">Current: <b>{u.depositLimitCents == null ? "No limit" : money(u.depositLimitCents)}</b></p>
-            <input id="dep-lim" value={depLim ?? centsToInput(u.depositLimitCents)} onChange={(e) => setDepLim(e.target.value)} inputMode="decimal" placeholder="No limit" />
-            <label htmlFor="loss-lim">Loss limit ($)</label>
-            <p className="cage-cur">Current: <b>{u.lossLimitCents == null ? "No limit" : money(u.lossLimitCents)}</b></p>
-            <input id="loss-lim" value={lossLim ?? centsToInput(u.lossLimitCents)} onChange={(e) => setLossLim(e.target.value)} inputMode="decimal" placeholder="No limit" />
-            <div className="btn-row cage-actions">
-              <button type="button" className="btn" onClick={async () => {
-                setErr(null);
-                const dRaw = (depLim ?? centsToInput(u.depositLimitCents)).trim();
-                const lRaw = (lossLim ?? centsToInput(u.lossLimitCents)).trim();
-                const dl = dRaw === "" ? null : parseDollarsInput(dRaw);
-                const ll = lRaw === "" ? null : parseDollarsInput(lRaw);
-                if ((dRaw !== "" && dl == null) || (lRaw !== "" && ll == null)) { setErr("Limits are dollar amounts, like 200 or 200.50."); return; }
-                try {
-                  await api("/api/wallet/limits", { method: "POST", body: JSON.stringify({
-                    depositLimitCents: dl,
-                    lossLimitCents: ll,
-                  }) });
-                  setMsg("Limits saved.");
-                  location.reload();
-                } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
-              }}>Save limits</button>
-            </div>
+            <LimitsPanel />
           <CageLedger />
           </div>
         </div>

@@ -135,6 +135,9 @@ function RecentlyPlayed() {
 export default function Floor() {
   const [q, setQ] = useState("");
   const shown = filterGames(GAMES, q);
+  const [jp, setJp] = useState(true);
+  useEffect(() => { try { setJp(localStorage.getItem("pit.showJackpots") !== "0"); } catch {} }, []);
+  const toggleJp = () => { const v = !jp; setJp(v); try { localStorage.setItem("pit.showJackpots", v ? "1" : "0"); } catch {} };
   return (
     <Shell>
       {(u) => (
@@ -171,6 +174,9 @@ export default function Floor() {
                 enterKeyHint="search"
               />
             </label>
+            <button type="button" role="switch" aria-checked={jp} className={`floor-jp-toggle${jp ? " on" : ""}`} onClick={toggleJp}>
+              <span className="floor-jp-knob" aria-hidden />Show jackpots
+            </button>
           </div>
           {!shown.length && (
             <p className="muted floor-empty" role="status">
@@ -191,7 +197,7 @@ export default function Floor() {
                 <h2 className="gname">{g.name}</h2>
                 <div className="gmeta">{g.meta}</div>
                 <div className="gtags"><span className="gtag">{g.level}</span><span className="gtag">{g.pace} pace</span></div>
-                {g.progressive && <VaultLobbyMeters />}
+                {g.progressive && jp && <VaultLobbyMeters />}
                 {g.cash && (
                   <>
                     <div className="mini-oval" aria-hidden />

@@ -1,4 +1,5 @@
 import fs from "fs";
+import { migrateLimits } from "./limits";
 import path from "path";
 import Database from "better-sqlite3";
 
@@ -109,6 +110,7 @@ function finish(db: Database.Database, wal: boolean): Database.Database {
   if (wal) db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
   db.exec(SCHEMA);
+  migrateLimits(db);
   return instrument(db);
 }
 

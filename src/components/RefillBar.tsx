@@ -1,8 +1,9 @@
 "use client";
+import { chicagoTime } from "@/lib/limitText";
 import { useEffect, useState } from "react";
 import { api, money, useUser } from "./useUser";
 
-type Status = { ok: true; amountCents: number; note?: string } | { ok: false; reason: string; message: string };
+type Status = { ok: true; amountCents: number; note?: string } | { ok: false; reason: string; message: string; resetsAt?: string | null };
 
 /** Shown when a player is out of sandbox chips. Offers a one-tap top-up only when their own limits allow it. */
 export default function RefillBar() {
@@ -33,6 +34,7 @@ export default function RefillBar() {
         <div className="refill-copy">
           <b>{status.reason === "loss_limit" ? "Loss limit reached" : "Deposit limit reached"}</b>
           <span>{status.message}</span>
+          <span className="refill-reset">{status.resetsAt ? <>Resets {chicagoTime(status.resetsAt)}.</> : <>This is an all-time limit, so it doesn&apos;t reset. You can change it in the Cage (raising it waits 24 hours).</>}</span>
         </div>
       </div>
     );

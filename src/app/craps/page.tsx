@@ -245,36 +245,36 @@ export default function CrapsPage() {
           <div className="felt-table felt-rect craps-felt">
             <div className="cr-place-grid">
               {[4,5,6,8,9,10].map((n) => (
-                <div key={n} className={z(!!table?.place?.[String(n)])} onClick={() => bet({ type: "place", number: n })}>
+                <button type="button" key={n} className={z(!!table?.place?.[String(n)])} aria-pressed={(table?.place?.[String(n)] || 0) > 0} aria-label={`${`Place ${n}`}, ${(table?.place?.[String(n)] || 0) > 0 ? money(table?.place?.[String(n)] || 0) + " on" : "no bet"}. Tap to add ${money(chip)}`} onClick={() => bet({ type: "place", number: n })}>
                   <span className="cr-z-sm">Place</span> <span className="cr-z-big">{n}</span>
                   <BoxChip cents={table?.place?.[String(n)] || 0} />
-                </div>
+                </button>
               ))}
             </div>
-            <div className={`${z(!!table?.field)} cr-field`} onClick={() => bet({ type: "field" })}>
+            <button type="button" className={`${z(!!table?.field)} cr-field`} aria-pressed={(table?.field || 0) > 0} aria-label={`${"Field: 2, 3, 4, 9, 10, 11, 12. 2 pays 2 to 1, 12 pays 3 to 1"}, ${(table?.field || 0) > 0 ? money(table?.field || 0) + " on" : "no bet"}. Tap to add ${money(chip)}`} onClick={() => bet({ type: "field" })}>
               <span className="cr-field-name">Field</span>
               <span className="cr-field-nums">2 · 3 · 4 · 9 · 10 · 11 · 12</span>
               <span className="cr-field-pay">2 pays 2:1 · 12 pays 3:1</span>
               <BoxChip cents={table?.field || 0} />
-            </div>
-            <div className={`${z(!!table?.come?.length)} cr-come`} onClick={() => bet({ type: "come" })}>
+            </button>
+            <button type="button" className={`${z(!!table?.come?.length)} cr-come`} aria-pressed={(comeAmt) > 0} aria-label={`${"Come"}, ${(comeAmt) > 0 ? money(comeAmt) + " on" : "no bet"}. Tap to add ${money(chip)}`} onClick={() => bet({ type: "come" })}>
               Come {table?.come?.map((c: any) => `${money(c.amount)}${c.point ? "@"+c.point : ""}`).join(" · ")}
               <BoxChip cents={comeAmt} />
-            </div>
+            </button>
             <div className="cr-two">
-              <div className={z(!!table?.dontPass)} onClick={() => bet({ type: "dontPass" })}>
+              <button type="button" className={z(!!table?.dontPass)} aria-pressed={(table?.dontPass || 0) > 0} aria-label={`${"Don't pass bar"}, ${(table?.dontPass || 0) > 0 ? money(table?.dontPass || 0) + " on" : "no bet"}. Tap to add ${money(chip)}`} onClick={() => bet({ type: "dontPass" })}>
                 Don&apos;t pass bar
                 <BoxChip cents={table?.dontPass || 0} />
-              </div>
-              <div className={z(!!table?.dontCome?.length)} onClick={() => bet({ type: "dontCome" })}>
+              </button>
+              <button type="button" className={z(!!table?.dontCome?.length)} aria-pressed={(dcAmt) > 0} aria-label={`${"Don't come"}, ${(dcAmt) > 0 ? money(dcAmt) + " on" : "no bet"}. Tap to add ${money(chip)}`} onClick={() => bet({ type: "dontCome" })}>
                 Don&apos;t come
                 <BoxChip cents={dcAmt} />
-              </div>
+              </button>
             </div>
-            <div className={z(!!table?.pass)} onClick={() => bet({ type: "pass" })}>
+            <button type="button" className={z(!!table?.pass)} aria-pressed={(table?.pass || 0) > 0} aria-label={`${"Pass line"}, ${(table?.pass || 0) > 0 ? money(table?.pass || 0) + " on" : "no bet"}. Tap to add ${money(chip)}`} onClick={() => bet({ type: "pass" })}>
               Pass line
               <BoxChip cents={table?.pass || 0} />
-            </div>
+            </button>
             <details className="cr-more" onToggle={(e) => { const d = e.currentTarget; if (d.open) requestAnimationFrame(() => d.scrollIntoView({ block: "nearest", behavior: "smooth" })); }}>
               <summary>More bets{propsCents ? ` · ${money(propsCents)} on` : ""} <span className="muted">· one-roll, hardways, odds</span></summary>
               <div className="cr-prop-grid">
@@ -300,6 +300,12 @@ export default function CrapsPage() {
           <ActionDock busy={busy} hint={table?.alwaysRepeat
             ? "Auto-repeat is on: each roll restacks your chips."
             : canRoll ? "Pick a chip, tap the felt, then Roll." : "Tap Pass line to place your first bet."}>
+            <div className="cr-dock-status" aria-hidden="true">
+              <span className={`cr-dock-puck ${table?.comeOut ? "off" : "on"}`}>{table?.comeOut ? "Come-out" : `Point ${table?.point}`}</span>
+              {table?.lastRoll
+                ? <span className="cr-dock-dice"><span className="dice cr-die">{table.lastRoll[0]}</span><span className="dice cr-die">{table.lastRoll[1]}</span><b>= {table.lastTotal}</b></span>
+                : <span className="muted">No roll yet</span>}
+            </div>
             <ChipRow amounts={[100, 500, 1000, 2500]} selected={chip} onSelect={setChip} minCents={100} maxCents={500_000} />
             <div className="cr-tools">
               <button className="btn" disabled={busy || !table?.canUndo} onClick={undo}>Undo</button>

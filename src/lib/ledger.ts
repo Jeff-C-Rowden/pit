@@ -1,3 +1,5 @@
+import { chicagoTime } from "./limitText";
+import { limitView } from "./limits";
 import { getDb, type LedgerRow, type UserRow } from "./db";
 import { newId } from "./rng";
 import { assertPositiveCents } from "./money";
@@ -67,17 +69,18 @@ export function applyLedger(opts: {
     const user = db.prepare("SELECT * FROM users WHERE id = ?").get(opts.userId) as UserRow | undefined;
     if (!user) throw new LedgerError("NO_USER", "user not found");
 
-    if (opts.type === "deposit" && user.deposit_limit_cents != null) {
-      const nextDep = depositedCents(opts.userId, db) + amount;
-      if (nextDep > user.deposit_limit_cents) {
-        throw new LedgerError("DEPOSIT_LIMIT", "deposit would exceed your limit");
-      }
-    }
-
-    if (opts.type === "bet" && user.loss_limit_cents != null) {
-      const nextLoss = netLossCents(opts.userId, db) + -amount;
-      if (nextLoss > user.loss_limit_cents) {
-        throw new LedgerError("LOSS_LIMIT", "this wager would exceed your loss limit");
+    if (opts.type === "deposit" || opts.type === "bet") {
+      const now = new Date();
+      if (opts.type === "deposit") {
+        const v = limitView(db, opts.userId, "deposit", now);
+        if (v.cents != null && v.usedCents + amount > v.cents) {
+          throw new LedgerError("DEPOSIT_LIMIT", "deposit would exceed your limit" + (v.resetsAt ? `; it resets ${chicagoTime(v.resetsAt)}` : ""));
+        }
+      } else {
+        const v = limitView(db, opts.userId, "loss", now);
+        if (v.cents != null && v.usedCents + -amount > v.cents) {
+          throw new LedgerError("LOSS_LIMIT", "this wager would exceed your loss limit" + (v.resetsAt ? `; it resets ${chicagoTime(v.resetsAt)}` : ""));
+        }
       }
     }
 

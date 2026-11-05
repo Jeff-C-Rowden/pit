@@ -3202,3 +3202,28 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
 .felt-amt{display:inline-block}
 @media (prefers-reduced-motion:no-preference){.felt-amt{animation:feltPop .35s ease-out}@keyframes feltPop{0%{transform:scale(1.25);color:#f3d27a}100%{transform:none}}}
 .progressive-card .felt-thumb{margin-top:26px}
+
+/* R24: craps bet areas are real buttons; keep the felt look */
+button.zone { font: inherit; color: inherit; width: 100%; background: transparent; border: inherit; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; }
+.craps-felt button.zone { border: 1px solid rgba(230,196,110,.35); border-radius: 6px; }
+button.zone:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+/* R24: limits panel */
+.limits-panel fieldset.lim-row { border: 1px solid rgba(230,196,110,.25); border-radius: 10px; padding: 8px 10px; margin: 10px 0; }
+.limits-panel legend { font-weight: 700; padding: 0 4px; }
+.lim-inputs { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.lim-inputs select { min-height: 44px; font: inherit; }
+.lim-reset, .refill-reset { font-size: 13px; opacity: .85; display: block; }
+.lim-pending { font-size: 13px; color: var(--gold); }
+/* R24: dice + point always visible in the craps dock (the full status bar is above the felt) */
+.cr-dock-status { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; padding: 2px 2px 6px; }
+.cr-dock-puck { font-weight: 700; letter-spacing: .04em; padding: 2px 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,.3); }
+.cr-dock-puck.on { background: #f4f1e6; color: #111; }
+.cr-dock-dice { display: inline-flex; align-items: center; gap: 4px; }
+.cr-dock-dice .cr-die { width: 24px; height: 24px; font-size: 14px; display: inline-grid; place-items: center; }
+.floor-jp-toggle { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; background: transparent; color: inherit; font: inherit; font-size: 14px; border: 0; cursor: pointer; padding: 0 4px; }
+.floor-jp-knob { width: 36px; height: 20px; border-radius: 999px; background: rgba(255,255,255,.2); position: relative; }
+.floor-jp-knob::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.floor-jp-toggle.on .floor-jp-knob { background: var(--gold); }
+.floor-jp-toggle.on .floor-jp-knob::after { transform: translateX(16px); }
+@media (prefers-reduced-motion: reduce) { .floor-jp-knob::after { transition: none; } }
+.floor-jp-toggle:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
