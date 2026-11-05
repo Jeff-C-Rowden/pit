@@ -1,8 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
+import { blackjackResultLabel } from "@/lib/feel";
 import PlayingCard from "@/components/PlayingCard";
-import { ActionDock, ChipRow, OutcomeBanner, ReplayCard, cageHref } from "@/components/TableUX";
+import { ActionDock, ChipRow, OutcomeBanner, ReplayCard, ResultsStrip, cageHref } from "@/components/TableUX";
 import { DealerBooth, TableHeart, TableSeat, botBlackjackHand, botHandValue, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -118,6 +119,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
   return (
     <>
       <div className="rail-label" style={{ marginTop: 20 }}>Blackjack · 7-spot · 6 decks · S17 · 3:2</div>
+      <ResultsStrip game="blackjack" refreshKey={`${game?.id}-${game?.phase}`} />
       <div className="felt-table seated bj-table">
         <DealerBooth>
           <div className="muted">Dealer {game?.dealer?.value ? `(${game.dealer.value.total})` : ""}</div>
@@ -159,7 +161,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
             <OutcomeBanner
               title="DEALER WINS"
               cageHref={cageHref("blackjack", game?.id)}
-              subtitle={result || "You lost this hand."}
+              subtitle={blackjackResultLabel(result) || "You lost this hand."}
             />
           )}
           {game?.phase === "settled" && result === "hand closed" && (
@@ -213,7 +215,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
                   <div className="hand">{h.cards.map((c: any, j: number) => <PlayingCard key={j} card={c} size="sm" />)}</div></div>
               ))}
             </div>
-            <div className="replay-h">{({ lose: "Dealer won", win: "You won", push: "Push", blackjack: "Blackjack" } as Record<string, string>)[replay.result] || replay.result || "Settled"} · bet {money(replay.stakeCents)} · paid {money(replay.payoutCents)}</div>
+            <div className="replay-h">{blackjackResultLabel(replay.result) || "Settled"} · bet {money(replay.stakeCents)} · paid {money(replay.payoutCents)}</div>
           </ReplayCard>
         )}
         {betting && !replay && (

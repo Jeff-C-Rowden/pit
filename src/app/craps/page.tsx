@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { crapsRiskedCents } from "@/lib/feel";
-import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, cageHref } from "@/components/TableUX";
+import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, ResultsStrip, cageHref } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -199,6 +199,7 @@ export default function CrapsPage() {
               )}
             </div>
           </div>
+          <ResultsStrip game="craps" refreshKey={rollRef} />
           {replay ? (
             <ReplayCard onClose={closeReplay} cageHref={cageHref("craps", replay.ref)}>
               <div className="replay-body">

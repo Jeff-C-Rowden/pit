@@ -109,3 +109,24 @@ export function buzz(pattern: number[]) {
   if (!pattern.length || !soundOn() || reducedMotion()) return;
   try { (navigator as Navigator & { vibrate?: (p: number[]) => boolean }).vibrate?.(pattern); } catch {}
 }
+
+const BJ_WORDS: Record<string, string> = {
+  win: "You win", lose: "Dealer wins", push: "Push", blackjack: "Blackjack", bust: "Bust",
+  "dealer bust": "Dealer busts", "dealer blackjack": "Dealer blackjack", "hand closed": "Hand closed",
+  "insurance wins": "Insurance wins",
+};
+/** Turns the engine's result words ("dealer bust / lose") into a readable line ("Dealer busts · Dealer wins"). */
+export function blackjackResultLabel(result: string | null | undefined): string {
+  if (!result) return "";
+  return result.split(/\s*[\/,]\s*/).filter(Boolean)
+    .map((p) => BJ_WORDS[p] || p.charAt(0).toUpperCase() + p.slice(1)).join(" · ");
+}
+
+/** Short, honest headline for a Pai Gow result string. */
+export function paigowResultLabel(result: string | null | undefined): string {
+  const r = String(result || "");
+  if (r.startsWith("win both")) return "You won both hands";
+  if (r.startsWith("lose both")) return "Dealer won both hands";
+  if (r.startsWith("push")) return "Push · one hand each";
+  return r ? r.charAt(0).toUpperCase() + r.slice(1) : "Settled";
+}

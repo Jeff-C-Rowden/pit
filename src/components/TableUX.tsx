@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { money } from "./useUser";
 import { celebrationLevel, playChip, playPayout, shouldSlidePayout } from "@/lib/feel";
 
@@ -548,4 +548,59 @@ export function ReplayCard({ children, onClose, cageHref, autoHideMs = 9000 }: {
 
 export function cageHref(game: string, ref: string | null | undefined) {
   return ref ? `/wallet?game=${encodeURIComponent(game)}&ref=${encodeURIComponent(ref)}#ledger` : null;
+}
+
+type Recent = { ref: string; at: string; netCents: number | null; paidCents: number; label: string };
+
+/** Compact "Last 5" strip, straight from the ledger. Each pill opens those lines in the Cage. */
+export function ResultsStrip({ game, refreshKey }: { game: string; refreshKey?: unknown }) {
+  const [items, setItems] = useState<Recent[] | null>(null);
+  useEffect(() => {
+    let live = true;
+    fetch(`/api/replay?game=${game}&recent=5`, { credentials: "same-origin" })
+      .then((r) => (r.ok ? r.json() : null)).then((d) => { if (live && d) setItems(d.recent || []); }).catch(() => null);
+    return () => { live = false; };
+  }, [game, refreshKey]);
+  if (!items || !items.length) return null;
+  return (
+    <div className="results-strip" aria-label="Your last results, from the ledger">
+      <span className="results-strip-k">Last {items.length}</span>
+      {items.map((r) => {
+        const craps = r.netCents == null;
+        const tone = craps ? (r.paidCents > 0 ? "up" : "flat") : r.netCents! > 0 ? "up" : r.netCents! < 0 ? "down" : "flat";
+        const text = craps
+          ? `Roll ${r.label}${r.paidCents > 0 ? ` · +${money(r.paidCents)}` : ""}`
+          : r.netCents === 0 ? "Push" : `${r.netCents! > 0 ? "+" : "−"}${money(Math.abs(r.netCents!))}`;
+        const aria = craps ? `Rolled ${r.label}, paid ${money(r.paidCents)}` : r.netCents === 0 ? "Push" : `${r.netCents! > 0 ? "Won" : "Lost"} ${money(Math.abs(r.netCents!))}`;
+        return <a key={r.ref} className={`rs-pill ${tone}`} href={cageHref(game, r.ref) || "#"} aria-label={`${aria}. View in Cage`}>{text}</a>;
+      })}
+    </div>
+  );
+}
+
+/** "Replay last result" button that swaps for an honest ReplayCard. Fetches the settled result from the ledger. */
+export function TableReplay({ game, show, resetKey, render }: {
+  game: string; show: boolean; resetKey?: unknown; render: (last: any) => ReactNode;
+}) {
+  const [last, setLast] = useState<any>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const close = useCallback(() => setLast(null), []);
+  useEffect(() => { setLast(null); setMsg(null); }, [resetKey]);
+  if (!show) return null;
+  async function open() {
+    setMsg(null);
+    try {
+      const r = await fetch(`/api/replay?game=${game}`, { credentials: "same-origin" });
+      const d = await r.json();
+      if (!d.last) { setMsg("No settled result to replay yet."); return; }
+      setLast(d.last);
+    } catch { setMsg("Couldn't load the last result."); }
+  }
+  if (last) return <ReplayCard onClose={close} cageHref={cageHref(game, last.ref)}>{render(last)}</ReplayCard>;
+  return (
+    <>
+      <button type="button" className="rl-replay" onClick={open}>↺ Replay last result</button>
+      {msg && <span className="muted" style={{ fontSize: 12 }}>{msg}</span>}
+    </>
+  );
 }

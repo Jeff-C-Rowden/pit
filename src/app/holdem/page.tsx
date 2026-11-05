@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Shell from "@/components/Shell";
 import PlayingCard from "@/components/PlayingCard";
 import { holdemRiskedCents } from "@/lib/feel";
-import { ActionDock, ChipStack, OutcomeBanner } from "@/components/TableUX";
+import { ActionDock, ChipStack, OutcomeBanner, ResultsStrip, TableReplay } from "@/components/TableUX";
 import { CARD_BACK, TableHeart, TableSeat, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -115,6 +115,7 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
   return (
     <>
       <div className="rail-label he-label" style={{ marginTop: 20 }}>Texas Hold&apos;em · $1/$2 No-limit</div>
+      <ResultsStrip game="holdem" refreshKey={`${game?.id}-${live}`} />
       {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
       <div className="felt-table seated holdem-table">
         {flyPot != null && won && (
@@ -241,6 +242,16 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
             {youActing && <p className="your-action">Your action</p>}
           </div>
         )}
+        <TableReplay game="holdem" show={!game || !live} resetKey={`${game?.id}-${live}`} render={(r) => (
+          <>
+            <div className="replay-bj">
+              <div className="replay-hand"><span className="muted">Board</span><div className="hand">{!(r.board || []).length && <span className="muted">Not dealt — hand ended preflop</span>}{(r.board || []).map((c: any, i: number) => <PlayingCard key={i} card={c} size="sm" />)}</div></div>
+              <div className="replay-hand"><span className="muted">You{r.playerHandName ? ` · ${r.playerHandName}` : ""}</span><div className="hand">{(r.playerHole || []).map((c: any, i: number) => <PlayingCard key={i} card={c} size="sm" />)}</div></div>
+              <div className="replay-hand"><span className="muted">Mara{r.houseHandName ? ` · ${r.houseHandName}` : ""}</span><div className="hand">{(r.houseHole || []).map((c: any, i: number) => <PlayingCard key={i} card={c} size="sm" />)}</div></div>
+            </div>
+            <div className="replay-h">{r.result || "Settled"} · in {money(r.stakeCents)} · paid {money(r.payoutCents)}</div>
+          </>
+        )} />
         {(!game || !live) && (
           <button className="btn primary hero-act" disabled={busy} onClick={() => act("deal")}>
             {busy ? "Dealing…" : game && !live ? "Next hand" : "Deal"}

@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
+import { paigowResultLabel } from "@/lib/feel";
 import PlayingCard from "@/components/PlayingCard";
-import { ActionDock, ChipRow, OutcomeBanner } from "@/components/TableUX";
+import { ActionDock, ChipRow, OutcomeBanner, ResultsStrip, TableReplay } from "@/components/TableUX";
 import { CARD_BACK, DealerBooth, TableHeart, TableSeat, botPaiGowCards, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 
@@ -77,6 +78,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
         <p className="lede">House banks · 5% commission on wins · 6 seats</p>
         <h1 style={{ fontSize: 48 }}>Pai Gow Poker</h1>
       </div>
+      <ResultsStrip game="paigow" refreshKey={`${game?.id}-${game?.phase}`} />
       {err && <p className="err">{err}</p>}
       <div className="felt-table seated felt-rect bj-table pg-table">
         <DealerBooth>
@@ -167,6 +169,17 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
         </div>
       )}
       <ActionDock hint={hint} busy={busy}>
+        <TableReplay game="paigow" show={betting} resetKey={`${game?.id}-${game?.phase}`} render={(r) => (
+          <>
+            <div className="replay-bj">
+              <div className="replay-hand"><span className="muted">Your high · low</span>
+                <div className="hand">{(r.playerHigh || []).map((c: any, i: number) => <PlayingCard key={i} card={c} size="sm" />)}<span className="replay-gap" />{(r.playerLow || []).map((c: any, i: number) => <PlayingCard key={i} card={c} size="sm" />)}</div></div>
+              <div className="replay-hand"><span className="muted">Dealer high · low</span>
+                <div className="hand">{(r.dealerHigh || []).map((c: any, i: number) => <PlayingCard key={i} card={c} size="sm" />)}<span className="replay-gap" />{(r.dealerLow || []).map((c: any, i: number) => <PlayingCard key={i} card={c} size="sm" />)}</div></div>
+            </div>
+            <div className="replay-h">{paigowResultLabel(r.result)} · bet {money(r.stakeCents)} · paid {money(r.payoutCents)}</div>
+          </>
+        )} />
         {betting && (
           <>
             <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} minCents={500} maxCents={500_000} />

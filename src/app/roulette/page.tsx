@@ -4,7 +4,7 @@ import { pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
 import { previewBets } from "@/lib/games/roulettePreview";
 import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
-import { Chip, ReplayCard, cageHref } from "@/components/TableUX";
+import { Chip, ReplayCard, ResultsStrip, cageHref } from "@/components/TableUX";
 import { celebrationLevel, playChip, playPayout } from "@/lib/feel";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
@@ -293,6 +293,7 @@ export default function RoulettePage() {
               {lastWin == null ? "—" : `${lastWin > 0 ? "+" : ""}${money(lastWin)}`}</strong></div>
           </div>
 
+          <ResultsStrip game="roulette" refreshKey={history.length + ":" + (spin?.id || "")} />
           {history.length > 0 && !spin?.replay && (
             <div className="rl-replay-row">
               <button type="button" className="rl-replay" onClick={replayLast} disabled={busy || spinning}>↺ Replay last result</button>

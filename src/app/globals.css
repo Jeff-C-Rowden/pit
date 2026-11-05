@@ -3054,3 +3054,17 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
   body .action-dock .he-dock .he-slots { grid-template-columns: repeat(3, 1fr); gap: 6px; }
   body .action-dock .he-dock .he-slot .btn { min-height: 44px; font-size: 12px; letter-spacing: .04em; padding: 0 4px; }
 }
+
+/* ---- Round 19: results strip, ledger days ---- */
+.results-strip { display: flex; align-items: center; gap: 6px; flex-wrap: nowrap; overflow-x: auto; margin: 6px auto; padding: 2px 10px; max-width: 520px; scrollbar-width: none; }
+.results-strip::-webkit-scrollbar { display: none; }
+.results-strip-k { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: rgba(243,236,216,.6); flex-shrink: 0; }
+.rs-pill { flex-shrink: 0; font: 700 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 6px 9px; min-height: 28px; display: inline-flex; align-items: center; border-radius: 999px; border: 1px solid rgba(255,255,255,.18); color: #f3ecd8; text-decoration: none; background: rgba(0,0,0,.35); }
+.rs-pill.up { border-color: rgba(127,220,154,.55); color: #9be8b0; }
+.rs-pill.down { border-color: rgba(240,138,138,.45); color: #f3a3a3; }
+.rs-pill.flat { color: rgba(243,236,216,.75); }
+.replay-gap { display: inline-block; width: 8px; }
+.ledger-day { margin-top: 10px; }
+.ledger-day-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; margin: 8px 0 2px; padding-bottom: 4px; border-bottom: 1px solid rgba(230,195,106,.3); }
+.ledger-day-net { font-size: 12px; font-weight: 400; color: rgba(243,236,216,.75); }
+.ledger-day-net .up { color: #7fdc9a; } .ledger-day-net .down { color: #f08a8a; }
