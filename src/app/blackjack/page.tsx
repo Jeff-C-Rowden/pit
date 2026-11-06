@@ -2,7 +2,7 @@
 import TableNameplate from "@/components/TableNameplate";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
-import { blackjackResultLabel } from "@/lib/feel";
+import { blackjackResultLabel, playDeal } from "@/lib/feel";
 import PlayingCard from "@/components/PlayingCard";
 import { ActionDock, ChipRow, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { DealerBooth, TableHeart, TableSeat, botBlackjackHand, botHandValue, useTableSeats } from "@/components/Seating";
@@ -40,6 +40,7 @@ export default function BlackjackPage() {
     setErr(null);
     setReplay(null);
     setBusy(true);
+    if (action === "deal") playDeal();
     try {
       const d = await api("/api/games/blackjack", {
         method: "POST",

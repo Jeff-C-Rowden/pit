@@ -7,7 +7,7 @@ import { previewBets } from "@/lib/games/roulettePreview";
 import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
 import { Chip, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
-import { celebrationLevel, playChip, playPayout } from "@/lib/feel";
+import { celebrationLevel, playChip, playPayout, playSpin } from "@/lib/feel";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 import { usePausedLabel } from "@/components/PauseStatus";
@@ -192,7 +192,6 @@ export default function RoulettePage() {
     if (busy) return;
     setGhosts([]);
     setBets((x) => [...x, { ...b, amountCents: chip }]);
-    try { navigator.vibrate?.(10); } catch { /* ignore */ }
     if (showHint) dismissHint();
   }
 
@@ -258,6 +257,7 @@ export default function RoulettePage() {
       rotorRef.current = p.frames[p.frames.length - 1]!.rotor % 360;
       setPlan(p);
       setSpinning(true);
+      playSpin();
       await waitSpin(reduced ? 0 : p.durationMs);
       setSpinning(false);
       setSpin(d.spin);

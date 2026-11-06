@@ -2,7 +2,7 @@
 import TableNameplate from "@/components/TableNameplate";
 import { useCallback, useEffect, useState } from "react";
 import Shell from "@/components/Shell";
-import { crapsFeltCents, crapsRiskedCents } from "@/lib/feel";
+import { crapsFeltCents, crapsRiskedCents, playSpin } from "@/lib/feel";
 import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
@@ -115,6 +115,7 @@ export default function CrapsPage() {
     setErr(null);
     setRepeatNote(null);
     setBusy(true);
+    playSpin();
     try {
       const snap = layoutFromTable(table);
       if (snap.length) remember(snap);

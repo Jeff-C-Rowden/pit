@@ -33,6 +33,18 @@ describe("vibration scaling", () => {
     expect(vibratePattern("pay", 3).length).toBeGreaterThan(vibratePattern("pay", 2).length);
     expect(vibratePattern("chip")).toEqual([8]);
   });
+  it("spin and deal patterns are short, non-empty, and distinct from chip/pay", () => {
+    const spin = vibratePattern("spin");
+    const deal = vibratePattern("deal");
+    expect(spin.length).toBeGreaterThan(0);
+    expect(deal.length).toBeGreaterThan(0);
+    expect(spin).not.toEqual(deal);
+    expect(spin).not.toEqual(vibratePattern("chip"));
+    expect(deal).not.toEqual(vibratePattern("chip"));
+    expect(spin).not.toEqual(vibratePattern("pay", 1));
+    // empty pattern is the no-op signal buzz()/play* respect
+    expect(vibratePattern("pay", 0)).toEqual([]);
+  });
 });
 
 describe("roulette replay reads the ledger", () => {

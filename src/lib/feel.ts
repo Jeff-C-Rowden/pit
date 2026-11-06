@@ -1,6 +1,7 @@
 // Tactile feedback: how big a result effect should be, plus soft synthesized sounds.
 // Effects follow the real settled result only. Losses, pushes and wins smaller than the
-// stake never celebrate. Sound is off by default and remembered per device.
+// stake never celebrate. Sound & feel stay off by default (localStorage pit.sound !== "on")
+// and are remembered per device. Buzz never fires when feel is off or reduced-motion is on.
 
 export type FeelLevel = 0 | 1 | 2 | 3;
 
@@ -88,6 +89,22 @@ export function playPayout(level: FeelLevel) {
   }
 }
 
+/** Soft kick when a spin / roll actually starts (not Stop). Gated like every other buzz. */
+export function playSpin() {
+  buzz(vibratePattern("spin"));
+  const c = ac(); if (!c) return;
+  clack(c, 0, 0.06);
+  tone(c, 220, 0, 0.05, 0.025, "triangle");
+}
+
+/** Soft kick when a deal actually starts. Gated like every other buzz. */
+export function playDeal() {
+  buzz(vibratePattern("deal"));
+  const c = ac(); if (!c) return;
+  clack(c, 0, 0.05);
+  tone(c, 330, 0.01, 0.04, 0.02, "sine");
+}
+
 /** Total chips the player had riding on a craps roll (from the layout snapshot). */
 export function crapsRiskedCents(pattern: { amount?: number }[] | null | undefined): number {
   return (pattern || []).reduce((n, b) => n + Math.max(0, Number(b.amount) || 0), 0);
@@ -98,9 +115,11 @@ export function holdemRiskedCents(game: { playerCommittedCents?: number } | null
   return Math.max(0, Number(game?.playerCommittedCents) || 0);
 }
 
-/** Vibration patterns (ms). Same scaling as the visuals: nothing for level-0 results. */
-export function vibratePattern(kind: "chip" | "pay", level: FeelLevel = 0): number[] {
+/** Vibration patterns (ms). Same scaling as the visuals: nothing for level-0 pay results. */
+export function vibratePattern(kind: "chip" | "pay" | "spin" | "deal", level: FeelLevel = 0): number[] {
   if (kind === "chip") return [8];
+  if (kind === "spin") return [12, 30, 8];
+  if (kind === "deal") return [10, 24, 10];
   return [[], [18], [18, 50, 18], [24, 50, 24, 50, 48]][level];
 }
 

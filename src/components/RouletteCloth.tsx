@@ -1,5 +1,6 @@
 "use client";
 import { shouldSwallowClick } from "@/lib/tapGuard";
+import { buzz } from "@/lib/feel";
 import type React from "react";
 import { useEffect, useId, useRef, useState } from "react";
 import { ChipStack } from "./TableUX";
@@ -426,7 +427,7 @@ export default function RouletteCloth({
     endPress();
     press.current = {
       x: e.clientX, y: e.clientY,
-      t: setTimeout(() => { suppress.current = true; lastLP.current = Date.now(); press.current = null; onRemove?.(label); try { navigator.vibrate?.([8, 40, 8]); } catch { /* ignore */ } }, 480),
+      t: setTimeout(() => { suppress.current = true; lastLP.current = Date.now(); press.current = null; onRemove?.(label); buzz([8, 40, 8]); }, 480),
     };
   };
   const onPointerMove = (e: React.PointerEvent) => {

@@ -8,7 +8,7 @@ import ProgressiveMeterStrip, { type MeterPublic } from "@/components/Progressiv
 import { ActionDock, ChipRow, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { api, money, useUser } from "@/components/useUser";
 import { VS_PAYLINES, VS_TOTAL_CONTRIBUTION_BPS, type VsSymbol } from "@/lib/games/slotProgressive";
-import { slotGlowTier, soundOn, reducedMotion } from "@/lib/feel";
+import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 
 type LineWin = { line: number; symbol: VsSymbol | null; count: number; pay: number; winCents: number };
@@ -180,6 +180,7 @@ export default function VaultPage() {
     setReseedBeat(false);
     setGrid(null);
     setSpinning(true);
+    playSpin();
     setMaxArmed(false);
     try {
       const d = await api("/api/games/slot-progressive", {

@@ -6,7 +6,7 @@ import SlotMachine, { type SlotMachineHandle, type WinCell } from "@/components/
 import { ActionDock, ChipRow, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { api, money, useUser } from "@/components/useUser";
 import { PAYLINES, type Symbol } from "@/lib/games/slot";
-import { slotGlowTier, soundOn, reducedMotion } from "@/lib/feel";
+import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 
 type LineWin = { line: number; symbol: Symbol | null; count: number; pay: number; winCents: number };
@@ -91,6 +91,7 @@ export default function SlotPage() {
     setShowOutcome(false);
     setGrid(null); // force filler until server result arrives
     setSpinning(true);
+    playSpin();
     try {
       const d = await api("/api/games/slot", {
         method: "POST",
