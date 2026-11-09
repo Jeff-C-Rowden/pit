@@ -13,10 +13,12 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 7 | Game feel | Faster mobile controls: bet chips row, repeat-bet, thumb-reach Spin button. | |
 | 8 | Engagement | Daily sandbox chip top-up when balance is low (clearly labeled test credits, capped). | SHIPPED 2026-11-05 as once/day $25 claim (research #2) — not gated on low balance; Cage card, ledger idempotency |
 | 9 | Engagement | Achievements for exploring games (e.g., "Tried every table"), never for losses or volume of betting. | |
-| 10 | Visuals | PWA manifest + install icon + splash so the demo feels app-like on phones. | |
+| 10 | Visuals | PWA manifest + install icon + splash so the demo feels app-like on phones. | SHIPPED 2026-11-09 — manifest + original P-chip icons |
 | 11 | Onboarding | Guest "try one spin" demo mode before signup with no ledger writes. | |
 
 ## NEXT (top): Backlog item 5 (per-game How-to-play coach marks + RTP link) or #7 (mobile bet chips row). Then research #5 hold-and-win / stacking multipliers / cascade bonus.
+
+## Shipped 2026-11-09 (pm): PWA install (backlog #10). src/app/manifest.ts (standalone, start /floor, name says sandbox chips, description says no real money), original gold-ring P-chip PNG icons in public/icons (192, 512, maskable 512, apple-touch 180), appleWebApp meta. Middleware isPublicAsset lets manifest/icons through without the 21+ cookie (browsers fetch manifests credential-less); game pages still gated. Tests: tests/pwa.test.ts.
 
 ## Shipped 2026-11-09: Session strip (backlog #4). src/components/SessionStrip.tsx in Shell: compact chip with session time, real ledger net and bets placed (from /api/session/activity; helpers in src/lib/sessionStrip.ts); expands to a "Sandbox / test chips" note with limits/activity links and help line. A dismissible, non-modal break nudge appears once per 30-min block; dismissal in sessionStorage. No timers beyond a 60s refresh, no animation. Tests: tests/sessionPanel.test.ts.
 

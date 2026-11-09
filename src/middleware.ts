@@ -3,9 +3,20 @@ import type { NextRequest } from "next/server";
 
 const OPEN = new Set(["/", "/rules"]);
 
+/** Install assets browsers fetch without cookies; they must never bounce to the age gate. */
+export function isPublicAsset(pathname: string): boolean {
+  return (
+    pathname === "/manifest.webmanifest" ||
+    pathname.startsWith("/icons/") ||
+    pathname === "/icon.svg" ||
+    pathname.startsWith("/icon") ||
+    pathname.startsWith("/apple-icon")
+  );
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  if (pathname.startsWith("/_next") || pathname.startsWith("/favicon") || pathname.startsWith("/api/auth/me")) {
+  if (pathname.startsWith("/_next") || pathname.startsWith("/favicon") || pathname.startsWith("/api/auth/me") || isPublicAsset(pathname)) {
     return NextResponse.next();
   }
   if (pathname.startsWith("/api/")) {
