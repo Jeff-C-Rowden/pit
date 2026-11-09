@@ -7,7 +7,7 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 1 | Onboarding | First-visit welcome sheet: claim $100 sandbox chips (idempotent, once per account) + 4-step lobby tour with responsible-play step. Mobile-first. | Shipped cycle 1 |
 | 2 | Visuals | Game-card art: original SVG illustrations per table (felt, wheel, reels) replacing flat cards. | SHIPPED 2026-11-05 — GameArt banners on every Floor card |
 | 3 | Game feel | Haptics (navigator.vibrate) + optional sound toggle on spins, deals and wins, off by default, respects reduced motion. | SHIPPED 2026-11-06 — playSpin/playDeal + gated buzz |
-| 4 | Session engagement | "Session panel": time played, net result, bets placed, with a gentle break reminder every 30 min. | |
+| 4 | Session engagement | "Session panel": time played, net result, bets placed, with a gentle break reminder every 30 min. | SHIPPED 2026-11-09 — SessionStrip in Shell |
 | 5 | Onboarding | Per-game "How to play" first-seat coach marks with published RTP/house edge link. | |
 | 6 | Visuals | Win celebrations scaled honestly to win size (no celebration for wins smaller than the bet). | Partial — Gilded Track + Canopy Spire glow SHIPPED 2026-11-05 |
 | 7 | Game feel | Faster mobile controls: bet chips row, repeat-bet, thumb-reach Spin button. | |
@@ -16,7 +16,9 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 10 | Visuals | PWA manifest + install icon + splash so the demo feels app-like on phones. | |
 | 11 | Onboarding | Guest "try one spin" demo mode before signup with no ledger writes. | |
 
-## NEXT (top): Backlog item 4 — Session panel (time played, net result, bets placed, gentle 30-min break reminder). Then research #5 hold-and-win / stacking multipliers / cascade bonus.
+## NEXT (top): Backlog item 5 (per-game How-to-play coach marks + RTP link) or #7 (mobile bet chips row). Then research #5 hold-and-win / stacking multipliers / cascade bonus.
+
+## Shipped 2026-11-09: Session strip (backlog #4). src/components/SessionStrip.tsx in Shell: compact chip with session time, real ledger net and bets placed (from /api/session/activity; helpers in src/lib/sessionStrip.ts); expands to a "Sandbox / test chips" note with limits/activity links and help line. A dismissible, non-modal break nudge appears once per 30-min block; dismissal in sessionStorage. No timers beyond a 60s refresh, no animation. Tests: tests/sessionPanel.test.ts.
 
 ## Shipped 2026-11-06: Haptics on spins, deals and wins (backlog #3). `vibratePattern` gains short `spin` / `deal` kinds; `playSpin()` / `playDeal()` buzz + soft optional click (reuse clack/tone, no new assets). Wired on Gilded Track + Canopy Spire spin start, Roulette spin start, Craps Roll start, Blackjack deal start. RouletteCloth long-press remove goes through `buzz` (respects Sound & feel off + prefers-reduced-motion). Feel stays off by default (`pit.sound`). Wins still celebrate only via OutcomeBanner → playPayout honesty. Tests: tests/feel17.test.ts spin/deal patterns.
 

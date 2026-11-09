@@ -3435,3 +3435,11 @@ label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spa
 .game-card .game-art{display:block;width:calc(100% + 2px);height:auto;aspect-ratio:8/3;margin:0 0 10px;border-radius:10px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 .progressive-card .game-art{margin-top:26px}
 @media (prefers-reduced-motion:no-preference){.game-card .game-art{transition:transform .2s ease,filter .2s ease}.game-card:hover .game-art,.game-card:focus-visible .game-art{transform:translateY(-2px);filter:brightness(1.08)}}
+/* session strip (backlog #4): compact, non-modal, no animation */
+.session-strip { margin: 6px 0; display: grid; gap: 6px; font-size: 13px; }
+.session-strip-chip { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: center; min-height: 44px; padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(230,196,110,.35); background: #101a15; color: inherit; font: inherit; cursor: pointer; text-align: left; }
+.session-strip-dot { width: 8px; height: 8px; border-radius: 50%; background: #e6c46e; }
+.session-strip-chip .pos { color: #7fd69a; } .session-strip-chip .neg { color: #e08a78; }
+.session-strip-detail { margin: 0; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(230,196,110,.2); line-height: 1.45; }
+.session-strip-nudge { display: grid; gap: 6px; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(230,196,110,.45); background: #14201a; }
+@media (prefers-reduced-motion: reduce) { .session-strip *, .session-strip { transition: none; animation: none; } }
