@@ -21,7 +21,7 @@ export function CoinIcon({ size = 20 }: { size?: number }) {
 export function Lantern({ x, y, s = 1, className = "" }: { x: number; y: number; s?: number; className?: string }) {
   const id = uid(useId());
   return (
-    <g className={`rd-lantern ${className}`} transform={`translate(${x} ${y}) scale(${s})`}>
+    <g transform={`translate(${x} ${y}) scale(${s})`}><g className={`rd-lantern ${className}`}>
       <defs>
         <radialGradient id={`l${id}`} cx="50%" cy="45%" r="60%"><stop offset="0" stopColor="#ffd27a" /><stop offset=".35" stopColor="#ff5a2a" /><stop offset="1" stopColor="#a10d12" /></radialGradient>
       </defs>
@@ -31,7 +31,7 @@ export function Lantern({ x, y, s = 1, className = "" }: { x: number; y: number;
       <path d="M-9 -14 Q-15 0 -9 14 M0 -17 V17 M9 -14 Q15 0 9 14" stroke="#7d0a0f" strokeWidth="1" fill="none" opacity=".55" />
       <rect x="-7" y="15" width="14" height="5" rx="1.5" fill="#e7b84a" />
       <path d="M0 20 V34 M-3 22 L-4 34 M3 22 L4 34" stroke="#ffcf5a" strokeWidth="1.2" />
-    </g>
+    </g></g>
   );
 }
 

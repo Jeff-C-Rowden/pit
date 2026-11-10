@@ -197,11 +197,8 @@ function HeroBanner({ name }: { name: string }) {
   const s = SLIDES[i]!;
   return (
     <section className="rd-hero" aria-roledescription="carousel" aria-label="Featured">
-      <svg className="rd-hero-lanterns" viewBox="0 0 400 80" preserveAspectRatio="xMidYMin meet" aria-hidden="true">
-        <path d="M0 6 Q200 34 400 6" stroke="#e7b84a" strokeWidth="1.2" fill="none" opacity=".7" />
-        <Lantern x={46} y={52} s={0.9} className="sway-a" />
-        <Lantern x={354} y={52} s={0.9} className="sway-b" />
-      </svg>
+      <svg className="rd-hero-lanterns rd-hero-lanterns-l" viewBox="0 0 80 90" aria-hidden="true"><Lantern x={40} y={50} s={0.95} className="sway-a" /></svg>
+      <svg className="rd-hero-lanterns rd-hero-lanterns-r" viewBox="0 0 80 90" aria-hidden="true"><Lantern x={40} y={50} s={0.95} className="sway-b" /></svg>
       <div className="rd-hero-copy">
         <p className="rd-hero-hello">Good evening, {name}</p>
         <div className="rd-hero-slide" key={i} aria-live="polite">
