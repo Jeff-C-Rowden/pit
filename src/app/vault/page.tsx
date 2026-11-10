@@ -5,11 +5,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import VaultSpireMachine, { type VaultSpireMachineHandle, type WinCell } from "@/components/VaultSpireMachine";
 import ProgressiveMeterStrip, { type MeterPublic } from "@/components/ProgressiveMeter";
-import { ActionDock, ChipRow, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { api, money, useUser } from "@/components/useUser";
 import { VS_PAYLINES, VS_TOTAL_CONTRIBUTION_BPS, type VsSymbol } from "@/lib/games/slotProgressive";
 import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
+import QuickBetRow, { useLastBet } from "@/components/QuickBet";
+import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
 
 type LineWin = { line: number; symbol: VsSymbol | null; count: number; pay: number; winCents: number };
 type ProgHit = { tierId: string; name: string; awardCents: number; reseedsTo?: number };
@@ -72,6 +74,7 @@ export default function VaultPage() {
   const [reseedBeat, setReseedBeat] = useState(false);
   const [infoSheet, setInfoSheet] = useState<MeterPublic | "game" | null>(null);
   const [maxArmed, setMaxArmed] = useState(false);
+  const [lastCoin, rememberCoin] = useLastBet("vault");
   const [feelLive, setFeelLive] = useState(false);
   const [turbo, setTurbo] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -162,12 +165,14 @@ export default function VaultPage() {
     return () => window.clearTimeout(t);
   }, [spinning]);
 
-  async function go() {
+  async function go(coinOverride?: number) {
     if (busy || spinning) return;
+    const c = coinOverride ?? coin;
+    const cost = c * 9;
     const bal = balRef.current;
-    if (bal < coinIn) {
+    if (bal < cost) {
       setErr(
-        `This spin costs ${money(coinIn)} (coin × 9). Add sandbox chips above.`,
+        `This spin costs ${money(cost)} (coin × 9). Add sandbox chips above.`,
       );
       return;
     }
@@ -185,8 +190,9 @@ export default function VaultPage() {
     try {
       const d = await api("/api/games/slot-progressive", {
         method: "POST",
-        body: JSON.stringify({ coinCents: coin, idempotencyKey: crypto.randomUUID() }),
+        body: JSON.stringify({ coinCents: c, idempotencyKey: crypto.randomUUID() }),
       });
+      rememberCoin(c); // only after the server accepted the bet
       setSpin(d.spin);
       setGrid(d.spin.grid as VsSymbol[][]);
       setLastWinCents(d.spin.winCents || 0);
@@ -427,25 +433,31 @@ export default function VaultPage() {
                 </p>
               )}
               <div className="vault-dock-bet">
-                <div className="vault-total-bet">
-                  Total bet <strong>{money(coinIn)}</strong>
-                  <span className="muted"> · coin {money(coin)} × 9 lines</span>
+                <div className="vault-bet-head">
+                  <div className="vault-total-bet">
+                    Total bet <strong>{money(coinIn)}</strong>
+                    <span className="muted"> · coin {money(coin)} × 9 lines</span>
+                  </div>
+                  <button
+                    type="button"
+                    className={`btn vault-max${maxArmed ? " armed" : ""}`}
+                    onClick={onMaxBet}
+                    disabled={busy || spinning}
+                  >
+                    {maxArmed ? "Confirm Max $50 coin" : "Max Bet"}
+                  </button>
                 </div>
-                <ChipRow
-                  amounts={[25, 50, 100, 250, 500]}
+                <QuickBetRow
+                  amounts={SLOT_COIN_CHIPS}
                   selected={coin}
                   onSelect={setCoinAndClear}
-                  minCents={25}
-                  maxCents={5000}
+                  lastCoinCents={lastCoin}
+                  balanceCents={u.balanceCents}
+                  busy={busy || spinning}
+                  onRepeat={(c) => { setCoinAndClear(c); void go(c); }}
+                  minCents={SLOT_COIN_MIN}
+                  maxCents={SLOT_COIN_MAX}
                 />
-                <button
-                  type="button"
-                  className={`btn vault-max${maxArmed ? " armed" : ""}`}
-                  onClick={onMaxBet}
-                  disabled={busy || spinning}
-                >
-                  {maxArmed ? "Confirm Max $50 coin" : "Max Bet"}
-                </button>
               </div>
               <button
                 type="button"

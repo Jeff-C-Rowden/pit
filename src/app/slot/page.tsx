@@ -3,11 +3,13 @@ import { SYM_ART } from "@/components/SlotMachine";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import SlotMachine, { type SlotMachineHandle, type WinCell } from "@/components/SlotMachine";
-import { ActionDock, ChipRow, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { api, money, useUser } from "@/components/useUser";
 import { PAYLINES, type Symbol } from "@/lib/games/slot";
 import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
+import QuickBetRow, { useLastBet } from "@/components/QuickBet";
+import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
 
 type LineWin = { line: number; symbol: Symbol | null; count: number; pay: number; winCents: number };
 
@@ -42,6 +44,7 @@ export default function SlotPage() {
   const [spinning, setSpinning] = useState(false);
   const [showOutcome, setShowOutcome] = useState(false);
   const machineRef = useRef<SlotMachineHandle>(null);
+  const [lastCoin, rememberCoin] = useLastBet("slot");
   const [feelLive, setFeelLive] = useState(false);
   const [turbo, setTurbo] = useState(false);
   const [reduced, setReduced] = useState(false);
@@ -84,8 +87,9 @@ export default function SlotPage() {
     setShowOutcome(true);
   }, []);
 
-  async function go() {
+  async function go(coinOverride?: number) {
     if (busy || spinning) return;
+    const c = coinOverride ?? coin;
     setErr(null);
     setBusy(true);
     setShowOutcome(false);
@@ -95,8 +99,9 @@ export default function SlotPage() {
     try {
       const d = await api("/api/games/slot", {
         method: "POST",
-        body: JSON.stringify({ coinCents: coin, idempotencyKey: crypto.randomUUID() }),
+        body: JSON.stringify({ coinCents: c, idempotencyKey: crypto.randomUUID() }),
       });
+      rememberCoin(c); // only after the server accepted the bet
       setSpin(d.spin);
       setGrid(d.spin.grid as Symbol[][]);
       if (d.user) setUser(d.user);
@@ -209,12 +214,16 @@ export default function SlotPage() {
           </div>
 
           <ActionDock hint={spinning ? "Stop · or tap a reel · reels in motion…" : "Pick a coin size, then Spin."} busy={busy || spinning}>
-            <ChipRow
-              amounts={[25, 50, 100, 250, 500]}
+            <QuickBetRow
+              amounts={SLOT_COIN_CHIPS}
               selected={coin}
               onSelect={setCoin}
-              minCents={25}
-              maxCents={5000}
+              lastCoinCents={lastCoin}
+              balanceCents={u.balanceCents}
+              busy={busy || spinning}
+              onRepeat={(c) => { setCoin(c); void go(c); }}
+              minCents={SLOT_COIN_MIN}
+              maxCents={SLOT_COIN_MAX}
             />
             <button
               type="button"
