@@ -67,5 +67,10 @@ describe("exploration achievements", () => {
     expect(readFileSync("src/components/LimitsPanel.tsx", "utf8")).toContain('recordAchievement({ kind: "limit" })');
     const css = readFileSync("src/app/globals.css", "utf8");
     expect(css).toMatch(/prefers-reduced-motion: reduce\) \{ \.ach-toast \{ animation: none/);
+    // sr-only labels inside the scrollable strip must not widen the phone page (390px overflow regression)
+    expect(css).toMatch(/\.ach-badge \{ position: relative;/);
+    expect(css).toMatch(/\.ach-card \{ min-width: 0; max-width: 100%;/);
+    // toast sits above fixed bet docks
+    expect(css).toMatch(/\.ach-toast-wrap \{[^}]*top: calc[^}]*z-index: 1000/);
   });
 });
