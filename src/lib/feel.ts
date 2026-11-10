@@ -161,15 +161,23 @@ export function crapsFeltCents(table: Record<string, unknown> | null | undefined
 }
 
 /** One-time "How to play in 10 seconds" tips, keyed by table. */
-export const TABLE_TIPS: Record<string, { title: string; steps: string[] }> = {
-  slot: { title: "Gilded Track in 10 seconds", steps: ["Pick a coin size.", "Tap Spin. Each spin bets all 9 lines.", "Wins pay from the paytable below the reels."] },
-  vault: { title: "Canopy Spire in 10 seconds", steps: ["Pick a coin size and tap Spin.", "A small part of every bet feeds the four jackpots.", "Jackpots are rare. Most spins pay nothing."] },
-  roulette: { title: "Roulette in 10 seconds", steps: ["Pick a chip.", "Tap a spot on the table, like Red.", "Tap Spin. Red wins 18 of 38 spins and pays 1 to 1. Undo takes a chip back."] },
-  blackjack: { title: "Blackjack in 10 seconds", steps: ["Pick a chip and tap Deal.", "Get closer to 21 than the dealer without going over.", "Hit takes a card. Stand keeps your hand."] },
-  craps: { title: "Craps in 10 seconds", steps: ["Pick a chip and tap Pass line.", "Tap Roll. 7 or 11 wins now. 2, 3 or 12 loses.", "Any other number is the point: roll it again before a 7 to win."] },
-  holdem: { title: "Hold'em in 10 seconds", steps: ["Tap Deal. You post a blind and get two cards.", "Check, bet or fold as the five shared cards come out.", "Best five-card hand at showdown takes the pot."] },
-  paigow: { title: "Pai Gow in 10 seconds", steps: ["Pick a chip and tap Deal. You get seven cards.", "Tap House way to split them into a 5-card and a 2-card hand.", "Win both to win. Win one for a push. Wins pay less 5%."] },
+export type TableTip = { title: string; steps: string[]; odds: string };
+
+/** Per-table "how to play" coach card. `odds` restates only what /rules publishes for that table. */
+export const TABLE_TIPS: Record<string, TableTip> = {
+  slot: { title: "Gilded Track in 10 seconds", steps: ["Pick a coin size.", "Tap Spin. Each spin bets all 9 lines.", "Wins pay from the paytable below the reels."], odds: "Theoretical RTP 94–96%, so the house keeps about 4–6% of coin-in over time." },
+  vault: { title: "Canopy Spire in 10 seconds", steps: ["Pick a coin size and tap Spin.", "A small part of every bet feeds the four jackpots.", "Jackpots are rare. Most spins pay nothing."], odds: "Line RTP targets about 93–95% before jackpots. 3% of each bet feeds the meters." },
+  roulette: { title: "Roulette in 10 seconds", steps: ["Pick a chip.", "Tap a spot on the table, like Red.", "Tap Spin. Red wins 18 of 38 spins and pays 1 to 1. Undo takes a chip back."], odds: "American wheel: house edge 5.26% (RTP 94.74%) on standard bets." },
+  blackjack: { title: "Blackjack in 10 seconds", steps: ["Pick a chip and tap Deal.", "Get closer to 21 than the dealer without going over.", "Hit takes a card. Stand keeps your hand."], odds: "House edge roughly 0.5% with basic strategy, higher if you play by feel." },
+  craps: { title: "Craps in 10 seconds", steps: ["Pick a chip and tap Pass line.", "Tap Roll. 7 or 11 wins now. 2, 3 or 12 loses.", "Any other number is the point: roll it again before a 7 to win."], odds: "Pass line house edge about 1.41%. Odds bets pay true odds. Props carry much higher edges." },
+  holdem: { title: "Hold'em in 10 seconds", steps: ["Tap Deal. You post a blind and get two cards.", "Check, bet or fold as the five shared cards come out.", "Best five-card hand at showdown takes the pot."], odds: "Heads-up against the house bot with no rake. Results depend on your decisions." },
+  paigow: { title: "Pai Gow in 10 seconds", steps: ["Pick a chip and tap Deal. You get seven cards.", "Tap House way to split them into a 5-card and a 2-card hand.", "Win both to win. Win one for a push. Wins pay less 5%."], odds: "The house banks, wins copied hands, and takes 5% commission on your wins." },
 };
+
+/** Anchor on /rules for a table's full rules and odds. */
+export function rulesHref(game: string): string {
+  return `/rules#${game}`;
+}
 
 /**
  * Slot cabinet glow tier from the real server-paid return and the coin-in.

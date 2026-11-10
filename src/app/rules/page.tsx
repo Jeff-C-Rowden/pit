@@ -13,19 +13,19 @@ export default function Rules() {
       <div className="panel"><ShowTipsSwitch /></div>
       <div className="panel">
         <p>Pit is 21+ only. The server owns every card, reel, die, pocket, and chip. Your browser cannot credit money. Bets debit before resolution; wins credit after. Each ledger row is idempotent.</p>
-        <h3>Blackjack</h3>
+        <h3 id="blackjack" className="rules-anchor">Blackjack</h3>
         <p className="muted">6-deck shoe. Dealer stands on soft 17. Blackjack pays 3:2. Insurance 2:1. Hit, stand, double, split once. House edge roughly 0.5% with basic strategy.</p>
-        <h3>Gilded Track (slot)</h3>
+        <h3 id="slot" className="rules-anchor">Gilded Track (slot)</h3>
         <p className="muted">5 reels, 3 rows, 9 paylines. Left-to-right. WILD substitutes. Theoretical RTP is enumerated from the published 20-stop strips and kept in the 94–96% band (see tests).</p>
-        <h3>Canopy Spire (progressive slot)</h3>
+        <h3 id="vault" className="rules-anchor">Canopy Spire (progressive slot)</h3>
         <p className="muted">Jungle-themed 5-reel video slot with four shared progressive meters (Mini / Minor / Major / Grand). Seeds $10 / $50 / $250 / $2,500. Must-hit-by ceilings on Mini / Minor / Major ($30 / $150 / $1,000); Grand is a rare mystery (~1/35k). Each spin contributes 3.00% (300 bps: 100/70/50/80) of coin-in from the same bet debit. All sandbox bets qualify. Hits reseed. Demo chips only — not a licensed casino jackpot. Main-game line RTP targets ~93–95% excluding progressive awards.</p>
-        <h3>Texas Hold&apos;em</h3>
-        <p className="muted">Heads-up no-limit vs the house bot. Blinds $1/$2. Standard ranking. Button posts the small blind.</p>
-        <h3>Roulette</h3>
+        <h3 id="holdem" className="rules-anchor">Texas Hold&apos;em</h3>
+        <p className="muted">Heads-up no-limit vs the house bot. Blinds $1/$2. Standard ranking. Button posts the small blind. No rake: the house bot takes no cut of the pot.</p>
+        <h3 id="roulette" className="rules-anchor">Roulette</h3>
         <p className="muted">American wheel (0 and 00), 38 pockets. Straight 35:1, split 17:1, street 11:1, corner 8:1, dozen/column 2:1, even money 1:1. House edge 5.26% (RTP 94.74% on standard bets).</p>
-        <h3>Craps</h3>
-        <p className="muted">Come-out: 7/11 pass wins, 2/3/12 pass loses (12 is bar for don&apos;t pass). Point then seven-out. Odds at true odds. Place 6/8 pay 7:6. Field 2/12 pay extra. Props: any 7 4:1, any craps 7:1, yo 15:1, hardways.</p>
-        <h3>Pai Gow Poker</h3>
+        <h3 id="craps" className="rules-anchor">Craps</h3>
+        <p className="muted">Come-out: 7/11 pass wins, 2/3/12 pass loses (12 is bar for don&apos;t pass). Point then seven-out. Odds at true odds. Place 6/8 pay 7:6. Field 2/12 pay extra. Props: any 7 4:1, any craps 7:1, yo 15:1, hardways. Pass line house edge about 1.41%; odds bets carry no edge; props run much higher.</p>
+        <h3 id="paigow" className="rules-anchor">Pai Gow Poker</h3>
         <p className="muted">House banks. 53-card deck with joker (ace or to complete a straight/flush). High (5) must beat low (2). Both hands to win; copies to the banker; otherwise push. 5% commission on player wins. House Way available.</p>
         <p style={{ marginTop: 24 }}><Link href="/">Back to the door</Link></p>
       </div>

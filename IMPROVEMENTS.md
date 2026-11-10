@@ -8,7 +8,7 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 2 | Visuals | Game-card art: original SVG illustrations per table (felt, wheel, reels) replacing flat cards. | SHIPPED 2026-11-05 — GameArt banners on every Floor card |
 | 3 | Game feel | Haptics (navigator.vibrate) + optional sound toggle on spins, deals and wins, off by default, respects reduced motion. | SHIPPED 2026-11-06 — playSpin/playDeal + gated buzz |
 | 4 | Session engagement | "Session panel": time played, net result, bets placed, with a gentle break reminder every 30 min. | SHIPPED 2026-11-09 — SessionStrip in Shell |
-| 5 | Onboarding | Per-game "How to play" first-seat coach marks with published RTP/house edge link. | |
+| 5 | Onboarding | Per-game "How to play" first-seat coach marks with published RTP/house edge link. | SHIPPED 2026-11-09 (eve) — odds line + /rules#game link + reopen button |
 | 6 | Visuals | Win celebrations scaled honestly to win size (no celebration for wins smaller than the bet). | Partial — Gilded Track + Canopy Spire glow SHIPPED 2026-11-05 |
 | 7 | Game feel | Faster mobile controls: bet chips row, repeat-bet, thumb-reach Spin button. | |
 | 8 | Engagement | Daily sandbox chip top-up when balance is low (clearly labeled test credits, capped). | SHIPPED 2026-11-05 as once/day $25 claim (research #2) — not gated on low balance; Cage card, ledger idempotency |
@@ -16,7 +16,9 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 10 | Visuals | PWA manifest + install icon + splash so the demo feels app-like on phones. | SHIPPED 2026-11-09 — manifest + original P-chip icons |
 | 11 | Onboarding | Guest "try one spin" demo mode before signup with no ledger writes. | |
 
-## NEXT (top): Backlog item 5 (per-game How-to-play coach marks + RTP link) or #7 (mobile bet chips row). Then research #5 hold-and-win / stacking multipliers / cascade bonus.
+## NEXT (top): Backlog #7 (mobile bet chips row / thumb-reach Spin) or #9 (exploration achievements). Then research #5 hold-and-win / stacking multipliers / cascade bonus.
+
+## Shipped 2026-11-09 (eve): How-to-play coach cards (backlog #5). FirstVisitTip in TableUX now adds a "The odds" line per table (TABLE_TIPS.odds, restating only /rules figures), a "Full rules & odds" link to /rules#<game> anchors, a sandbox-chips note, and after Got it folds into a small "How to play · odds" button to reopen. Rules page gains per-game anchors, craps pass-line edge and Hold'em no-rake line. Tests: tests/coachMarks.test.ts.
 
 ## Shipped 2026-11-09 (pm): PWA install (backlog #10). src/app/manifest.ts (standalone, start /floor, name says sandbox chips, description says no real money), original gold-ring P-chip PNG icons in public/icons (192, 512, maskable 512, apple-touch 180), appleWebApp meta. Middleware isPublicAsset lets manifest/icons through without the 21+ cookie (browsers fetch manifests credential-less); game pages still gated. Tests: tests/pwa.test.ts.
 

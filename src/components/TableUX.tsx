@@ -2,7 +2,8 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { money, useUser } from "./useUser";
 import PauseStatus from "./PauseStatus";
-import { celebrationLevel, playChip, playPayout, shouldSlidePayout, TABLE_TIPS } from "@/lib/feel";
+import Link from "next/link";
+import { celebrationLevel, playChip, playPayout, shouldSlidePayout, TABLE_TIPS, rulesHref } from "@/lib/feel";
 
 const LOADED_AT = typeof performance !== "undefined" ? performance.now() : 0;
 const settled = () => typeof performance !== "undefined" && performance.now() - LOADED_AT > 1500;
@@ -620,20 +621,38 @@ export function useHasPlayed(game: string, refreshKey?: unknown) {
   return has;
 }
 
-/** One-time tip for a player's first visit to a table. Dismissed per table, remembered on this device. */
+/** How-to-play coach card: opens on a player's first visit to a table, then folds into a small
+ *  "How to play · odds" button so the rules and published RTP/house edge stay one tap away. */
 export function FirstVisitTip({ game }: { game: string }) {
   const tip = TABLE_TIPS[game];
   const key = `pit_tip_v1:${game}`;
   const [open, setOpen] = useState(false);
-  useEffect(() => { try { if (!localStorage.getItem(key)) setOpen(true); } catch {} }, [key]);
-  if (!open || !tip) return null;
+  const [first, setFirst] = useState(false);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    try { if (!localStorage.getItem(key)) { setOpen(true); setFirst(true); } } catch {}
+    setReady(true);
+  }, [key]);
+  if (!tip || !ready) return null;
+  if (!open) {
+    return (
+      <button type="button" className="tip-reopen" aria-expanded={false} onClick={() => { setFirst(false); setOpen(true); }}>
+        <span aria-hidden="true">?</span> How to play · odds
+      </button>
+    );
+  }
   const close = () => { try { localStorage.setItem(key, "1"); } catch {} setOpen(false); };
   return (
     <aside className="first-tip" role="note" aria-label={tip.title}>
-      <div className="first-tip-k">First time here</div>
+      <div className="first-tip-k">{first ? "First time here" : "How to play"}</div>
       <b>{tip.title}</b>
       <ol>{tip.steps.map((s) => <li key={s}>{s}</li>)}</ol>
-      <button type="button" className="btn first-tip-ok" onClick={close}>Got it</button>
+      <p className="first-tip-odds"><span className="first-tip-odds-k">The odds</span> {tip.odds}</p>
+      <div className="first-tip-row">
+        <button type="button" className="btn first-tip-ok" onClick={close}>Got it</button>
+        <Link className="first-tip-rules" href={rulesHref(game)}>Full rules &amp; odds</Link>
+      </div>
+      <small className="first-tip-note">Sandbox / test chips. No real money.</small>
     </aside>
   );
 }
