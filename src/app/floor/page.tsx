@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import FeltThumb from "@/components/FeltThumb";
 import GameArt from "@/components/GameArt";
+import { DragonHero, Lantern } from "@/components/DragonArt";
+import { LOBBY_TABS, TAB_LABEL, filterByTab, parseTab, tabCounts, tileRibbon, type LobbyTab } from "@/lib/lobbyTabs";
 import { AchievementStrip } from "@/components/Achievements";
 import Shell from "@/components/Shell";
 import Onboarding from "@/components/Onboarding";
@@ -179,11 +181,63 @@ function WeekCard({ w }: { w?: { weekStart: string; minutes: number; netCents: n
   );
 }
 
+const SLIDES = [
+  { k: "Sandbox casino · 21+", h: "Fire up the floor", p: "Seven tables, honest odds and real casino rules. Sandbox chips only, never real money.", cta: "Play now", href: "#games" },
+  { k: "Canopy Spire", h: "Four live jackpots", p: "Mini, Minor, Major and Grand meters that grow only from real spins. Odds on the rules page.", cta: "Spin Canopy Spire", href: "/vault" },
+  { k: "The Cage", h: "Daily sandbox chips", p: "Claim $25 of test chips once a Chicago day. No cash value, nothing to withdraw.", cta: "Open the Cage", href: "/wallet" },
+];
+
+function HeroBanner({ name }: { name: string }) {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    if (typeof window === "undefined" || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
+    const t = window.setInterval(() => setI((n) => (n + 1) % SLIDES.length), 7000);
+    return () => window.clearInterval(t);
+  }, []);
+  const s = SLIDES[i]!;
+  return (
+    <section className="rd-hero" aria-roledescription="carousel" aria-label="Featured">
+      <svg className="rd-hero-lanterns" viewBox="0 0 400 80" preserveAspectRatio="xMidYMin meet" aria-hidden="true">
+        <path d="M0 6 Q200 34 400 6" stroke="#e7b84a" strokeWidth="1.2" fill="none" opacity=".7" />
+        <Lantern x={46} y={52} s={0.9} className="sway-a" />
+        <Lantern x={354} y={52} s={0.9} className="sway-b" />
+      </svg>
+      <div className="rd-hero-copy">
+        <p className="rd-hero-hello">Good evening, {name}</p>
+        <div className="rd-hero-slide" key={i} aria-live="polite">
+          <span className="rd-hero-kicker">{s.k}</span>
+          <h1 className="foil rd-hero-title">{s.h}</h1>
+          <p className="rd-hero-p">{s.p}</p>
+          {s.href.startsWith("#") ? (
+            <a href={s.href} className="btn primary rd-glow">{s.cta}</a>
+          ) : (
+            <Link href={s.href} className="btn primary rd-glow">{s.cta}</Link>
+          )}
+        </div>
+        <div className="rd-hero-dots" role="group" aria-label="Choose slide">
+          {SLIDES.map((sl, n) => (
+            <button key={sl.h} type="button" className={n === i ? "on" : ""} aria-label={sl.h} aria-pressed={n === i} onClick={() => setI(n)} />
+          ))}
+        </div>
+      </div>
+      <DragonHero className="rd-hero-dragon" />
+    </section>
+  );
+}
+
 export default function Floor() {
   const [q, setQ] = useState("");
   const pause = usePauseInfo();
   const excl = exclusionNote(pause);
-  const shown = filterGames(GAMES, q);
+  const [tab, setTab] = useState<LobbyTab>("all");
+  useEffect(() => {
+    const sync = () => { const t = parseTab(window.location.hash); if (t !== "all" || window.location.hash === "#all") setTab(t); };
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+  const shown = filterByTab(filterGames(GAMES, q), tab);
+  const counts = tabCounts(GAMES);
   const [jp, setJp] = useState(true);
   useEffect(() => { try { setJp(localStorage.getItem("pit.showJackpots") !== "0"); } catch {} }, []);
   const toggleJp = () => { const v = !jp; setJp(v); try { localStorage.setItem("pit.showJackpots", v ? "1" : "0"); } catch {} };
@@ -192,24 +246,8 @@ export default function Floor() {
       {(u) => (
         <>
           <Onboarding user={u} />
-          <div className="hero floor-hero marquee-hero">
-            <div className="marquee-bulbs" aria-hidden="true" />
-            <svg className="marquee-art" viewBox="0 0 240 90" aria-hidden="true">
-              <defs>
-                <radialGradient id="mqChipR" cx="50%" cy="40%" r="60%"><stop offset="0" stopColor="#e2534b" /><stop offset="1" stopColor="#8e1d1a" /></radialGradient>
-                <radialGradient id="mqChipG" cx="50%" cy="40%" r="60%"><stop offset="0" stopColor="#2fae7a" /><stop offset="1" stopColor="#0e5a3c" /></radialGradient>
-                <linearGradient id="mqCard" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#fffaf0" /><stop offset="1" stopColor="#e9dfc8" /></linearGradient>
-              </defs>
-              <g transform="translate(88 14) rotate(-12)"><rect width="38" height="54" rx="5" fill="url(#mqCard)" stroke="#b9a777" /><text x="7" y="17" fontSize="13" fill="#1a1a1a" fontFamily="Georgia">A</text><path d="M19 27 l6 9 -6 9 -6 -9z" fill="#1a1a1a" /></g>
-              <g transform="translate(116 10) rotate(10)"><rect width="38" height="54" rx="5" fill="url(#mqCard)" stroke="#b9a777" /><text x="7" y="17" fontSize="13" fill="#b3261e" fontFamily="Georgia">K</text><path d="M19 30 c-6 -8 -12 0 0 10 c12 -10 6 -18 0 -10z" fill="#b3261e" /></g>
-              {[[60, 66, "R"], [74, 60, "G"], [178, 64, "G"], [166, 70, "R"]].map(([x, y, c], i) => (
-                <g key={i} transform={`translate(${x} ${y})`}><ellipse rx="15" ry="6" fill={c === "R" ? "url(#mqChipR)" : "url(#mqChipG)"} stroke="#f5e6bf" strokeWidth="1.2" strokeDasharray="4 3" /></g>
-              ))}
-            </svg>
-            <p className="lede">Good evening, {u.displayName}</p>
-            <h1 className="foil">The floor</h1>
-            <div className="rule" />
-            <p className="muted">Tables open. The cage keeps the ledger. Sandbox credits only.</p>
+          <div className="floor-hero">
+            <HeroBanner name={u.displayName} />
             {!excl && <ExclusionEndedNote />}
             {excl && (
               <aside className="excl-note" role="note" aria-label="Self-exclusion">
@@ -228,9 +266,29 @@ export default function Floor() {
               21+
             </span>
           </div>
-          <WeekCard w={pause?.week} />
+          {jp && (
+            <section className="rd-jackpots" aria-label="Canopy Spire jackpots">
+              <div className="rd-section-head"><h2>Canopy Spire jackpots</h2><Link href="/vault" className="rd-section-link">Play →</Link></div>
+              <VaultLobbyMeters />
+            </section>
+          )}
           <StartHere />
-          <AchievementStrip />
+          <div className="rd-tabs-row" id="games">
+            <div className="rd-tabs" role="tablist" aria-label="Game categories">
+              {LOBBY_TABS.map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === t}
+                  className={`rd-tab${tab === t ? " on" : ""}`}
+                  onClick={() => { setTab(t); try { history.replaceState(null, "", t === "all" ? "#all" : `#${t}`); } catch {} }}
+                >
+                  {TAB_LABEL[t]} <span className="rd-tab-n">{counts[t]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="floor-tools">
             <RecentlyPlayed />
             <label className="floor-search">
@@ -251,39 +309,33 @@ export default function Floor() {
           </div>
           {!shown.length && (
             <p className="muted floor-empty" role="status">
-              No table matches “{q}”. <button type="button" className="linkish" onClick={() => setQ("")}>Show all games</button>
+              No table matches “{q}”. <button type="button" className="linkish" onClick={() => { setQ(""); setTab("all"); }}>Show all games</button>
             </p>
           )}
-          <div className="grid-games">
+          <div className="rd-grid" role="tabpanel" aria-label={TAB_LABEL[tab]}>
             {shown.map((g: any) => (
               <Link
                 key={g.href}
                 href={g.href}
-                className={`game-card${g.cash ? " cash-table" : ""}${g.accent ? ` accent-${g.accent}` : ""}${g.progressive ? " progressive-card" : ""}`}
+                className={`rd-tile${g.accent ? ` accent-${g.accent}` : ""}${g.progressive ? " progressive-card" : ""}`}
+                aria-label={`${g.name}. ${g.line}`}
               >
-                {g.progressive && <span className="progressive-badge">LIVE Progressive</span>}
-                {g.cash && <div className="cash-stakes">{g.stakes}</div>}
-                <GameArt kind={g.accent} />
-                <div className="gmeta gline">{g.line}</div>
-                <h2 className="gname">{g.name}</h2>
-                <div className="gmeta">{g.meta}</div>
-                <div className="gtags"><span className="gtag">{g.level}</span><span className="gtag">{g.pace} pace</span></div>
-                {g.progressive && jp && <VaultLobbyMeters />}
-                {g.cash && (
-                  <>
-                    <div className="mini-oval" aria-hidden />
-                    <div className="seat-dots" aria-label={`${g.taken} of ${g.max} seated`}>
-                      {Array.from({ length: g.max }, (_, i) => (
-                        <span key={i} className={`seat-dot${i < g.taken ? " on" : ""}`} />
-                      ))}
-                    </div>
-                    <div className="cash-taken">{g.taken} / {g.max} seated</div>
-                  </>
-                )}
-                <div className="play">{g.cash ? "Sit down →" : g.progressive ? "Spin progressive →" : "Take a seat →"}</div>
+                <span className="rd-tile-frame">
+                  <GameArt kind={g.accent} variant="tile" />
+                  <span className={`rd-ribbon rd-ribbon-${tileRibbon(g).toLowerCase()}`}>{tileRibbon(g)}</span>
+                  {g.cash && <span className="rd-tile-seats">{g.taken}/{g.max} seated</span>}
+                  <span className="rd-tile-play" aria-hidden>Play</span>
+                  <span className="rd-tile-plate">
+                    <h2 className="gname">{g.name}</h2>
+                    <span className="gmeta">{g.meta}</span>
+                    <span className="rd-tile-tags">{g.level} · {g.pace} pace</span>
+                  </span>
+                </span>
               </Link>
             ))}
           </div>
+          <WeekCard w={pause?.week} />
+          <AchievementStrip />
         </>
       )}
     </Shell>

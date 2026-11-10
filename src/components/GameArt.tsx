@@ -82,8 +82,43 @@ function art(kind: string): { bg: [string, string]; body: ReactNode } {
   }
 }
 
-export default function GameArt({ kind }: { kind?: string }) {
+const TILE_BG: Record<string, [string, string]> = {
+  bj: ["#c8141e", "#3a0306"], slot: ["#e0701a", "#4a0a06"], vault: ["#138a5c", "#06261a"],
+  he: ["#7a1fa0", "#1e0628"], rl: ["#d3121c", "#2a0204"], cr: ["#0f7a52", "#05261a"], pg: ["#2a3fb0", "#0a0e3a"],
+};
+
+/** Portrait lobby tile: sunburst, gold inner frame, then the table's own art. */
+function Tile({ kind }: { kind: string }) {
+  const { body } = art(kind);
+  const [a, b] = TILE_BG[kind] ?? TILE_BG.bj!;
+  const id = `gt-${kind}`;
+  const rays = Array.from({ length: 16 }, (_, i) => {
+    const t = (i / 16) * Math.PI * 2, u = t + Math.PI / 28;
+    const p = (q: number) => `${(120 + Math.cos(q) * 260).toFixed(1)} ${(130 + Math.sin(q) * 260).toFixed(1)}`;
+    return <path key={i} d={`M120 130 L${p(t)} L${p(u)} Z`} fill="#ffe9a8" opacity=".07" />;
+  });
+  return (
+    <svg className={`game-art game-tile-art game-art-${kind}`} data-art={kind} data-variant="tile" viewBox="0 0 240 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+      <defs>
+        <radialGradient id={id} cx="50%" cy="40%" r="75%"><stop offset="0" stopColor={a} /><stop offset="1" stopColor={b} /></radialGradient>
+        <linearGradient id={`${id}-g`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#fff3b0" /><stop offset=".5" stopColor="#f5c542" /><stop offset="1" stopColor="#a8650c" /></linearGradient>
+      </defs>
+      <rect width="240" height="300" fill={`url(#${id})`} />
+      {rays}
+      <circle cx="120" cy="130" r="70" fill="#fff1b8" opacity=".10" />
+      <g fill="none" stroke={`url(#${id}-g)`} strokeWidth="1.6" opacity=".55">
+        <path d="M18 250 c-8 -12 8 -20 14 -10 c4 -10 20 -8 18 4" />
+        <path d="M190 252 c-8 -12 8 -20 14 -10 c4 -10 20 -8 18 4" />
+        <path d="M14 30 h22 v-12 M226 30 h-22 v-12 M14 270 h22 v12 M226 270 h-22 v12" strokeWidth="2" />
+      </g>
+      <g transform="translate(-56 58) scale(1.1)">{body}</g>
+    </svg>
+  );
+}
+
+export default function GameArt({ kind, variant = "banner" }: { kind?: string; variant?: "banner" | "tile" }) {
   const k = kind || "x";
+  if (variant === "tile") return <Tile kind={k} />;
   const { bg, body } = art(k);
   const id = `ga-${k}`;
   return (
