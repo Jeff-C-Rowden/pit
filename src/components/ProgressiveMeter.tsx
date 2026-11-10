@@ -10,6 +10,7 @@ import {
   reseedLabel,
   type ReseedMoment,
 } from "@/lib/reseedMoment";
+import MhbBar from "@/components/MhbBar";
 
 /**
  * J4 reseed moments: holds real post-hit "Won $X · reset to $seed" notes for
@@ -122,6 +123,7 @@ export default function ProgressiveMeterStrip({
             ) : (
               <span className="prog-tier-tag">{m.hasMustHitBy ? "Must-hit" : "Mystery"}</span>
             )}
+            <MhbBar meter={m} shownCents={shown} />
           </button>
         );
       })}

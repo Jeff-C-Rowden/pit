@@ -16,7 +16,7 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 10 | Visuals | PWA manifest + install icon + splash so the demo feels app-like on phones. | SHIPPED 2026-11-09 — manifest + original P-chip icons |
 | 11 | Onboarding | Guest "try one spin" demo mode before signup with no ledger writes. | |
 
-## NEXT (top): Jackpot Desk J1→J3→J2→J5, then Slot Scout S1→S3→S2→S4→S5, #11 guest demo spin, #6 remainder, research #5 hold-and-win / stacking multipliers / cascade bonus. (#7 follow-up if cheap: same quick row on Blackjack/Pai Gow docks.)
+## NEXT (top): Jackpot Desk J3→J2→J5, then Slot Scout S1→S3→S2→S4→S5, #11 guest demo spin, #6 remainder, research #5 hold-and-win / stacking multipliers / cascade bonus. (#7 follow-up if cheap: same quick row on Blackjack/Pai Gow docks.)
 
 ## Shipped 2026-11-10 (eve): Red-and-gold "dragon floor" restyle (Jeff: "reference Red Dragon Casino and make it similar… almost indistinguishable"). Research notes: /workspace/red-dragon-ref/NOTES.md. New src/app/dragon.css (loaded after globals): lacquer-crimson palette, gold-gradient Cinzel headings, glossy gold/red pill buttons, gold-framed lacquer panels, red felts with gold rails, red slot cabinets (Canopy Spire jade inside the gold frame), red docks, ambient embers, lantern sway, flame flicker and CTA glow (all off under reduced motion). Floor rebuilt as a mobile casino lobby: hero carousel with an original SVG dragon + lanterns (src/components/DragonArt.tsx), a real-only jackpot strip, All/Slots/Tables tabs (src/lib/lobbyTabs.ts, pure), portrait 3:4 gold-framed tiles (GameArt variant="tile"), and a phone bottom nav with a raised Cage coin (hidden on game screens). Top bar: medallion logo, coin balance pill with "+" to the Cage, avatar, icon sound toggle. No game math or server changes; sandbox labels, 21+ gate, odds and responsible-play tools unchanged; ribbons never say HOT. Tests: tests/lobbyTabs.test.ts, tests/gameArt.test.ts tile case.
 
@@ -48,7 +48,7 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 
 ## Jackpot Desk progressive UX ideas (2026-11-10) — Canopy Spire, real config + real hits only. Ship order: J4, J1, J3, J2, J5
 - J4 SHIPPED 2026-11-10 (noon). Visible reseed moment: on a real hit, lobby + in-game meter show "Won $X · reset to $seed" ~5s before ticking again. Real events only.
-- J1 Must-hit-by ceiling bar: thin bar seed→MHB under each capped meter, copy "Pays before $1,000"; never "due/hot/about to hit". Grand stays open (no bar).
+- J1 SHIPPED 2026-11-10 (6pm). Must-hit-by ceiling bar: thin gold seed→ceiling bar + "Hits by $30/$150/$1,000" (real config, real meter value; empty during J4 reseed) under Mini/Minor/Major on in-game strip and lobby meters; Grand has no bar; no "due/hot" wording; reduced-motion safe. Copy is "Hits by" not "Pays before" because the award can land on the spin that reaches the ceiling. Tests: tests/mhbBar.test.ts.
 - J3 Per-tier hit history strip: last 10 real hits (amount, time ago, meter at hit vs ceiling), anonymized; "No hits yet" empty state, no placeholders.
 - J2 "How this pot works" sheet on meter tap: seed, ceiling, "a small part of each bet feeds this pot", qualifying bets; any hit rate computed from real config/history and labeled average, not next-spin odds.
 - J5 One consistent "Sandbox chips, no cash value" chip on every meter, win modal, history row and share card.

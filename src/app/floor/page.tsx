@@ -14,6 +14,7 @@ import { usePauseInfo } from "@/components/PauseStatus";
 import { ExclusionEndedNote } from "@/components/ExclusionReminder";
 import { exclusionNote } from "@/lib/pauseText";
 import { useReseedMoments } from "@/components/ProgressiveMeter";
+import MhbBar from "@/components/MhbBar";
 import { activeMoment, displayCents, momentsFromNewHits, reseedLabel } from "@/lib/reseedMoment";
 
 type MeterPublic = {
@@ -21,6 +22,7 @@ type MeterPublic = {
   name: string;
   progressiveCents: number;
   seedCents: number;
+  ceilingCents?: number | null;
 };
 
 type RecentHitPublic = {
@@ -112,6 +114,7 @@ function VaultLobbyMeters() {
               <span className="vault-lobby-tier-name">{m.name}</span>
               <span className="vault-lobby-tier-amt">{money(displayCents(m.progressiveCents, moment))}</span>
               {moment && <span className="vault-lobby-reseed">{reseedLabel(moment)}</span>}
+              <MhbBar meter={m} shownCents={displayCents(m.progressiveCents, moment)} />
             </div>
           );
         })}
