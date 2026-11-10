@@ -2,7 +2,7 @@
 export const LOBBY_TABS = ["all", "slots", "tables"] as const;
 export type LobbyTab = (typeof LOBBY_TABS)[number];
 
-export const TAB_LABEL: Record<LobbyTab, string> = { all: "All games", slots: "Slots", tables: "Tables" };
+export const TAB_LABEL: Record<LobbyTab, string> = { all: "All", slots: "Slots", tables: "Tables" };
 
 const SLOT_PATHS = new Set(["/slot", "/vault"]);
 
