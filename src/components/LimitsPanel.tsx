@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { api, money } from "./useUser";
 import { PERIOD_LABEL, chicagoTime } from "@/lib/limitText";
 import { parseDollarsInput } from "@/lib/money";
+import { recordAchievement } from "@/lib/achievements";
 
 type View = { cents: number | null; period: string | null; usedCents: number; resetsAt: string | null;
   pending: { cents: number | null; period: string | null; effectiveAt: string } | null };
@@ -80,6 +81,7 @@ export default function LimitsPanel() {
     try {
       const d: any = await api("/api/wallet/limits", { method: "POST", body: JSON.stringify({ depositLimitCents: dl, depositPeriod: dP, lossLimitCents: ll, lossPeriod: lP }) });
       load(d.limits);
+      if (dl != null || ll != null) recordAchievement({ kind: "limit" });
       const parts = (["deposit", "loss"] as const).map((k) => {
         const r = d.result[k]; const n = k === "deposit" ? "Deposit" : "Loss";
         return r.applied === "now" ? `${n} limit is in effect now.` : r.applied === "pending" ? `${n} limit change is pending until ${chicagoTime(r.effectiveAt)}.` : "";

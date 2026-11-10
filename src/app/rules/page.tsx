@@ -1,10 +1,12 @@
 import Logo from "@/components/Logo";
 import Link from "next/link";
 import ShowTipsSwitch from "@/components/ShowTipsSwitch";
+import { RecordAchievement } from "@/components/Achievements";
 
 export default function Rules() {
   return (
     <div className="pit-shell">
+      <RecordAchievement kind="rules" />
       <div className="hero">
         <Logo />
         <h1 style={{ fontSize: 48 }}>House rules</h1>

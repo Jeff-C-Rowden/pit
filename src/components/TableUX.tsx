@@ -3,6 +3,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState, type ReactNod
 import { money, useUser } from "./useUser";
 import PauseStatus from "./PauseStatus";
 import Link from "next/link";
+import { recordAchievement } from "@/lib/achievements";
 import { celebrationLevel, playChip, playPayout, shouldSlidePayout, TABLE_TIPS, rulesHref } from "@/lib/feel";
 
 const LOADED_AT = typeof performance !== "undefined" ? performance.now() : 0;
@@ -636,12 +637,12 @@ export function FirstVisitTip({ game }: { game: string }) {
   if (!tip || !ready) return null;
   if (!open) {
     return (
-      <button type="button" className="tip-reopen" aria-expanded={false} onClick={() => { setFirst(false); setOpen(true); }}>
+      <button type="button" className="tip-reopen" aria-expanded={false} onClick={() => { setFirst(false); setOpen(true); recordAchievement({ kind: "coach" }); }}>
         <span aria-hidden="true">?</span> How to play · odds
       </button>
     );
   }
-  const close = () => { try { localStorage.setItem(key, "1"); } catch {} setOpen(false); };
+  const close = () => { try { localStorage.setItem(key, "1"); } catch {} recordAchievement({ kind: "coach" }); setOpen(false); };
   return (
     <aside className="first-tip" role="note" aria-label={tip.title}>
       <div className="first-tip-k">{first ? "First time here" : "How to play"}</div>

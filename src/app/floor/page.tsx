@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import FeltThumb from "@/components/FeltThumb";
 import GameArt from "@/components/GameArt";
+import { AchievementStrip } from "@/components/Achievements";
 import Shell from "@/components/Shell";
 import Onboarding from "@/components/Onboarding";
 import { api, money } from "@/components/useUser";
@@ -209,6 +210,7 @@ export default function Floor() {
           </div>
           <WeekCard w={pause?.week} />
           <StartHere />
+          <AchievementStrip />
           <div className="floor-tools">
             <RecentlyPlayed />
             <label className="floor-search">

@@ -12,11 +12,13 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 6 | Visuals | Win celebrations scaled honestly to win size (no celebration for wins smaller than the bet). | Partial — Gilded Track + Canopy Spire glow SHIPPED 2026-11-05 |
 | 7 | Game feel | Faster mobile controls: bet chips row, repeat-bet, thumb-reach Spin button. | |
 | 8 | Engagement | Daily sandbox chip top-up when balance is low (clearly labeled test credits, capped). | SHIPPED 2026-11-05 as once/day $25 claim (research #2) — not gated on low balance; Cage card, ledger idempotency |
-| 9 | Engagement | Achievements for exploring games (e.g., "Tried every table"), never for losses or volume of betting. | |
+| 9 | Engagement | Achievements for exploring games (e.g., "Tried every table"), never for losses or volume of betting. | SHIPPED 2026-11-10 — Floor "Explore the floor" badge strip + quiet toast |
 | 10 | Visuals | PWA manifest + install icon + splash so the demo feels app-like on phones. | SHIPPED 2026-11-09 — manifest + original P-chip icons |
 | 11 | Onboarding | Guest "try one spin" demo mode before signup with no ledger writes. | |
 
-## NEXT (top): Backlog #7 (mobile bet chips row / thumb-reach Spin) or #9 (exploration achievements). Then research #5 hold-and-win / stacking multipliers / cascade bonus.
+## NEXT (top): Backlog #7 (mobile bet chips row / repeat-bet / thumb-reach Spin). Then #11 guest demo spin, #6 remainder, research #5 hold-and-win / stacking multipliers / cascade bonus.
+
+## Shipped 2026-11-10: Exploration achievements (backlog #9). src/lib/achievements.ts (pure reducer, localStorage `pit.achievements.v1`, no ledger/API writes, no chip rewards) tracks five badges: Pulled up a chair (any table), Toured the floor (all 7 tables), Read the house rules (/rules visit), Learned a table (coach card Got it / reopen), Set a limit (saving a limit in the Cage). Floor gets a compact "Explore the floor" strip of original SVG chip medallions labeled "Sandbox / test chips", device-only, with Rules/Limits links; horizontally scrollable on phones, 5-up on desktop. Shell shows one quiet non-modal role=status toast per unlock at most (auto-hides 5s, dismissible, no animation under reduced motion). Never rewards losses, bet volume, streaks or time. Tests: tests/achievements.test.ts.
 
 ## Shipped 2026-11-09 (eve): How-to-play coach cards (backlog #5). FirstVisitTip in TableUX now adds a "The odds" line per table (TABLE_TIPS.odds, restating only /rules figures), a "Full rules & odds" link to /rules#<game> anchors, a sandbox-chips note, and after Got it folds into a small "How to play · odds" button to reopen. Rules page gains per-game anchors, craps pass-line edge and Hold'em no-rake line. Tests: tests/coachMarks.test.ts.
 

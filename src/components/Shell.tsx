@@ -5,6 +5,8 @@ import { usePathname, useRouter } from "next/navigation";
 import Logo from "./Logo";
 import { api, money, useUser, type User } from "./useUser";
 import { recordRecent } from "@/lib/lobby";
+import { recordAchievement } from "@/lib/achievements";
+import { AchievementToast } from "./Achievements";
 import RealityCheck from "./RealityCheck";
 import SessionStrip from "./SessionStrip";
 import RefillBar from "./RefillBar";
@@ -63,7 +65,7 @@ export default function Shell({ children, requireAuth = true }: { children: Reac
   const path = usePathname();
   const router = useRouter();
   useEffect(() => {
-    if (user && path) recordRecent(path);
+    if (user && path) { recordRecent(path); recordAchievement({ kind: "seat", href: path }); }
   }, [user, path]);
 
   if (user === undefined) {
@@ -124,6 +126,7 @@ export default function Shell({ children, requireAuth = true }: { children: Reac
       {user && path !== "/wallet" && <RefillBar />}
       {user && <RealityCheck />}
       {user && <SessionStrip />}
+      {user && <AchievementToast />}
       {typeof children === "function" ? (user ? children(user) : null) : children}
       <footer className="footer">
         <p className="footer-line">Adults 21+ only. Sandbox wallet — no live charges.</p>
