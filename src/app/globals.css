@@ -3529,3 +3529,33 @@ label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spa
   .quick-bet-sub { width: auto; flex-wrap: nowrap; }
 }
 /* /m7 */
+
+/* J4 reseed moment: real hit → "Won $X · reset to $seed" for ~5s, meter holds at seed */
+.prog-tier-reseed {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 3px;
+  font-size: 8px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.prog-reseed-won { color: #ffe9a8; font-weight: 800; }
+.prog-reseed-reset { color: rgba(214, 240, 222, .78); letter-spacing: .02em; }
+.prog-tier-reseeding { border-color: rgba(255, 233, 168, .7); }
+.prog-tier-reseeding .prog-tier-amount { color: rgba(255, 246, 216, .82); }
+.vault-lobby-reseeding { border-color: rgba(255, 233, 168, .6); }
+.vault-lobby-reseed {
+  font-size: 10px;
+  line-height: 1.25;
+  color: #ffe9a8;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 420px) {
+  .prog-tier-reseed { font-size: 7.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .prog-tier-hit { animation: none; }
+}

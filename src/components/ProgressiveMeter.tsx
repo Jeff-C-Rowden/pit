@@ -1,7 +1,34 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { money } from "@/components/useUser";
+import {
+  activeMoment,
+  displayCents,
+  mergeMoments,
+  nextExpiry,
+  reseedLabel,
+  type ReseedMoment,
+} from "@/lib/reseedMoment";
+
+/**
+ * J4 reseed moments: holds real post-hit "Won $X · reset to $seed" notes for
+ * ~5 s per tier, then clears so the meter resumes ticking. Only fed real hits.
+ */
+export function useReseedMoments() {
+  const [moments, setMoments] = useState<ReseedMoment[]>([]);
+  const add = useCallback((incoming: ReseedMoment[]) => {
+    if (!incoming.length) return;
+    setMoments((cur) => mergeMoments(cur, incoming, Date.now()));
+  }, []);
+  useEffect(() => {
+    const ms = nextExpiry(moments, Date.now());
+    if (ms == null) return;
+    const t = window.setTimeout(() => setMoments((cur) => mergeMoments(cur, [], Date.now())), ms + 20);
+    return () => window.clearTimeout(t);
+  }, [moments]);
+  return [moments, add] as const;
+}
 
 export type MeterPublic = {
   id: string;
@@ -49,6 +76,7 @@ export default function ProgressiveMeterStrip({
   meters,
   quiet = false,
   hitTierIds = [],
+  reseed = [],
   onOpenInfo,
   className = "",
 }: {
@@ -56,6 +84,8 @@ export default function ProgressiveMeterStrip({
   /** Softer animation during active spins / peer drip */
   quiet?: boolean;
   hitTierIds?: string[];
+  /** J4: live reseed moments (real hits only) */
+  reseed?: ReseedMoment[];
   onOpenInfo?: (meter: MeterPublic) => void;
   className?: string;
 }) {
@@ -66,22 +96,38 @@ export default function ProgressiveMeterStrip({
     <div className={`prog-strip${className ? ` ${className}` : ""}`} role="group" aria-label="Progressive jackpot meters">
       {sorted.map((m) => {
         const hit = hitTierIds.includes(m.id);
+        const moment = activeMoment(reseed, m.id, Date.now());
+        const shown = displayCents(m.progressiveCents, moment);
         return (
           <button
             key={m.id}
             type="button"
-            className={`prog-tier prog-tier-${m.name.toLowerCase()}${hit ? " prog-tier-hit" : ""}${quiet ? " prog-tier-quiet" : ""}`}
+            className={`prog-tier prog-tier-${m.name.toLowerCase()}${hit ? " prog-tier-hit" : ""}${moment ? " prog-tier-reseeding" : ""}${quiet ? " prog-tier-quiet" : ""}`}
             onClick={() => onOpenInfo?.(m)}
-            aria-label={`${m.name} progressive ${money(m.progressiveCents)}. Tap for info.`}
+            aria-label={
+              moment
+                ? `${m.name} progressive: ${reseedLabel(moment)}. Tap for info.`
+                : `${m.name} progressive ${money(m.progressiveCents)}. Tap for info.`
+            }
           >
             <span className="prog-tier-name">{m.name}</span>
             <span className="prog-tier-amount">
-              <Odometer cents={m.progressiveCents} quiet={quiet && !hit} />
+              <Odometer cents={shown} quiet={quiet && !hit} />
             </span>
-            <span className="prog-tier-tag">{m.hasMustHitBy ? "Must-hit" : "Mystery"}</span>
+            {moment ? (
+              <span className="prog-tier-reseed">
+                <span className="prog-reseed-won">Won {money(moment.wonCents)}</span>
+                <span className="prog-reseed-reset">reset to {money(moment.seedCents)}</span>
+              </span>
+            ) : (
+              <span className="prog-tier-tag">{m.hasMustHitBy ? "Must-hit" : "Mystery"}</span>
+            )}
           </button>
         );
       })}
+      <span className="sr-only" role="status" aria-live="polite">
+        {reseed.map((r) => `${r.tierName} ${reseedLabel(r)}.`).join(" ")}
+      </span>
     </div>
   );
 }

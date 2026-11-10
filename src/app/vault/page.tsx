@@ -4,7 +4,8 @@ import { VS_SYM_ART } from "@/components/VaultSpireMachine";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import VaultSpireMachine, { type VaultSpireMachineHandle, type WinCell } from "@/components/VaultSpireMachine";
-import ProgressiveMeterStrip, { type MeterPublic } from "@/components/ProgressiveMeter";
+import ProgressiveMeterStrip, { type MeterPublic, useReseedMoments } from "@/components/ProgressiveMeter";
+import { momentsFromNewHits, momentsFromSpinHits } from "@/lib/reseedMoment";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { api, money, useUser } from "@/components/useUser";
 import { VS_PAYLINES, VS_TOTAL_CONTRIBUTION_BPS, type VsSymbol } from "@/lib/games/slotProgressive";
@@ -72,6 +73,11 @@ export default function VaultPage() {
   const [hitTierIds, setHitTierIds] = useState<string[]>([]);
   const [jackpotModal, setJackpotModal] = useState<ProgHit[] | null>(null);
   const [reseedBeat, setReseedBeat] = useState(false);
+  const [reseed, addReseed] = useReseedMoments();
+  const seenHitsRef = useRef<Set<string> | null>(null);
+  const metersRef = useRef<MeterPublic[]>([]);
+  metersRef.current = meters;
+  const pendingMetersRef = useRef<MeterPublic[] | null>(null);
   const [infoSheet, setInfoSheet] = useState<MeterPublic | "game" | null>(null);
   const [maxArmed, setMaxArmed] = useState(false);
   const [lastCoin, rememberCoin] = useLastBet("vault");
@@ -111,23 +117,34 @@ export default function VaultPage() {
   const coinIn = coin * 9;
   const contribPreview = Math.floor((coinIn * VS_TOTAL_CONTRIBUTION_BPS) / 10_000);
 
+  // J4: a real hit by anyone that lands while we watch shows a reseed moment.
+  // First load only records existing hits (history is not replayed as live).
+  const takeHits = useCallback((d: any) => {
+    const ms = (d?.meters as MeterPublic[] | undefined) ?? metersRef.current;
+    const r = momentsFromNewHits(seenHitsRef.current, d?.recentHits, ms, Date.now());
+    seenHitsRef.current = r.seen;
+    addReseed(r.moments);
+  }, [addReseed]);
+
   const refreshMeters = useCallback(() => {
     api("/api/games/slot-progressive")
       .then((d) => {
         setInfo(d);
         if (d.meters) setMeters(d.meters);
+        takeHits(d);
       })
       .catch(() => {});
-  }, []);
+  }, [takeHits]);
 
   useEffect(() => {
     api("/api/games/slot-progressive")
       .then((d) => {
         setInfo(d);
         if (d.meters) setMeters(d.meters);
+        takeHits(d);
       })
       .catch((e) => setErr(e.message));
-  }, []);
+  }, [takeHits]);
 
   // Peer drip poll — calm 2.5s ticks while idle
   useEffect(() => {
@@ -146,6 +163,11 @@ export default function VaultPage() {
     setBusy(false);
     setShowOutcome(true);
     const hits = (spinRef.current?.progressiveHits as ProgHit[] | undefined) ?? [];
+    if (pendingMetersRef.current) {
+      // Reseeded meters were held back so the reels, not the meter, reveal the hit.
+      setMeters(pendingMetersRef.current);
+      pendingMetersRef.current = null;
+    }
     if (hits.length) {
       setHitTierIds(hits.map((h) => h.tierId));
       setJackpotModal(hits);
@@ -193,10 +215,16 @@ export default function VaultPage() {
         body: JSON.stringify({ coinCents: c, idempotencyKey: crypto.randomUUID() }),
       });
       rememberCoin(c); // only after the server accepted the bet
+      // Own hits get their moment from the spin result after the modal; mark
+      // them seen so the poll doesn't replay them.
+      seenHitsRef.current = momentsFromNewHits(seenHitsRef.current ?? new Set(), d.recentHits, [], Date.now()).seen;
       setSpin(d.spin);
       setGrid(d.spin.grid as VsSymbol[][]);
       setLastWinCents(d.spin.winCents || 0);
-      if (d.meters) setMeters(d.meters);
+      if (d.meters) {
+        if ((d.spin.progressiveHits as ProgHit[] | undefined)?.length) pendingMetersRef.current = d.meters;
+        else setMeters(d.meters);
+      }
       if (d.user) setUser(d.user);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "failed");
@@ -258,6 +286,7 @@ export default function VaultPage() {
               meters={meters}
               quiet={spinning || busy}
               hitTierIds={hitTierIds}
+              reseed={reseed}
               onOpenInfo={(m) => setInfoSheet(m)}
             />
 
@@ -334,6 +363,7 @@ export default function VaultPage() {
                   type="button"
                   className="btn primary"
                   onClick={() => {
+                    addReseed(momentsFromSpinHits(jackpotModal, metersRef.current, Date.now()));
                     setJackpotModal(null);
                     refreshMeters();
                   }}

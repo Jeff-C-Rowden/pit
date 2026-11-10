@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import FeltThumb from "@/components/FeltThumb";
 import GameArt from "@/components/GameArt";
@@ -11,15 +11,19 @@ import { filterGames, readRecent } from "@/lib/lobby";
 import { usePauseInfo } from "@/components/PauseStatus";
 import { ExclusionEndedNote } from "@/components/ExclusionReminder";
 import { exclusionNote } from "@/lib/pauseText";
+import { useReseedMoments } from "@/components/ProgressiveMeter";
+import { activeMoment, displayCents, momentsFromNewHits, reseedLabel } from "@/lib/reseedMoment";
 
 type MeterPublic = {
   id: string;
   name: string;
   progressiveCents: number;
+  seedCents: number;
 };
 
 type RecentHitPublic = {
   tier: string;
+  tierId?: string;
   amountCents: number;
   at: string;
   displayName: string;
@@ -55,6 +59,8 @@ const GAMES = [
 function VaultLobbyMeters() {
   const [meters, setMeters] = useState<MeterPublic[]>([]);
   const [recentHits, setRecentHits] = useState<RecentHitPublic[] | null>(null);
+  const [reseed, addReseed] = useReseedMoments();
+  const seenRef = useRef<Set<string> | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -65,6 +71,10 @@ function VaultLobbyMeters() {
           if (d.meters) setMeters(d.meters);
           if (Array.isArray(d.recentHits)) setRecentHits(d.recentHits);
           else setRecentHits([]);
+          // J4: only hits that land while the lobby is open become a reseed moment.
+          const r = momentsFromNewHits(seenRef.current, d.recentHits, d.meters ?? [], Date.now());
+          seenRef.current = r.seen;
+          addReseed(r.moments);
         })
         .catch(() => {});
     };
@@ -74,7 +84,7 @@ function VaultLobbyMeters() {
       alive = false;
       window.clearInterval(t);
     };
-  }, []);
+  }, [addReseed]);
 
   if (!meters.length) {
     return <div className="vault-lobby-meters muted">Loading progressive meters…</div>;
@@ -90,13 +100,23 @@ function VaultLobbyMeters() {
         <span className="vault-lobby-live">LIVE</span>
       </div>
       <div className="vault-lobby-meters" aria-label="Live progressive meters">
-        {sorted.map((m) => (
-          <div key={m.id} className={`vault-lobby-tier vault-lobby-${m.name.toLowerCase()}`}>
-            <span className="vault-lobby-tier-name">{m.name}</span>
-            <span className="vault-lobby-tier-amt">{money(m.progressiveCents)}</span>
-          </div>
-        ))}
+        {sorted.map((m) => {
+          const moment = activeMoment(reseed, m.id, Date.now());
+          return (
+            <div
+              key={m.id}
+              className={`vault-lobby-tier vault-lobby-${m.name.toLowerCase()}${moment ? " vault-lobby-reseeding" : ""}`}
+            >
+              <span className="vault-lobby-tier-name">{m.name}</span>
+              <span className="vault-lobby-tier-amt">{money(displayCents(m.progressiveCents, moment))}</span>
+              {moment && <span className="vault-lobby-reseed">{reseedLabel(moment)}</span>}
+            </div>
+          );
+        })}
       </div>
+      <span className="sr-only" role="status" aria-live="polite">
+        {reseed.map((r) => `${r.tierName} ${reseedLabel(r)}.`).join(" ")}
+      </span>
       <div className="vault-lobby-lastwon" aria-label="Recent progressive wins">
         <div className="vault-lobby-lastwon-lab">Last won</div>
         {recentHits === null ? (
