@@ -98,7 +98,7 @@ describe("cabinet: wiring", () => {
       expect(src).toContain("auto.fail()");
       expect(src).toContain("Sandbox / test chips");
     }
-    expect(pages[1]).toMatch(/<CabinetTopper title="Canopy Spire"[\s\S]{0,200}?<ProgressiveMeterStrip/);
+    expect(pages[1]).toMatch(/<CabinetTopper title="Antler Ridge"[\s\S]{0,200}?<ProgressiveMeterStrip/);
   });
   it("win lighting is only applied after the reels settle", () => {
     expect(chrome).toContain("const after = settled && !spinning;");

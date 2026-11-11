@@ -1,5 +1,5 @@
 /**
- * Physical-cabinet controls for both slots (Gilded Track, Canopy Spire): Bet −/+,
+ * Physical-cabinet controls for both slots (Sundown Trail, Antler Ridge): Bet −/+,
  * Max Bet, Auto, and the pull handle. Pure — no DOM, no ledger. Every spin still goes
  * through the page's go() → server POST, which checks balance, limits, pause and
  * exclusion. None of this changes odds, paytables or results.

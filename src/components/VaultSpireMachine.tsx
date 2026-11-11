@@ -15,7 +15,7 @@ import {
 import { VS_PAYLINES, VS_SYMBOLS, type VsSymbol } from "@/lib/games/slotProgressive";
 import { CabinetChrome, CabinetTopper } from "./SlotCabinet";
 import { slotBlurCycleMs, slotStopMs } from "@/lib/slotFeel";
-import { JADE_ART } from "./DragonSymbols";
+import { RIDGE_ART } from "./WesternSymbols";
 
 const VISIBLE = 3;
 const FILLER_LEN = 28;
@@ -42,7 +42,7 @@ export type WinCell = { reel: number; row: number };
 
 type ArtMeta = { label: string; tone: string; Svg: () => ReactNode };
 
-export const VS_SYM_ART: Record<VsSymbol, ArtMeta> = JADE_ART;
+export const VS_SYM_ART: Record<VsSymbol, ArtMeta> = RIDGE_ART;
 
 function randSym(): VsSymbol {
   return VS_SYMBOLS[Math.floor(Math.random() * VS_SYMBOLS.length)]!;
@@ -274,13 +274,13 @@ export type VaultTheme = {
 };
 
 const DEFAULT_THEME: Required<VaultTheme> = {
-  title: "Canopy Spire",
+  title: "Antler Ridge",
   kickLabels: ["9 lines", "Progressive", "Sandbox / test chips"],
   cabinetClass: "vault-cabinet",
 };
 
 /**
- * Canopy Spire cabinet (jungle progressive). Extension point: `theme` props for redesign
+ * Antler Ridge cabinet (frontier progressive). Extension point: `theme` props for redesign
  * without forking spin math.
  */
 export type VaultSpireMachineHandle = {
@@ -388,13 +388,13 @@ const VaultSpireMachine = forwardRef<
   return (
     <SymHCtx.Provider value={symH}>
       <CabinetChrome
-        themeClass={`cab-canopy ${t.cabinetClass}`}
+        themeClass={`cab-ridge ${t.cabinetClass}`}
         glow={glow}
         glowLive={glowLive}
         spinning={spinning}
         settled={settled}
         symH={symH}
-        topper={topper ?? <CabinetTopper title={t.title} kicker="Jade dragon progressive" />}
+        topper={topper ?? <CabinetTopper title={t.title} kicker="Progressive · 9 lines" />}
         belly={belly}
         deck={deck}
         lever={lever}

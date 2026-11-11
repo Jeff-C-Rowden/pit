@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { exactRtp, evaluateGrid, PAYLINES, REELS, LINE_COUNT } from "../src/lib/games/slot";
 import type { Symbol } from "../src/lib/games/slot";
 
-describe("gilded track slot", () => {
+describe("sundown trail slot", () => {
   it("is 5 reels of 20 with 9 lines", () => {
     expect(REELS).toHaveLength(5);
     expect(REELS.every((r) => r.length === 20)).toBe(true);

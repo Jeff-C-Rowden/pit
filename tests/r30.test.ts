@@ -50,7 +50,7 @@ describe("sparkline running net", () => {
   });
 });
 
-describe("Canopy Spire glow uses the same honest tiers on coin×9 bets", () => {
+describe("Antler Ridge glow uses the same honest tiers on coin×9 bets", () => {
   // Vault coin-in is coin × 9 paylines; glow must stay dark on loss/push/sub-bet.
   it("tier 0 for loss, push, and return under the bet", () => {
     expect(slotGlowTier(900, 0)).toBe(0);

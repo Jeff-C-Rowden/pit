@@ -31,7 +31,7 @@ async function shoot(game, width, height, mobile) {
   for (const t of ["Got it", "Dismiss", "OK"]) await click(`.//button[normalize-space(.)="${t}"]`, 800).catch(() => {});
   const cab = await p.$(".slot-cabinet");
   await cab.evaluate((e) => e.scrollIntoView({ block: "start" })); await p.evaluate(() => window.scrollBy(0, -70)); await W(400);
-  const tag = `${PREFIX}-${game === "slot" ? "gilded" : "canopy"}-${width}`;
+  const tag = `${PREFIX}-${game === "slot" ? "sundown" : "ridge"}-${width}`;
   await p.screenshot({ path: `${OUT}/${tag}-idle.png` });
   let won = false;
   for (let i = 0; i < SPINS; i++) {

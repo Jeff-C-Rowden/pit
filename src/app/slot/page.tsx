@@ -99,7 +99,11 @@ export default function SlotPage() {
     [spin, showOutcome],
   );
 
+  const winRef = useRef(0);
+  const [paid, setPaid] = useState(0);
   const onSpinComplete = useCallback(() => {
+    setPaid((p) => p + winRef.current);
+    winRef.current = 0;
     setSpinning(false);
     setBusy(false);
     setShowOutcome(true);
@@ -122,6 +126,7 @@ export default function SlotPage() {
         body: JSON.stringify({ coinCents: c, idempotencyKey: crypto.randomUUID() }),
       });
       rememberCoin(c); // only after the server accepted the bet
+      winRef.current = d.spin.winCents || 0;
       setSpin(d.spin);
       setGrid(d.spin.grid as Symbol[][]);
       if (d.user) setUser(d.user);
@@ -159,8 +164,8 @@ export default function SlotPage() {
       {(u) => { balRef.current = u.balanceCents; return (
         <div className="slot-page">
           <div className="slot-page-hero">
-            <p className="lede">Video slot</p>
-            <h1>Gilded Track</h1>
+            <p className="lede">Western video slot</p>
+            <h1>Sundown Trail</h1>
             <p className="muted">9 lines · 5 reels · published RTP 94–96%</p>
           </div>
           <FirstVisitTip game="slot" />
@@ -177,7 +182,7 @@ export default function SlotPage() {
               glowLive={feelLive}
               turbo={turboOn}
               winLines={winLines}
-              topper={<CabinetTopper title="Gilded Track" kicker="Red dragon · 9 lines" emblem={<span className="cab-pearl" />} />}
+              topper={<CabinetTopper title="Sundown Trail" kicker="9 lines · 5 reels" info={<>Lines played: 9 · Coin {money(coin)} · Spins pay left to right</>} />}
               belly={<CabinetBelly pays={pays} note={<>Pays left to right on 9 lines · × coin · {info?.rtpPublished ? "published RTP 94–96%" : "Sandbox"}</>} />}
               deck={
                 <CabinetDeck
@@ -191,9 +196,14 @@ export default function SlotPage() {
                   canBetUp={coin < SLOT_COIN_MAX}
                   onBetDown={() => { setCoin((c) => stepCoin(c, -1)); setMaxArmed(false); }}
                   onBetUp={() => { setCoin((c) => stepCoin(c, 1)); setMaxArmed(false); }}
+                  onBetOne={() => { setCoin((c) => (c >= SLOT_COIN_MAX ? SLOT_COIN_MIN : stepCoin(c, 1))); setMaxArmed(false); }}
                   onMax={onMaxBet}
                   maxArmed={maxArmed}
                   onSpin={onPrimary}
+                  onPayTable={() => document.getElementById("paytable")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                  coinLabel={money(coin)}
+                  paidCents={paid}
+                  maxLabel="Max bet"
                   auto={auto}
                   note="Sandbox / test chips · no cash value · 21+"
                 />
@@ -228,7 +238,7 @@ export default function SlotPage() {
           )}
 
           {info && (
-            <div className="panel" style={{ marginTop: 20 }}>
+            <div className="panel" id="paytable" style={{ marginTop: 20 }}>
               <h3>Paytable (per line, × coin)</h3>
               <table className="paytable">
                 <thead>

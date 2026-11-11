@@ -4,7 +4,7 @@ import { createContext, forwardRef, useCallback, useContext, useEffect, useImper
 import { PAYLINES, SYMBOLS, type Symbol } from "@/lib/games/slot";
 import { CabinetChrome, CabinetTopper } from "./SlotCabinet";
 import { slotBlurCycleMs, slotStopMs } from "@/lib/slotFeel";
-import { HOARD_ART } from "./DragonSymbols";
+import { SUNDOWN_ART } from "./WesternSymbols";
 
 const VISIBLE = 3;
 const FILLER_LEN = 28;
@@ -32,7 +32,7 @@ export type WinCell = { reel: number; row: number };
 
 type ArtMeta = { label: string; tone: string; Svg: () => ReactNode };
 
-export const SYM_ART: Record<Symbol, ArtMeta> = HOARD_ART;
+export const SYM_ART: Record<Symbol, ArtMeta> = SUNDOWN_ART;
 
 function randSym(): Symbol {
   return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]!;
@@ -361,19 +361,19 @@ const SlotMachine = forwardRef<
   return (
     <SymHCtx.Provider value={symH}>
       <CabinetChrome
-        themeClass="cab-gilded"
+        themeClass="cab-sundown"
         glow={glow}
         glowLive={glowLive}
         spinning={spinning}
         settled={settled}
         symH={symH}
-        topper={topper ?? <CabinetTopper title="Gilded Track" kicker="Red dragon · 9 lines" />}
+        topper={topper ?? <CabinetTopper title="Sundown Trail" kicker="9 lines · 5 reels" />}
         belly={belly}
         deck={deck}
         lever={lever}
         paylines={PAYLINES}
         winLines={winLines}
-        windowLabel="Gilded Track reels"
+        windowLabel="Sundown Trail reels"
         kick={["9 lines", "5 reels", "Sandbox / test chips"]}
       >
         {reels}

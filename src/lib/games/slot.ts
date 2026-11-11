@@ -138,7 +138,7 @@ export function exactRtp(): number {
 }
 
 export const SLOT_INFO = {
-  name: "Gilded Track",
+  name: "Sundown Trail",
   reels: 5,
   rows: 3,
   lines: LINE_COUNT,

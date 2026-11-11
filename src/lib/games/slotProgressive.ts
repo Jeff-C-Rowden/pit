@@ -1,7 +1,7 @@
 import { randInt, newId } from "../rng";
 
 /**
- * Canopy Spire — jungle-themed 5-reel progressive video slot (separate from Gilded Track).
+ * Antler Ridge — frontier-themed 5-reel progressive video slot (separate from Sundown Trail).
  * Route remains /vault; progressive family/tier ids stay vault-* for meter continuity.
  *
  * Progressive (Jackpot Desk v1):
@@ -216,7 +216,7 @@ export function exactVsLineRtp(): number {
 }
 
 export const VAULT_SPIRE_INFO = {
-  name: "Canopy Spire",
+  name: "Antler Ridge",
   reels: 5,
   rows: 3,
   lines: VS_LINE_COUNT,

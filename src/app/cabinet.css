@@ -1,94 +1,79 @@
 /* ==========================================================================
-   Physical slot cabinets (Gilded Track, Canopy Spire). Original CSS art.
+   Classic upright slot cabinets (Sundown Trail, Antler Ridge, Buckshot Bars).
+   Green pinstriped body, brass rails, title band with marquee bulbs, chrome-
+   framed ivory reels, blue payline tabs, red LED meters and beige keycaps on a
+   brass console. Original CSS art.
    Lights: idle attract chase only; steady while reels spin; win lighting only
    after the result (glow tiers set by the page after settle). Reduced motion:
    no chase, no flashes, no handle travel animation.
    ========================================================================== */
 
-.slot-stage-wrap, .vault-stage-wrap { max-width: 640px; margin: 0 auto; overflow: visible; }
+.slot-stage-wrap, .vault-stage-wrap { max-width: 720px; margin: 0 auto; overflow: visible; }
 .cab-wrap { position: relative; width: 100%; }
 .cab-wrap.has-lever { padding-right: 40px; }
 
 /* ---------- cabinet shell ---------- */
 .slot-cabinet.cab {
-  --cab-body-a: #3a0306; --cab-body-b: #8b0a12; --cab-body-c: #c8141e; --cab-body-d: #a50f18;
-  --cab-led: #ff3b1f; --cab-strip: #ff7a1a;
+  --cab-green: #0a2407; --cab-green-hi: #347854; --cab-stripe: #4a5747;
+  --cab-pitch: 22px;
+  --cab-led: #ffffb4;
   position: relative;
   overflow: visible;
-  padding: 0 14px 12px;
-  border: 4px solid transparent;
-  border-radius: 26px 26px 12px 12px;
+  padding: 0 16px 0;
+  border: 0;
+  border-radius: 10px 10px 6px 6px;
   background:
-    linear-gradient(180deg, rgba(255,230,170,.18), transparent 12%, transparent 88%, rgba(0,0,0,.35)) padding-box,
-    linear-gradient(90deg, var(--cab-body-a) 0%, var(--cab-body-b) 5%, var(--cab-body-c) 13%, var(--cab-body-d) 50%, var(--cab-body-c) 87%, var(--cab-body-b) 95%, var(--cab-body-a) 100%) padding-box,
-    linear-gradient(135deg, #fff3b0, #e0a52a 22%, #7a4a0a 40%, #f5c542 58%, #fff3b0 72%, #b07a14 88%, #fff3b0) border-box;
+    radial-gradient(130% 90% at 50% 40%, transparent 55%, rgba(0,0,0,.4) 100%),
+    linear-gradient(180deg, var(--cab-green-hi) 0%, rgba(52,120,84,0) 16%),
+    repeating-linear-gradient(180deg, var(--cab-green) 0 calc(var(--cab-pitch) - 2px), var(--cab-stripe) calc(var(--cab-pitch) - 2px) var(--cab-pitch)),
+    var(--cab-green);
   box-shadow:
-    0 0 0 2px #2a0204,
-    0 0 0 4px #9a9a9a,
-    0 0 0 5px #2a0204,
-    0 34px 60px rgba(0,0,0,.7),
-    0 0 50px rgba(255,120,40,.18),
-    inset 0 2px 0 rgba(255,240,200,.45),
-    inset 6px 0 10px rgba(255,200,160,.12),
-    inset -6px 0 10px rgba(0,0,0,.35);
+    inset 12px 0 0 #614929, inset -12px 0 0 #614929,
+    inset 13px 0 0 #f0d890, inset -13px 0 0 #f0d890,
+    0 0 0 2px #2a1c0c, 0 30px 60px rgba(0,0,0,.65);
 }
-.slot-cabinet.cab.cab-canopy {
-  --cab-body-a: #04261a; --cab-body-b: #0a4a32; --cab-body-c: #0f7a52; --cab-body-d: #0b5a3c;
-  --cab-strip: #4ef0a0;
-}
+.slot-cabinet.cab.cab-ridge { --cab-green: #3a1010; --cab-green-hi: #9c3835; --cab-stripe: #6a2a28; }
 
-/* ---------- topper / marquee ---------- */
-.cab-topper { position: relative; margin: 0 -6px; padding-top: 4px; }
-.cab-crest { display: block; width: 72%; height: 26px; margin: -24px auto 0; filter: drop-shadow(0 -2px 6px rgba(255,170,60,.35)); }
-.cab-emblem { position: absolute; top: -18px; left: 50%; transform: translateX(-50%); z-index: 2; line-height: 0; }
-.cab-pearl {
-  display: block; width: 24px; height: 24px; border-radius: 50%;
-  background: radial-gradient(circle at 38% 30%, #fffbe6 0 12%, #ffd36a 30%, #ff5a2a 62%, #8b0a12 100%);
-  box-shadow: 0 0 14px 4px rgba(255,140,40,.6), 0 0 0 2px #f5c542;
+/* ---------- topper: LOBBY / sound pills, title band, info strip ---------- */
+.cab-topper { position: relative; padding-top: 8px; }
+.cab-topbar { display: flex; justify-content: space-between; align-items: center; padding: 0 2px; position: relative; z-index: 3; }
+.cab-pill {
+  display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+  font: 800 13px/1 var(--st-body, system-ui), sans-serif; letter-spacing: .04em; color: #fff; text-decoration: none;
+  border: 2px solid #fff;
+  background: linear-gradient(180deg, #6ab4ec 0%, #48a0dc 48%, #2a6aa8 52%, #1e4f86 100%);
+  box-shadow: 0 2px 0 #0b2340, 0 3px 6px rgba(0,0,0,.4);
 }
-.cab-pearl.jade { background: radial-gradient(circle at 38% 30%, #f2fff8 0 12%, #8ff2c4 32%, #1f9a68 64%, #04261a 100%); box-shadow: 0 0 14px 4px rgba(80,240,160,.5), 0 0 0 2px #f5c542; }
-.cab-sign {
-  position: relative;
-  padding: 16px 22px 14px;
-  border-radius: 16px;
-  border: 3px solid transparent;
-  background:
-    radial-gradient(ellipse at 50% 120%, rgba(255,120,40,.45), transparent 65%) padding-box,
-    linear-gradient(180deg, #4a0408, #1a0103 70%) padding-box,
-    linear-gradient(135deg, #fff3b0, #e0a52a 30%, #7a4a0a 50%, #f5c542 70%, #fff3b0) border-box;
-  box-shadow: 0 0 22px rgba(255,170,60,.35), inset 0 0 24px rgba(0,0,0,.6), 0 6px 0 #2a0204;
-  text-align: center;
-}
-.cab-canopy .cab-sign {
-  background:
-    radial-gradient(ellipse at 50% 120%, rgba(60,220,140,.35), transparent 65%) padding-box,
-    linear-gradient(180deg, #0a3a28, #03140d 70%) padding-box,
-    linear-gradient(135deg, #fff3b0, #e0a52a 30%, #7a4a0a 50%, #f5c542 70%, #fff3b0) border-box;
-}
-.cab-sign-face { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; }
-.cab-sign-kicker { font-size: 10px; font-weight: 800; letter-spacing: .24em; text-transform: uppercase; color: #ffe2b0; opacity: .9; }
+.cab-sound:not(.on) { background: linear-gradient(180deg, #8a8a8a, #555 52%, #3a3a3a); }
+.cab-pill:focus-visible { outline: 2px solid #fedd52; outline-offset: 2px; }
+.cab-sign { position: relative; margin: -14px 40px 0; padding: 18px 10px 8px; text-align: center; }
+.cab-sign-face { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0; }
+.cab-emblem { line-height: 0; margin-bottom: -4px; }
 .cab-sign-title {
-  font-family: var(--rd-display, Georgia, serif); font-weight: 900; text-transform: uppercase;
-  font-size: clamp(22px, 6vw, 36px); letter-spacing: .08em; line-height: 1.05; white-space: nowrap;
-  background: linear-gradient(180deg, #fffbe6 0%, #fff3b0 20%, #f5c542 50%, #c8891a 78%, #fff3b0 100%);
+  font-family: var(--st-display, Impact, sans-serif); font-weight: 400; text-transform: uppercase;
+  font-size: clamp(30px, 7.5vw, 54px); line-height: 1; letter-spacing: .03em; white-space: nowrap;
+  background: linear-gradient(180deg, #fff6c8 0%, #fedd52 45%, #ef9a01 100%);
   -webkit-background-clip: text; background-clip: text; color: transparent;
-  filter: drop-shadow(0 2px 0 #3a0306) drop-shadow(0 0 10px rgba(255,170,60,.55));
+  -webkit-text-stroke: 2px #0a2407;
+  filter: drop-shadow(0 3px 0 #0a2407) drop-shadow(0 4px 6px rgba(0,0,0,.5));
 }
-
-/* bulbs around the sign */
+.cab-ridge .cab-sign-title { -webkit-text-stroke-color: #3a1010; filter: drop-shadow(0 3px 0 #3a1010) drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+.cab-sign-kicker {
+  margin-top: 4px; padding: 2px 12px; border-radius: 3px;
+  font: 700 11px/1.3 var(--st-narrow, "Arial Narrow"), sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #fff;
+  background: linear-gradient(180deg, #c0392b, #7a1a21);
+  box-shadow: 0 2px 0 rgba(0,0,0,.4);
+}
+/* marquee bulbs along the top of the title band */
 .cab-bulbs { position: absolute; display: flex; justify-content: space-between; pointer-events: none; }
-.cab-bulbs-t { top: 4px; left: 14px; right: 14px; }
-.cab-bulbs-b { bottom: 4px; left: 14px; right: 14px; }
-.cab-bulbs-l, .cab-bulbs-r { top: 16px; bottom: 16px; flex-direction: column; }
-.cab-bulbs-l { left: 5px; }
-.cab-bulbs-r { right: 5px; }
+.cab-bulbs-t { top: 6px; left: 0; right: 0; }
+.cab-bulbs-b { bottom: 0; left: 0; right: 0; }
+.cab-bulbs-l, .cab-bulbs-r { top: 0; bottom: 0; flex-direction: column; }
 .cab-bulb {
   display: block; width: 7px; height: 7px; border-radius: 50%;
   background: radial-gradient(circle at 40% 35%, #fffbe6 0 20%, #ffd36a 50%, #b5791c 100%);
-  box-shadow: 0 0 6px 1px rgba(255,200,90,.75);
+  box-shadow: 0 0 6px 1px rgba(255,200,90,.7);
 }
-.cab-canopy .cab-bulb { background: radial-gradient(circle at 40% 35%, #fffbe6 0 20%, #ffe9a0 50%, #c8a02a 100%); }
-/* While reels spin: steady, a touch dimmer — no anticipation effects. */
 .cab.is-spinning .cab-bulb { filter: brightness(.8); }
 @media (prefers-reduced-motion: no-preference) {
   /* Idle attract chase (not a reaction to anything). */
@@ -97,147 +82,179 @@
   .cab.is-idle:not([class*="glow-t"]) .cab-bulb.ph2 { animation-delay: -1.2s; }
 }
 @keyframes cabChase { 0% { filter: brightness(1.15); } 33% { filter: brightness(.38); box-shadow: none; } 100% { filter: brightness(.38); box-shadow: none; } }
-
-.cab-topper-meters { margin: 10px 2px 0; padding: 6px; border-radius: 12px; background: rgba(0,0,0,.45); box-shadow: inset 0 0 0 1px rgba(245,197,66,.4), inset 0 4px 10px rgba(0,0,0,.6); }
+.cab-info {
+  display: flex; align-items: center; gap: 10px; margin: 6px -16px 0; padding: 5px 14px; width: fit-content; max-width: calc(100% + 32px);
+  background: rgba(0,0,0,.72); color: #fff; font: 500 13px/1.3 var(--st-body, system-ui), sans-serif;
+}
+.cab-info-i { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #fff; font: italic 800 11px/1 Georgia, serif; flex: 0 0 auto; }
+.cab-topper-meters { margin: 8px 0 0; padding: 6px; border-radius: 6px; background: rgba(0,0,0,.45); box-shadow: inset 0 0 0 1px rgba(254,221,82,.45); }
 .cab-topper-meters .prog-strip { margin: 0; }
 
-/* ---------- body: light strips + chrome bezel + recessed reels ---------- */
-.cab-body { position: relative; display: grid; grid-template-columns: 9px minmax(0, 1fr) 9px; gap: 7px; align-items: stretch; margin-top: 14px; }
-.cab-strip { display: flex; flex-direction: column; gap: 3px; padding: 3px 2px; border-radius: 6px; background: #120102; box-shadow: inset 0 0 0 1px rgba(245,197,66,.45), 0 0 0 1px #000; }
-.cab-strip i { flex: 1; border-radius: 3px; background: linear-gradient(90deg, rgba(255,255,255,.1), var(--cab-strip) 50%, rgba(0,0,0,.25)); box-shadow: 0 0 6px var(--cab-strip); opacity: .78; }
-.cab.is-spinning .cab-strip i { opacity: .7; }
-
+/* ---------- body: chrome reel frames ---------- */
+.cab-body { position: relative; display: grid; grid-template-columns: 0 minmax(0, 1fr) 0; gap: 0; align-items: stretch; margin-top: 12px; }
+.cab-strip { display: none; }
 .cab-bezel {
-  display: grid; grid-template-columns: 20px minmax(0, 1fr) 20px; gap: 3px; align-items: center;
-  padding: 9px 5px; border-radius: 14px;
-  background: linear-gradient(180deg, #fafafa 0%, #a9a9a9 14%, #f0f0f0 34%, #7a7a7a 58%, #dcdcdc 82%, #8f8f8f 100%);
-  box-shadow: inset 0 2px 1px #fff, inset 0 -2px 3px rgba(0,0,0,.55), 0 0 0 2px #2a0204, 0 8px 18px rgba(0,0,0,.55);
+  grid-column: 2; min-width: 0;
+  display: grid; grid-template-columns: 22px minmax(0, 1fr) 22px; gap: 4px; align-items: center;
+  padding: 4px 2px;
 }
+.cab-bezel.single { grid-template-columns: 62px minmax(0, 1fr); }
+.cab-bezel.single.has-side { grid-template-columns: 62px minmax(0, 1fr) 84px; gap: 8px; }
 .cab .cab-window {
-  position: relative; gap: 5px; padding: 6px;
-  border: 3px solid #f5c542; border-radius: 9px;
-  background: linear-gradient(90deg, #3a3a3a, #d9d9d9 50%, #3a3a3a);
-  background-size: calc((100% - 12px) / 5 + 5px) 100%; background-position: 3.5px 0;
-  box-shadow: inset 0 0 0 2px #7a4a0a, inset 0 10px 18px rgba(0,0,0,.85), 0 0 0 1px #000;
+  position: relative; gap: 10px; padding: 0;
+  border: 0; border-radius: 0; background: transparent; box-shadow: none;
 }
 .cab .reel {
-  border: 0; border-radius: 3px;
+  border-radius: 6px; overflow: hidden;
   mask-image: none; -webkit-mask-image: none;
-  background: linear-gradient(90deg, #b8a684 0%, #f3ead4 22%, #fffaf0 50%, #f3ead4 78%, #b8a684 100%);
-  box-shadow: inset 2px 0 3px rgba(0,0,0,.35), inset -2px 0 3px rgba(0,0,0,.35);
+  background: linear-gradient(180deg, #a39d83 0%, #e8e8d0 22%, #f4f4e2 50%, #e8e8d0 78%, #a39d83 100%);
+  border: 5px solid transparent;
+  background-clip: padding-box;
+  box-shadow:
+    0 0 0 1px #171817,
+    0 0 0 5px #c9cdd2,
+    0 0 0 6px #6e7277,
+    0 0 0 7px #171817,
+    inset 0 14px 18px -8px rgba(0,0,0,.55),
+    inset 0 -14px 18px -8px rgba(0,0,0,.55);
 }
-.cab-canopy .reel { background: linear-gradient(90deg, #8fb8a2 0%, #e2f3e8 22%, #f6fff9 50%, #e2f3e8 78%, #8fb8a2 100%); }
-.cab .sym { border-bottom: 1px solid rgba(90,60,20,.18); }
-/* curved-drum shading: dark at top and bottom so the strip reads as a cylinder */
+.cab .sym { border-bottom: 0; }
+.cab .sym .sym-face { background: transparent !important; border: 0 !important; box-shadow: none !important; }
+.cab .sym .sym-label { color: #2a1208; text-shadow: none; font: 800 10px/1 var(--st-narrow, "Arial Narrow"), sans-serif; letter-spacing: .08em; }
+/* curved-drum shading so each strip reads as a cylinder */
 .cab-drum {
-  position: absolute; inset: 6px; z-index: 2; pointer-events: none; border-radius: 3px;
-  background: linear-gradient(180deg, rgba(0,0,0,.82) 0%, rgba(0,0,0,.42) 10%, rgba(0,0,0,.08) 24%, rgba(255,255,255,.07) 42%, rgba(0,0,0,0) 56%, rgba(0,0,0,.1) 76%, rgba(0,0,0,.45) 90%, rgba(0,0,0,.85) 100%);
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(180deg, rgba(0,0,0,.55) 0%, rgba(0,0,0,.18) 12%, rgba(0,0,0,0) 26%, rgba(255,255,255,.06) 30%, rgba(255,255,255,.06) 38%, rgba(0,0,0,0) 44%, rgba(0,0,0,0) 74%, rgba(0,0,0,.18) 88%, rgba(0,0,0,.55) 100%);
 }
-.cab-payline { position: absolute; left: 4px; right: 4px; top: 50%; height: 2px; margin-top: -1px; z-index: 2; pointer-events: none; background: linear-gradient(90deg, transparent, rgba(255,40,30,.55) 6%, rgba(255,40,30,.55) 94%, transparent); box-shadow: 0 0 4px rgba(255,40,30,.45); }
-.cab .cab-glass {
-  z-index: 3; inset: 0; border-radius: 6px;
-  background:
-    linear-gradient(112deg, rgba(255,255,255,.26) 0%, rgba(255,255,255,.08) 16%, transparent 27%, transparent 64%, rgba(255,255,255,.07) 74%, transparent 80%),
-    linear-gradient(180deg, rgba(255,255,255,.12), transparent 9%);
-}
+.cab-payline { position: absolute; left: -6px; right: -6px; top: 50%; height: 2px; margin-top: -1px; z-index: 3; pointer-events: none; background: #e5e4e4; box-shadow: 0 1px 1px rgba(0,0,0,.5); }
+.cab .cab-glass { z-index: 3; inset: 0; border-radius: 6px; background: linear-gradient(112deg, rgba(255,255,255,.16) 0%, transparent 22%, transparent 70%, rgba(255,255,255,.06) 80%, transparent 86%); }
 
-/* payline number tabs */
+/* payline tabs: blue arrow tabs */
 .cab-tabs { display: grid; grid-template-rows: repeat(3, 1fr); height: calc(var(--sym-h) * 3); align-self: center; }
 .cab-tab-row { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 .cab-tab {
-  display: grid; place-items: center; width: 18px; height: 13px; border-radius: 4px;
-  font: 800 9px/1 ui-sans-serif, system-ui, sans-serif; color: #3a0306;
-  background: linear-gradient(180deg, #fff3b0, #e0a52a 60%, #9a6410);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 1px 1px rgba(0,0,0,.6);
+  display: grid; place-items: center; width: 20px; height: 14px; border-radius: 3px;
+  font: 800 9px/1 system-ui, sans-serif; color: #fff;
+  background: linear-gradient(180deg, #3474c0, #345c90);
+  box-shadow: inset 0 1px 0 #a9c7ee, 0 1px 0 #0b2340;
 }
-.cab-tab.lit { color: #fff; background: radial-gradient(circle at 50% 35%, #ffd0c0, #ff3b1f 55%, #8b0a12); box-shadow: 0 0 8px 2px rgba(255,80,40,.85), inset 0 1px 0 rgba(255,255,255,.6); }
+.cab-tab.lit { color: #0a2407; background: linear-gradient(180deg, #fff6c8, #fedd52 50%, #ef9a01); box-shadow: 0 0 8px 2px rgba(254,221,82,.85); }
+.cab-payline-tab {
+  position: relative; display: grid; place-items: center; height: 30px; margin-right: 6px; padding-left: 4px;
+  font: 800 11px/1 system-ui, sans-serif; letter-spacing: .02em; color: #fff; text-transform: uppercase;
+  background: linear-gradient(180deg, #4a8ad6, #3474c0 50%, #345c90);
+  border-radius: 8px 0 0 8px; box-shadow: inset 0 1px 0 #a9c7ee, 0 2px 0 #0b2340;
+}
+.cab-payline-tab::after { content: ""; position: absolute; right: -12px; top: 0; border-style: solid; border-width: 15px 0 15px 12px; border-color: transparent transparent transparent #3a68aa; }
+.cab-payline-tab.lit { background: linear-gradient(180deg, #fff6c8, #fedd52 50%, #ef9a01); color: #0a2407; }
+.cab-payline-tab.lit::after { border-left-color: #f5b81e; }
+.cab-side { display: flex; flex-direction: column; align-items: stretch; gap: 8px; align-self: stretch; justify-content: center; }
 
-/* ---------- belly glass ---------- */
+/* ---------- belly glass (paytable peek) ---------- */
 .cab-belly { margin-top: 12px; }
 .cab-belly-glass {
-  position: relative; overflow: hidden;
-  padding: 8px 10px 7px; border-radius: 12px; border: 3px solid transparent; text-align: center;
-  background:
-    radial-gradient(ellipse at 50% -10%, rgba(255,150,60,.45), transparent 62%) padding-box,
-    linear-gradient(180deg, #5a0208, #230103) padding-box,
-    linear-gradient(135deg, #fff3b0, #c8891a 40%, #7a4a0a 60%, #f5c542) border-box;
-  box-shadow: inset 0 0 18px rgba(0,0,0,.55), 0 4px 10px rgba(0,0,0,.45);
+  position: relative; overflow: hidden; padding: 7px 10px 6px; border-radius: 6px; text-align: center;
+  background: rgba(0,0,0,.55); box-shadow: inset 0 0 0 1px rgba(254,221,82,.5);
 }
-.cab-canopy .cab-belly-glass {
-  background:
-    radial-gradient(ellipse at 50% -10%, rgba(80,230,150,.35), transparent 62%) padding-box,
-    linear-gradient(180deg, #0a4a32, #03140d) padding-box,
-    linear-gradient(135deg, #fff3b0, #c8891a 40%, #7a4a0a 60%, #f5c542) border-box;
-}
-.cab-belly-glass::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(110deg, rgba(255,255,255,.16), transparent 30%, transparent 70%, rgba(255,255,255,.06)); }
 .cab-belly-pays { list-style: none; margin: 0; padding: 0; display: flex; justify-content: center; gap: 6px 14px; flex-wrap: wrap; }
-.cab-belly-pays li { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #ffe9c0; }
+.cab-belly-pays li { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #fff; }
 .cab-belly-ico { display: grid; place-items: center; width: 24px; height: 24px; line-height: 0; }
 .cab-belly-ico .sym-svg, .cab-belly-ico svg { width: 24px !important; height: 24px !important; }
-.cab-belly-five { font-weight: 800; color: #ffd36a; }
+.cab-belly-five { font-weight: 800; color: #fedd52; }
 .cab-belly-lbl { text-transform: uppercase; letter-spacing: .08em; font-size: 10px; opacity: .85; }
-.cab-belly-pays b { font-family: var(--rd-display, Georgia, serif); font-size: 15px; color: #fff3b0; text-shadow: 0 0 8px rgba(255,170,60,.6); }
-.cab-belly-note { margin: 4px 0 0; font-size: 10px; letter-spacing: .06em; color: rgba(255,233,200,.8); }
+.cab-belly-pays b { font-family: var(--st-display, Impact, sans-serif); font-weight: 400; font-size: 16px; color: #fedd52; }
+.cab-belly-note { margin: 4px 0 0; font-size: 10px; letter-spacing: .06em; color: rgba(255,255,255,.8); }
 
-/* ---------- button deck ---------- */
-.cab-deck {
-  margin: 12px -14px 0; padding: 12px 14px 10px;
-  background: linear-gradient(180deg, #3b3b3b 0%, #1b1b1b 40%, #0b0b0b 100%);
-  border-top: 3px solid #cfcfcf;
-  box-shadow: 0 -1px 0 #fff inset, 0 -3px 0 #7a7a7a, inset 0 10px 18px rgba(255,255,255,.06), inset 0 -8px 14px rgba(0,0,0,.6);
-  transform: perspective(700px) rotateX(7deg); transform-origin: 50% 0;
+/* ---------- meters ---------- */
+.cab-deck { margin: 12px -16px 0; padding: 0; transform: none; background: none; border: 0; box-shadow: none; }
+.cab-meters {
+  display: grid; grid-template-columns: minmax(0, 2fr) auto minmax(0, 1.2fr) minmax(0, 1.4fr) minmax(0, 1.4fr); gap: 8px; align-items: start;
+  padding: 0 22px 10px;
 }
-.cab-leds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
-.cab-led { padding: 4px 8px 5px; border-radius: 7px; background: #050505; box-shadow: inset 0 2px 6px #000, 0 0 0 2px #2b2b2b, 0 0 0 3px #6a6a6a; min-width: 0; }
-.cab-led-lbl { display: block; font-size: 9px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; color: #ffb07a; opacity: .85; }
-.cab-led-val { position: relative; display: block; text-align: right; font: 700 clamp(14px, 3.8vw, 21px)/1.15 "Courier New", ui-monospace, monospace; letter-spacing: .04em; white-space: nowrap; overflow: hidden; }
-.cab-led-ghost { position: absolute; right: 0; top: 0; color: var(--cab-led); opacity: .05; }
-.cab-led-num { position: relative; color: var(--cab-led); text-shadow: 0 0 6px rgba(255,60,20,.85), 0 0 1px #ff8a6a; }
-.cab-led.lit .cab-led-num { color: #7dff9a; text-shadow: 0 0 8px rgba(80,255,120,.9), 0 0 1px #e8ffe8; }
+.cab-credits { min-width: 0; }
+.cab-led { min-width: 0; }
+.cab-led-lbl { display: block; text-align: center; font: 600 10.5px/1.2 var(--st-body, system-ui), sans-serif; letter-spacing: .06em; text-transform: uppercase; color: #e8ede8; margin-bottom: 2px; }
+.cab-led-val {
+  position: relative; display: block; text-align: right; padding: 2px 8px; border-radius: 6px; overflow: hidden; white-space: nowrap;
+  font: italic 700 clamp(14px, 3.6vw, 20px)/1.25 "DSEG7 Classic", "Courier New", ui-monospace, monospace; letter-spacing: .06em;
+  background: #641714;
+  box-shadow: 0 0 0 3px #b8b8b8, 0 0 0 4px #5a5a5a, inset 0 2px 6px rgba(0,0,0,.6);
+}
+.cab-led-blue .cab-led-val { background: #243460; }
+.cab-led-ghost { position: absolute; right: 8px; top: 2px; color: var(--cab-led); opacity: .06; }
+.cab-led-num { position: relative; color: var(--cab-led); text-shadow: 0 0 6px rgba(255,255,160,.6); }
+.cab-led-blue .cab-led-num { color: #70e8fc; text-shadow: 0 0 6px rgba(112,232,252,.6); }
+.cab-led.lit .cab-led-num { color: #fff; text-shadow: 0 0 10px rgba(255,255,200,.95); }
+.cab-fine { margin: 6px 0 0; font: 700 8px/1.2 system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.7); text-align: center; }
+.cab-coin-plate {
+  align-self: center; display: grid; place-items: center; min-width: 64px; height: 44px; padding: 0 8px; border-radius: 6px;
+  font: 400 26px/1 var(--st-display, Impact, sans-serif); color: #ea3323;
+  background: linear-gradient(180deg, #ffffff, #f2f4f1 60%, #d8dad8);
+  box-shadow: 0 0 0 2px #b9b9b9, 0 3px 0 #6a6a6a, inset 0 -3px 4px rgba(0,0,0,.15);
+}
 
-.cab-buttons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.5fr); gap: 7px; margin-top: 10px; align-items: end; }
-.cab-btn {
-  appearance: none; border: 0; cursor: pointer; position: relative;
-  height: 54px; padding: 4px; border-radius: 12px; min-width: 0;
-  background: linear-gradient(180deg, #f2f2f2, #8a8a8a 45%, #c8c8c8 70%, #5a5a5a);
-  box-shadow: 0 5px 0 #1a1a1a, 0 7px 10px rgba(0,0,0,.6);
+/* ---------- brass console with beige keycaps ---------- */
+.cab-console {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 2.1fr) repeat(3, minmax(0, 1fr)); gap: 10px; align-items: center;
+  padding: 12px 14px 14px; border-radius: 0 0 8px 8px;
+  background:
+    linear-gradient(90deg, #201810 0, transparent 3%, transparent 97%, #201810 100%),
+    linear-gradient(180deg, #f8f0c8 0%, #c8a868 35%, #826c3c 80%, #201810 100%);
+  box-shadow: inset 0 2px 0 #fffbe0, 0 6px 14px rgba(0,0,0,.55);
+}
+.cab-key {
+  appearance: none; border: 0; cursor: pointer; position: relative; min-width: 0;
+  height: 58px; padding: 3px; border-radius: 9px;
+  background: linear-gradient(180deg, #a88048, #986030);
+  box-shadow: 0 0 0 1px #5d472d, 0 4px 0 #3b2a14, 0 6px 8px rgba(0,0,0,.45);
   transition: transform .06s ease, box-shadow .06s ease;
   -webkit-tap-highlight-color: transparent; touch-action: manipulation;
 }
-.cab-btn-cap {
-  --cap: #e01a20; --cap-hi: #ff9a8a; --cap-lo: #6a0508; --cap-glow: rgba(255,60,40,.55);
-  display: grid; place-items: center; height: 100%; border-radius: 8px; padding: 0 2px;
-  background: radial-gradient(ellipse at 50% 22%, var(--cap-hi) 0%, var(--cap) 52%, var(--cap-lo) 100%);
-  box-shadow: inset 0 2px 0 rgba(255,255,255,.6), inset 0 -5px 8px rgba(0,0,0,.35), 0 0 12px var(--cap-glow);
-  color: #fff; font: 900 11px/1.05 ui-sans-serif, system-ui, sans-serif; letter-spacing: .06em; text-transform: uppercase; text-align: center;
-  text-shadow: 0 1px 1px rgba(0,0,0,.65);
+.cab-key-cap {
+  display: grid; place-items: center; height: 100%; border-radius: 7px; padding: 0 2px;
+  background: linear-gradient(180deg, #f8f8f0 0%, #e6e2c6 55%, #d0c8a8 100%);
+  box-shadow: inset 0 2px 0 #fff, inset 0 -4px 0 rgba(120,100,60,.35);
+  color: #111; font: 900 12px/1.05 "Arial Rounded MT Bold", var(--st-body, system-ui), sans-serif; letter-spacing: .04em; text-transform: uppercase; text-align: center;
 }
-.cab-btn-amber .cab-btn-cap { --cap: #f0a000; --cap-hi: #fff0a0; --cap-lo: #7a4a00; --cap-glow: rgba(255,180,40,.55); color: #2a1400; text-shadow: 0 1px 0 rgba(255,255,255,.4); }
-.cab-btn-amber.armed .cab-btn-cap { --cap: #ff6a00; --cap-hi: #ffe0a0; --cap-glow: rgba(255,120,20,.9); color: #fff; }
-.cab-btn-blue .cab-btn-cap { --cap: #1a6ae0; --cap-hi: #a8d4ff; --cap-lo: #082a6a; --cap-glow: rgba(60,140,255,.55); }
-.cab-btn-blue.on .cab-btn-cap { --cap-glow: rgba(90,170,255,.95); }
-.cab-btn-spin { height: 64px; border-radius: 16px; }
-.cab-btn-spin .cab-btn-cap { --cap: #f5c542; --cap-hi: #fffbe6; --cap-lo: #8a5a08; --cap-glow: rgba(255,200,60,.7); color: #3a0306; font-size: 17px; letter-spacing: .14em; text-shadow: 0 1px 0 rgba(255,255,255,.55); border-radius: 12px; }
-.cab-btn-spin.stop .cab-btn-cap { --cap: #e01a20; --cap-hi: #ffb0a0; --cap-lo: #6a0508; --cap-glow: rgba(255,60,40,.7); color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.6); }
-.cab-btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 #1a1a1a, 0 2px 4px rgba(0,0,0,.6); }
-.cab-btn:focus-visible { outline: 3px solid #fff3b0; outline-offset: 2px; }
-.cab-btn:disabled { cursor: not-allowed; }
-.cab-btn:disabled .cab-btn-cap { filter: saturate(.35) brightness(.55); box-shadow: inset 0 2px 0 rgba(255,255,255,.25), inset 0 -5px 8px rgba(0,0,0,.4); }
-.cab-auto-note, .cab-deck-note { margin: 8px 0 0; text-align: center; font-size: 11px; letter-spacing: .06em; color: #ddd; }
+.cab-key:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 0 0 1px #5d472d, 0 1px 0 #3b2a14, 0 2px 3px rgba(0,0,0,.45); }
+.cab-key:focus-visible { outline: 3px solid #fedd52; outline-offset: 2px; }
+.cab-key:disabled { cursor: not-allowed; }
+.cab-key:disabled .cab-key-cap { color: #8a8270; background: linear-gradient(180deg, #e0dcc8, #c8c0a0); }
+.cab-key-spin .cab-key-cap { box-shadow: inset 0 2px 0 #fff, inset 0 -4px 0 rgba(120,100,60,.35), 0 0 12px rgba(255,255,220,.75); }
+.cab-key-spin.stop .cab-key-cap { background: linear-gradient(180deg, #ffe0d8, #f0a898 60%, #d8786a); color: #4a0808; }
+.cab-key-auto.on .cab-key-cap { background: linear-gradient(180deg, #e8f4ff, #b8d8f8 60%, #88b0d8); }
+.cab-key-max.armed .cab-key-cap { background: linear-gradient(180deg, #fff6c8, #fedd52 60%, #ef9a01); }
+.cab-rocker { display: grid; grid-template-columns: 1fr 1.3fr 1fr; align-items: center; gap: 4px; min-width: 0; }
+.cab-rock {
+  appearance: none; border: 0; cursor: pointer; height: 50px; padding: 0;
+  font: 900 26px/1 system-ui, sans-serif; color: #111;
+  background: linear-gradient(180deg, #ffffff, #f4f4e4 40%, #d0cca8);
+  box-shadow: inset 0 2px 0 #fff, 0 0 0 1px #8a8670, 0 4px 0 #6a6650, 0 6px 8px rgba(0,0,0,.45);
+}
+.cab-rock-dn { clip-path: polygon(0 50%, 100% 0, 100% 100%); padding-left: 14px; border-radius: 6px; }
+.cab-rock-up { clip-path: polygon(0 0, 100% 50%, 0 100%); padding-right: 14px; border-radius: 6px; }
+.cab-rock:active:not(:disabled) { transform: translateY(3px); }
+.cab-rock:disabled { cursor: not-allowed; color: #9a9680; }
+.cab-rock:focus-visible { outline: 3px solid #fedd52; outline-offset: 2px; }
+.cab-denom {
+  display: grid; place-items: center; height: 46px; border-radius: 3px; min-width: 0; overflow: hidden; white-space: nowrap;
+  font: italic 400 clamp(16px, 3.6vw, 26px)/1 Georgia, "Times New Roman", serif; color: #111;
+  background: #fffff4; box-shadow: inset 0 0 0 1px #c8c0a0, 0 2px 0 rgba(0,0,0,.25);
+}
+.cab-auto-note, .cab-deck-note { margin: 0; padding: 8px 12px 0; text-align: center; font-size: 11px; letter-spacing: .06em; color: #ddd; }
 .cab-auto-note { color: #a8d4ff; }
-.cab-deck-note { color: #c9b98f; text-transform: uppercase; font-size: 9.5px; letter-spacing: .16em; }
+.cab-deck-note { color: #ffe9a0; text-transform: uppercase; font-size: 9.5px; letter-spacing: .14em; padding-bottom: 6px; background: #1a0a0a; }
 
 /* ---------- base ---------- */
 .cab-base {
-  margin: 10px -2px 0; padding: 6px 8px; border-radius: 8px;
+  margin: 0 -16px; padding: 6px 8px; border-radius: 0 0 6px 6px;
   display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 4px 0;
-  background: linear-gradient(180deg, #1a0103, #000); box-shadow: inset 0 0 0 1px rgba(245,197,66,.45);
-  font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,233,168,.8);
+  background: #1a0a0a; font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,233,168,.85);
 }
 .cab-base > span { display: inline-flex; align-items: center; }
 .cab-base .slot-kick-dot { display: inline-block; margin: 0 8px; }
 
-/* ---------- pull handle ---------- */
+/* ---------- pull handle (brass) ---------- */
 .cab-lever {
   --lw: 30px; --ball: 32px;
   position: absolute; top: 4%; bottom: 18%; right: calc(-1 * (var(--lw) + 22px)); width: var(--lw);
@@ -247,10 +264,10 @@
 .cab-lever-hub {
   position: absolute; bottom: -14px; left: -14px; width: calc(var(--lw) + 18px); height: 34px; z-index: 0;
   border-radius: 4px 12px 12px 4px;
-  background: linear-gradient(180deg, #fafafa, #9a9a9a 35%, #e6e6e6 55%, #5a5a5a);
-  box-shadow: inset 0 1px 0 #fff, 0 4px 8px rgba(0,0,0,.6), 0 0 0 1px #222;
+  background: linear-gradient(180deg, #f8f0c8, #c8a868 40%, #826c3c);
+  box-shadow: inset 0 1px 0 #fffbe0, 0 4px 8px rgba(0,0,0,.6), 0 0 0 1px #3b2a14;
 }
-.cab-lever-hub::after { content: ""; position: absolute; right: 7px; top: 50%; width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff, #8a8a8a 60%, #3a3a3a); box-shadow: 0 0 0 2px #444; }
+.cab-lever-hub::after { content: ""; position: absolute; right: 7px; top: 50%; width: 16px; height: 16px; margin-top: -8px; border-radius: 50%; background: radial-gradient(circle at 40% 35%, #fff, #c8a868 60%, #5d472d); box-shadow: 0 0 0 2px #5d472d; }
 .cab-lever-arm {
   appearance: none; border: 0; padding: 0; background: none; cursor: grab; touch-action: none;
   position: absolute; left: 0; right: 0; top: 0; bottom: 3px; z-index: 1;
@@ -259,7 +276,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 .cab-lever-arm:active { cursor: grabbing; }
-.cab-lever-arm:focus-visible { outline: 3px solid #fff3b0; outline-offset: 4px; border-radius: 8px; }
+.cab-lever-arm:focus-visible { outline: 3px solid #fedd52; outline-offset: 4px; border-radius: 8px; }
 .cab-lever-rod {
   position: absolute; left: 50%; bottom: 0; top: calc(var(--ball) / 2); width: 9px; margin-left: -4.5px; border-radius: 5px;
   background: linear-gradient(90deg, #4a4a4a, #f8f8f8 40%, #b0b0b0 60%, #3a3a3a);
@@ -268,91 +285,77 @@
 .cab-lever-ball {
   position: absolute; left: 50%; top: calc(var(--ball) / -2); width: var(--ball); height: var(--ball); margin-left: calc(var(--ball) / -2);
   border-radius: 50%;
-  background: radial-gradient(circle at 36% 30%, #fff 0 8%, #ff8a7a 18%, #e01a20 52%, #5a0408 100%);
+  background: radial-gradient(circle at 36% 30%, #fff 0 8%, #ff8a7a 18%, #c0201e 52%, #4b1211 100%);
   box-shadow: 0 6px 10px rgba(0,0,0,.55), inset 0 -3px 6px rgba(0,0,0,.4);
   transform: rotateX(calc(var(--pull, 0) * 160deg));
 }
-.cab-canopy ~ * .cab-lever-ball, .cab-canopy .cab-lever-ball { background: radial-gradient(circle at 36% 30%, #fff 0 8%, #b8ffd8 18%, #14a86a 52%, #03301e 100%); }
 .cab-lever.ph-fire .cab-lever-arm, .cab-lever.ph-fire .cab-lever-ball { transition: transform .17s cubic-bezier(.55, 0, .9, .45); }
 .cab-lever.ph-return .cab-lever-arm, .cab-lever.ph-return .cab-lever-ball { transition: transform .52s cubic-bezier(.3, 1.45, .5, 1); }
 .cab-lever.is-disabled .cab-lever-arm { cursor: default; }
 .cab-lever.is-disabled .cab-lever-ball { filter: saturate(.6) brightness(.85); }
 
 /* ---------- win lighting: after the result only (glow-t* is set post-settle) ---------- */
-.cab[class*="glow-t"] .cab-bulb { background: radial-gradient(circle at 40% 35%, #fff 0 25%, #fff3b0 55%, #f5c542 100%); box-shadow: 0 0 9px 3px rgba(255,220,120,.95); }
-.cab.glow-t2 .cab-strip i, .cab.glow-t3 .cab-strip i, .cab.glow-t4 .cab-strip i { opacity: 1; background: linear-gradient(90deg, rgba(255,255,255,.3), #fff3b0 50%, rgba(0,0,0,.2)); box-shadow: 0 0 10px #ffd36a; }
-.cab.glow-t3 .cab-window, .cab.glow-t4 .cab-window { box-shadow: inset 0 0 0 2px #7a4a0a, inset 0 10px 18px rgba(0,0,0,.85), 0 0 0 2px #fff3b0, 0 0 26px rgba(255,210,110,.7); }
+.cab[class*="glow-t"] .cab-bulb { background: radial-gradient(circle at 40% 35%, #fff 0 25%, #fff3b0 55%, #fedd52 100%); box-shadow: 0 0 9px 3px rgba(255,220,120,.95); }
+.cab.glow-t3 .reel, .cab.glow-t4 .reel { box-shadow: 0 0 0 1px #171817, 0 0 0 5px #fedd52, 0 0 0 6px #b86f00, 0 0 0 7px #171817, 0 0 22px rgba(254,221,82,.7), inset 0 14px 18px -8px rgba(0,0,0,.55), inset 0 -14px 18px -8px rgba(0,0,0,.55); }
 @media (prefers-reduced-motion: no-preference) {
   .cab.glow-live .cab-bulb { animation: cabWinFlash .5s steps(2) 6; }
   .cab.glow-live .cab-bulb.ph1 { animation-delay: .25s; }
-  .cab.glow-live.glow-t3 .cab-strip i, .cab.glow-live.glow-t4 .cab-strip i { animation: cabWinFlash .4s steps(2) 8; }
-  .cab.glow-live.glow-t3 .cab-strip i:nth-child(even), .cab.glow-live.glow-t4 .cab-strip i:nth-child(even) { animation-delay: .2s; }
 }
 @keyframes cabWinFlash { 50% { filter: brightness(.45); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .cab .cab-bulb, .cab .cab-strip i { animation: none !important; }
+  .cab .cab-bulb { animation: none !important; }
   .cab-lever .cab-lever-arm, .cab-lever .cab-lever-ball { transition: none !important; }
   .cab-deck { transform: none; }
 }
 
-/* ---------- desktop: let the cabinet breathe; dock sits below it ---------- */
 @media (min-width: 900px) {
-  .slot-stage-wrap, .vault-stage-wrap { max-width: 660px; }
+  .slot-stage-wrap, .vault-stage-wrap { max-width: 740px; }
 }
 
 /* ---------- phones ---------- */
 @media (max-width: 720px) {
   .cab-wrap.has-lever { padding-right: 24px; }
-  .slot-cabinet.cab { padding: 0 8px 10px; border-width: 3px; border-radius: 20px 20px 10px 10px; }
-  .cab-topper { margin: 0 -3px; }
-  .cab-crest { height: 20px; margin-top: -18px; }
-  .cab-emblem { top: -14px; }
-  .cab-pearl { width: 20px; height: 20px; }
-  .cab-sign { padding: 13px 14px 11px; border-radius: 13px; }
-  .cab-sign-kicker { font-size: 8.5px; letter-spacing: .18em; }
-  .cab-bulb { width: 6px; height: 6px; }
-  .cab-bulbs-t, .cab-bulbs-b { left: 11px; right: 11px; }
-  .cab-bulbs-t { top: 3px; } .cab-bulbs-b { bottom: 3px; }
-  .cab-bulbs-l { left: 3px; } .cab-bulbs-r { right: 3px; }
-  .cab-topper-meters { margin-top: 8px; padding: 4px; }
-  .cab-body { grid-template-columns: 6px minmax(0, 1fr) 6px; gap: 4px; margin-top: 10px; }
-  .cab-strip { padding: 2px 1px; gap: 2px; }
-  .cab-bezel { grid-template-columns: 15px minmax(0, 1fr) 15px; gap: 2px; padding: 6px 3px; border-radius: 11px; }
-  .cab .cab-window { gap: 3px; padding: 4px; border-width: 2px; background-size: calc((100% - 8px) / 5 + 3px) 100%; background-position: 2.5px 0; }
-  .cab-drum { inset: 4px; }
-  .cab-tab { width: 14px; height: 11px; font-size: 7.5px; border-radius: 3px; }
-  .cab-tab-row { gap: 1px; }
-  .cab-belly { margin-top: 9px; }
-  .cab-belly-pays { gap: 4px 10px; }
-  .cab-belly-pays li { font-size: 11px; }
+  .slot-cabinet.cab { padding: 0 10px; --cab-pitch: 16px; box-shadow: inset 7px 0 0 #614929, inset -7px 0 0 #614929, inset 8px 0 0 #f0d890, inset -8px 0 0 #f0d890, 0 0 0 2px #2a1c0c, 0 20px 40px rgba(0,0,0,.6); }
+  .cab-pill { height: 24px; padding: 0 10px; font-size: 11px; }
+  .cab-sign { margin: -10px 24px 0; padding: 14px 4px 6px; }
+  .cab-sign-kicker { font-size: 9.5px; }
+  .cab-bulb { width: 5px; height: 5px; }
+  .cab-info { margin: 4px -10px 0; font-size: 11px; padding: 4px 10px; }
+  .cab-bezel { grid-template-columns: 16px minmax(0, 1fr) 16px; gap: 3px; padding: 2px 0; }
+  .cab-bezel.single { grid-template-columns: 46px minmax(0, 1fr); }
+  .cab-bezel.single.has-side { grid-template-columns: 46px minmax(0, 1fr) 58px; gap: 6px; }
+  .cab .cab-window { gap: 6px; }
+  .cab .reel { border-width: 3px; box-shadow: 0 0 0 1px #171817, 0 0 0 3px #c9cdd2, 0 0 0 4px #6e7277, inset 0 10px 12px -6px rgba(0,0,0,.55), inset 0 -10px 12px -6px rgba(0,0,0,.55); }
+  .cab-tab { width: 15px; height: 11px; font-size: 7.5px; }
+  .cab-payline-tab { height: 24px; font-size: 8.5px; }
+  .cab-payline-tab::after { border-width: 12px 0 12px 9px; right: -9px; }
   .cab-belly-lbl { display: none; }
-  .cab-deck { margin: 10px -8px 0; padding: 10px 8px 8px; }
-  .cab-leds { gap: 4px; }
-  .cab-led { padding: 3px 5px 4px; }
-  .cab-led-lbl { font-size: 8px; letter-spacing: .12em; }
-  .cab-led-val { font-size: 14px; }
-  .cab-buttons { gap: 5px; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.35fr); }
-  .cab-btn { height: 48px; padding: 3px; border-radius: 10px; }
-  .cab-btn-cap { font-size: 9.5px; letter-spacing: .02em; border-radius: 7px; }
-  .cab-btn-spin { height: 56px; border-radius: 13px; }
-  .cab-btn-spin .cab-btn-cap { font-size: 14px; letter-spacing: .08em; }
+  .cab-deck { margin: 10px -10px 0; }
+  .cab-meters { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 6px; padding: 0 14px 10px; }
+  .cab-credits { grid-column: 1 / span 2; }
+  .cab-coin-plate { min-width: 0; height: 38px; font-size: 22px; }
+  .cab-led-val { font-size: 14px; padding: 2px 6px; }
+  .cab-led-lbl { font-size: 9px; }
+  .cab-console { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 10px; }
+  .cab-rocker { grid-column: 1 / -1; grid-row: 2; }
+  .cab-console .cab-key-spin { grid-column: span 2; }
+  .cab-key { height: 52px; }
+  .cab-key-cap { font-size: 11px; }
+  .cab-rock { height: 44px; }
+  .cab-denom { height: 40px; }
   .cab-lever { --lw: 18px; --ball: 22px; right: calc(-1 * (var(--lw) + 13px)); top: 6%; bottom: 20%; }
   .cab-lever-rod { width: 6px; margin-left: -3px; }
   .cab-lever-hub { left: -10px; width: calc(var(--lw) + 12px); height: 26px; bottom: -12px; }
   .cab-lever-hub::after { width: 10px; height: 10px; margin-top: -5px; right: 5px; }
-  .cab-base { font-size: 8px; letter-spacing: .1em; }
-  .cab-base .slot-kick-dot { margin: 0 5px; }
 }
 @media (max-width: 380px) {
   .cab-tabs { display: none; }
   .cab-bezel { grid-template-columns: minmax(0, 1fr); }
-  .cab-buttons { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .cab-btn-spin { grid-column: 1 / -1; }
 }
 
-/* Desktop: the cabinet deck is the main control surface, so the bet dock sits in the
-   page right under the cabinet (not floating over the deck). Phones keep the
+/* Desktop: the cabinet console is the main control surface, so the bet dock sits in the
+   page right under the cabinet (not floating over the console). Phones keep the
    thumb-reach fixed dock with quick-bet chips and Repeat. */
 @media (min-width: 900px) {
   .slot-page, .vault-page { display: flex; flex-direction: column; }
@@ -360,16 +363,12 @@
   .slot-page > .result-banner, .vault-page > .result-banner { order: 1; }
   .slot-page > .action-dock, .vault-page > .action-dock {
     order: 1; position: static; z-index: auto; margin-top: 14px;
-    background: linear-gradient(180deg, rgba(42,2,4,.0), rgba(42,2,4,.55)) !important;
-    border-top: 0; box-shadow: none; padding: 6px 0 4px;
+    background: transparent !important;
+    border-top: 0 !important; box-shadow: none; padding: 6px 0 4px;
   }
   .pit-shell:has(.slot-page .action-dock), .pit-shell:has(.vault-page .action-dock) { padding-bottom: 72px; }
 }
 
-/* Phones: the cabinet deck is the Spin/Bet surface, so the fixed bottom bar keeps only
-   the coin picker, Custom $ and Repeat (no second big Spin, no hint line). It is
-   compact, and the page pads by its real height (--dock-h) so the deck always
-   scrolls clear of it. */
 @media (max-width: 720px) {
   .slot-page .action-dock .btn.hero-act,
   .vault-page .action-dock .btn.hero-act.vault-spin { display: none !important; }
@@ -389,11 +388,54 @@
   .slot-page .action-dock .repeat-bet, .vault-page .action-dock .repeat-bet { min-height: 44px; flex: 0 0 auto; white-space: nowrap; }
   .pit-shell:has(.slot-page .action-dock), .pit-shell:has(.vault-page .action-dock) { padding-bottom: calc(var(--dock-h, 150px) + 16px + env(safe-area-inset-bottom, 0px)); }
   .slot-page, .vault-page { padding-bottom: 8px !important; }
-  /* the deck already carries the sandbox label; drop the duplicate footer strip */
   .cab-base { display: none; }
-  .cab-deck { margin-bottom: -10px; border-radius: 0 0 8px 8px; }
 }
 
-/* Achievement toast drops in just below the sticky top bar instead of over it. */
-.ach-toast-wrap { top: calc(52px + env(safe-area-inset-top, 0px)); }
-@media (max-width: 720px) { .ach-toast-wrap { top: calc(72px + env(safe-area-inset-top, 0px)); } }
+/* ---------- Buckshot Bars: classic 3-reel specifics ---------- */
+.cab.cab-classic .cab-window { display: block; gap: 0; padding: 0; background: transparent; border: 0; }
+.cab.cab-classic .bb-reels { width: 100%; }
+.bb-play-sign {
+  display: flex; flex-direction: column; align-items: center; padding: 6px 4px; border-radius: 8px;
+  background: #fefffe; border: 2px solid #b9b9b9; color: #ea3323; text-align: center;
+  font: 900 11px/1 "Arial Narrow", var(--st-narrow, sans-serif); text-transform: uppercase; letter-spacing: .02em;
+}
+.bb-play-sign b { font: 400 44px/1 var(--st-display, Impact, sans-serif); }
+.bb-arrow {
+  position: relative; padding: 8px 4px 34px; text-align: center; color: #1a1a1a; background: #f0be42;
+  font: 900 10px/1.15 "Arial Narrow", var(--st-narrow, sans-serif); text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, 100% 62%, 100% 62%, 50% 100%, 0 62%);
+}
+.bb-sym-svg { width: 100%; height: 100%; }
+@media (max-width: 720px) {
+  .bb-play-sign { font-size: 8.5px; padding: 4px 2px; }
+  .bb-play-sign b { font-size: 30px; }
+  .bb-arrow { font-size: 8px; padding: 6px 2px 26px; }
+}
+
+.ach-toast-wrap { top: calc(60px + env(safe-area-inset-top, 0px)); }
+@media (max-width: 720px) { .ach-toast-wrap { top: calc(64px + env(safe-area-inset-top, 0px)); } }
+
+/* Buckshot reels */
+.bb-reels { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.bb-reel {
+  position: relative; appearance: none; padding: 0; margin: 0; cursor: default; color: inherit; font: inherit;
+  height: calc(var(--bb-h) * 2.2); overflow: hidden;
+}
+.bb-reel.moving { cursor: pointer; }
+.bb-reel:disabled { opacity: 1; }
+.bb-strip { position: absolute; left: 0; right: 0; top: calc(var(--bb-h) * -0.4); display: flex; flex-direction: column; }
+.bb-strip.spin { top: 0; filter: blur(1.5px); }
+@media (prefers-reduced-motion: no-preference) {
+  .bb-strip.spin { animation: bbSpin calc(var(--bb-n) * 28ms) linear infinite; }
+  .bb-strip.settle { animation: bbSettle .22s ease-out; }
+}
+@keyframes bbSpin { from { transform: translateY(calc(var(--bb-n) * var(--bb-h) * -1)); } to { transform: translateY(0); } }
+@keyframes bbSettle { 0% { transform: translateY(-10%); } 70% { transform: translateY(2%); } 100% { transform: none; } }
+.bb-cell { display: grid; place-items: center; padding: 8% 14%; box-sizing: border-box; }
+.bb-cell .sym-face, .bb-cell .sym-icon { width: 100%; height: 100%; display: grid; place-items: center; }
+.bb-cell .sym-svg { width: 100%; height: 100%; }
+.bb-cell.tone-bb-blank .sym-face { opacity: 0; }
+@media (max-width: 720px) { .bb-reels { gap: 10px; } }
+/* bigger reel art on the video cabinets */
+.cab .sym:not(.bb-cell) .sym-icon { width: calc(var(--sym-h) * .52); height: calc(var(--sym-h) * .52); display: grid; place-items: center; }
+.cab .sym:not(.bb-cell) .sym-icon svg { width: 100%; height: 100%; }

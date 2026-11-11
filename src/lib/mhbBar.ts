@@ -1,7 +1,7 @@
 /**
  * Jackpot Desk J1 — must-hit-by (MHB) ceiling bar.
  *
- * A thin seed→ceiling progress bar under each capped Canopy Spire meter, with
+ * A thin seed→ceiling progress bar under each capped Antler Ridge meter, with
  * honest copy built from the real configured ceiling ("Hits by $1,000"). The
  * fill is only ever (current − seed) / (ceiling − seed) of the REAL meter value
  * — it is a position on a fixed range, never a prediction. The hidden trigger is

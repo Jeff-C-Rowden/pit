@@ -25,7 +25,7 @@ await click('.//button[contains(., "Skip tour")]', 3000).catch(() => {});
 for (const [w, h] of [[390, 844], [360, 780]]) {
   await p.setViewport({ width: w, height: h, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
   for (const game of ["slot", "vault"]) {
-    const name = game === "slot" ? "gilded" : "canopy";
+    const name = game === "slot" ? "sundown" : "ridge";
     await p.goto(`${BASE}/${game}`, { waitUntil: "networkidle2" }); await W(1500);
     // toast (if any) must not overlap the top bar
     const toastOk = await p.evaluate(() => {

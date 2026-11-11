@@ -172,7 +172,11 @@ export default function VaultPage() {
     [spin, showOutcome],
   );
 
+  const winRef = useRef(0);
+  const [paid, setPaid] = useState(0);
   const onSpinComplete = useCallback(() => {
+    setPaid((p) => p + winRef.current);
+    winRef.current = 0;
     setSpinning(false);
     setBusy(false);
     setShowOutcome(true);
@@ -237,6 +241,7 @@ export default function VaultPage() {
       setSpin(d.spin);
       setGrid(d.spin.grid as VsSymbol[][]);
       setLastWinCents(d.spin.winCents || 0);
+      winRef.current = d.spin.winCents || 0;
       if (d.meters) {
         if ((d.spin.progressiveHits as ProgHit[] | undefined)?.length) pendingMetersRef.current = d.meters;
         else setMeters(d.meters);
@@ -291,8 +296,8 @@ export default function VaultPage() {
         <div className="vault-page">
           <div className="vault-topbar">
             <div className="vault-title-block">
-              <p className="lede">Jade dragon progressive video slot</p>
-              <h1>Canopy Spire</h1>
+              <p className="lede">Frontier progressive video slot</p>
+              <h1>Antler Ridge</h1>
             </div>
             <div className="vault-badges">
               <span className="sandbox-chip">Sandbox</span>
@@ -318,7 +323,7 @@ export default function VaultPage() {
                 turbo={turboOn}
                 winLines={winLines}
                 topper={
-                  <CabinetTopper title="Canopy Spire" kicker="Jade dragon progressive" emblem={<span className="cab-pearl jade" />}>
+                  <CabinetTopper title="Antler Ridge" kicker="Progressive · 9 lines" info={<>All bets qualify · Coin {money(coin)} × 9 lines · 3% of each bet feeds the pots</>}>
                     <ProgressiveMeterStrip
                       meters={meters}
                       quiet={spinning || busy}
@@ -341,9 +346,14 @@ export default function VaultPage() {
                     canBetUp={coin < SLOT_COIN_MAX}
                     onBetDown={() => setCoinAndClear(stepCoin(coin, -1))}
                     onBetUp={() => setCoinAndClear(stepCoin(coin, 1))}
+                    onBetOne={() => setCoinAndClear(coin >= SLOT_COIN_MAX ? SLOT_COIN_MIN : stepCoin(coin, 1))}
                     onMax={onMaxBet}
                     maxArmed={maxArmed}
                     onSpin={onPrimary}
+                    onPayTable={() => setInfoSheet("game")}
+                    coinLabel={money(coin)}
+                    paidCents={paid}
+                    maxLabel="Max bet"
                     auto={auto}
                     note="Sandbox / test chips · no cash value · 21+"
                   />
@@ -423,7 +433,7 @@ export default function VaultPage() {
               <div className="vault-sheet panel" role="dialog" onClick={(e) => e.stopPropagation()}>
                 {infoSheet === "game" ? (
                   <>
-                    <h3>Canopy Spire</h3>
+                    <h3>Antler Ridge</h3>
                     <p className="muted">{info?.rtpPublished || info?.info?.rtpNote}</p>
                     <h4>Paytable (× coin)</h4>
                     <table className="paytable">

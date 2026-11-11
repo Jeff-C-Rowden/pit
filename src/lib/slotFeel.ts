@@ -1,4 +1,4 @@
-// Shared reel settle timings for Gilded Track + Canopy Spire.
+// Shared reel settle timings for Sundown Trail + Antler Ridge.
 // Turbo only shortens animation; outcomes still come from the server after the spin request.
 
 export const SLOT_STOP_MS_NORMAL = [2400, 3000, 3600, 4200, 4800] as const;

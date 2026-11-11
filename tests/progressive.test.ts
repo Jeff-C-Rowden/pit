@@ -17,7 +17,7 @@ import {
   rollTriggerCents,
 } from "../src/lib/progressive";
 
-describe("canopy spire progressive model", () => {
+describe("antler ridge progressive model", () => {
   it("has 4 tiers totaling 300 bps with target seeds/ceilings", () => {
     expect(VS_TIERS).toHaveLength(4);
     expect(VS_TOTAL_CONTRIBUTION_BPS).toBe(300);
