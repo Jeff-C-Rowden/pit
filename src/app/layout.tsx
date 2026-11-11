@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./dragon.css";
+import "./roulette3d.css";
 import { Cinzel } from "next/font/google";
 
 import { UserProvider } from "@/components/useUser";

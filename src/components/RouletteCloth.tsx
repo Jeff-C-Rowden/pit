@@ -2,16 +2,12 @@
 import { shouldSwallowClick } from "@/lib/tapGuard";
 import { buzz } from "@/lib/feel";
 import type React from "react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ChipStack } from "./TableUX";
 import { SeatAvatar } from "./Seating";
 import { money } from "./useUser";
-import { DIAMONDS, FPS, R_DEFLECT, type Frame, type SpinPlan } from "@/lib/games/rouletteBall";
 import { RED, WHEEL_ORDER as WHEEL, FELT_ROWS, pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
 export { RED, FELT_ROWS, pocketColor, WHEEL };
-
-/** Smooth casino spin — ball arcs then settles with the cylinder. */
-export const SPIN_MS = 3000;
 
 export type ClothBet = {
   kind: string;
@@ -35,25 +31,32 @@ function OnChip({ cents, ghost, paid }: { cents: number; ghost?: boolean; paid?:
   );
 }
 
+/** Gold marker set on the winning number after a real settled spin. */
+function Dolly() {
+  return (
+    <span className="rl-dolly" aria-hidden>
+      <svg viewBox="0 0 22 34">
+        <defs>
+          <linearGradient id="rl-dolly-au" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#fff6c4" /><stop offset="45%" stopColor="#f0c040" /><stop offset="100%" stopColor="#8a5a0c" />
+          </linearGradient>
+        </defs>
+        <ellipse cx="11" cy="30.5" rx="9.5" ry="3.2" fill="#8a5a0c" />
+        <path d="M2 29 Q2 25 6 24.5 L16 24.5 Q20 25 20 29 Z" fill="url(#rl-dolly-au)" stroke="#5a3a06" strokeWidth=".6" />
+        <path d="M7.5 24.5 C8 18 9.6 15 9.6 12 L12.4 12 C12.4 15 14 18 14.5 24.5 Z" fill="url(#rl-dolly-au)" stroke="#5a3a06" strokeWidth=".6" />
+        <circle cx="11" cy="7.5" r="5.5" fill="url(#rl-dolly-au)" stroke="#5a3a06" strokeWidth=".6" />
+        <circle cx="9.2" cy="5.8" r="1.8" fill="rgba(255,255,240,.8)" />
+      </svg>
+    </span>
+  );
+}
+
 function Diamond({ color }: { color: "red" | "black" }) {
   return (
     <span className={`rl-diamond ${color}`} aria-hidden>
       ◆
     </span>
   );
-}
-
-function sectorPath(cx: number, cy: number, r0: number, r1: number, a0deg: number, a1deg: number) {
-  const rad = (d: number) => (d * Math.PI) / 180;
-  const a0 = rad(a0deg);
-  const a1 = rad(a1deg);
-  const p = (r: number, a: number) => [cx + r * Math.cos(a), cy + r * Math.sin(a)] as const;
-  const [x0i, y0i] = p(r0, a0);
-  const [x0o, y0o] = p(r1, a0);
-  const [x1i, y1i] = p(r0, a1);
-  const [x1o, y1o] = p(r1, a1);
-  const large = a1deg - a0deg > 180 ? 1 : 0;
-  return `M ${x0i.toFixed(2)} ${y0i.toFixed(2)} L ${x0o.toFixed(2)} ${y0o.toFixed(2)} A ${r1} ${r1} 0 ${large} 1 ${x1o.toFixed(2)} ${y1o.toFixed(2)} L ${x1i.toFixed(2)} ${y1i.toFixed(2)} A ${r0} ${r0} 0 ${large} 0 ${x0i.toFixed(2)} ${y0i.toFixed(2)} Z`;
 }
 
 function LastNine({ pockets }: { pockets: string[] }) {
@@ -100,260 +103,6 @@ export function RouletteBots({
           </div>
         );
       })}
-    </div>
-  );
-}
-
-export function RouletteWheel({
-  pocket,
-  spinning,
-  plan,
-  instant = false,
-}: {
-  pocket?: string | null;
-  spinning?: boolean;
-  /** Precomputed physics run that ends in the server's pocket. */
-  plan?: SpinPlan | null;
-  /** Skip / reduced motion: jump straight to the settled frame. */
-  instant?: boolean;
-}) {
-  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, "");
-  const n = WHEEL.length;
-  const slice = 360 / n;
-  const cylRef = useRef<HTMLDivElement | null>(null);
-  const ballRef = useRef<SVGCircleElement | null>(null);
-  const shadowRef = useRef<SVGCircleElement | null>(null);
-  const cx = 220;
-  const cy = 220;
-  const r0 = 72;
-  const r1 = 188;
-
-  useEffect(() => {
-    if (!plan) return;
-    const draw = (f: Frame | undefined) => {
-      if (!f) return;
-      if (cylRef.current) cylRef.current.style.transform = `rotate(${f.rotor.toFixed(3)}deg)`;
-      const a = (f.ball * Math.PI) / 180;
-      const x = cx + f.r * Math.sin(a);
-      const y = cy - f.r * Math.cos(a);
-      const lift = Math.min(f.lift, 14);
-      if (ballRef.current) {
-        ballRef.current.setAttribute("cx", x.toFixed(2));
-        ballRef.current.setAttribute("cy", (y - lift * 0.6).toFixed(2));
-        ballRef.current.setAttribute("r", (7 + lift * 0.08).toFixed(2));
-      }
-      if (shadowRef.current) {
-        shadowRef.current.setAttribute("cx", (x + 1.5 + lift * 0.3).toFixed(2));
-        shadowRef.current.setAttribute("cy", (y + 2 + lift * 0.3).toFixed(2));
-        shadowRef.current.setAttribute("opacity", (0.5 - lift * 0.02).toFixed(2));
-      }
-    };
-    const frames = plan.frames;
-    if (instant || !spinning) { draw(frames[frames.length - 1]!); return; }
-    let raf = 0;
-    const t0 = performance.now();
-    const tick = (now: number) => {
-      const i = Math.min(frames.length - 1, Math.floor(((now - t0) / 1000) * FPS));
-      draw(frames[i]!);
-      if (i < frames.length - 1) raf = requestAnimationFrame(tick);
-    };
-    draw(frames[0]!);
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [plan, instant, spinning]);
-
-  const settled = !spinning && !!pocket;
-
-  return (
-    <div
-      className={`rl-wheel-scene ${spinning ? "spinning" : ""} ${settled ? "settled" : ""} ${instant ? "instant" : ""}`}
-    >
-      <div className="rl-bowl">
-        <svg viewBox="0 0 440 440" className="rl-bowl-svg" aria-hidden>
-          <defs>
-            <radialGradient id={`wood${uid}`} cx="36%" cy="28%" r="74%">
-              <stop offset="0%" stopColor="#a06840" />
-              <stop offset="22%" stopColor="#7a4a2c" />
-              <stop offset="48%" stopColor="#4a2818" />
-              <stop offset="72%" stopColor="#1e100a" />
-              <stop offset="100%" stopColor="#3a2214" />
-            </radialGradient>
-            <linearGradient id={`brass${uid}`} x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="#f5e6c0" />
-              <stop offset="35%" stopColor="#d4b24a" />
-              <stop offset="70%" stopColor="#a07818" />
-              <stop offset="100%" stopColor="#6a4a0c" />
-            </linearGradient>
-            <radialGradient id={`groove${uid}`} cx="50%" cy="48%" r="52%">
-              <stop offset="70%" stopColor="#0c0806" />
-              <stop offset="82%" stopColor="#2a1810" />
-              <stop offset="90%" stopColor="#120c08" />
-              <stop offset="100%" stopColor="#241610" />
-            </radialGradient>
-            <radialGradient id={`rimShine${uid}`} cx="30%" cy="22%" r="70%">
-              <stop offset="0%" stopColor="rgba(255,220,170,.22)" />
-              <stop offset="45%" stopColor="rgba(255,220,170,0)" />
-              <stop offset="100%" stopColor="rgba(0,0,0,.35)" />
-            </radialGradient>
-          </defs>
-          <circle cx="220" cy="220" r="218" fill={`url(#wood${uid})`} />
-          <circle cx="220" cy="220" r="218" fill={`url(#rimShine${uid})`} />
-          <circle cx="220" cy="220" r="204" fill="none" stroke={`url(#brass${uid})`} strokeWidth="12" />
-          <circle cx="220" cy="220" r="194" fill="none" stroke="#8a6a20" strokeWidth="1.5" opacity="0.7" />
-          <circle cx="220" cy="220" r="192" fill={`url(#groove${uid})`} />
-          <circle cx="220" cy="220" r="186" fill="none" stroke="#e8d5a3" strokeWidth="2.2" opacity="0.75" />
-          <circle cx="220" cy="220" r="64" fill="#0a0604" />
-          {/* frets shadow ring */}
-          <circle cx="220" cy="220" r="76" fill="none" stroke="rgba(0,0,0,.45)" strokeWidth="8" />
-        </svg>
-
-        <div
-          className="rl-cylinder"
-          ref={cylRef}
-        >
-          <svg viewBox="0 0 440 440" className="rl-wheel" aria-hidden>
-            <defs>
-              <linearGradient id={`pocketRed${uid}`} x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#d42832" />
-                <stop offset="55%" stopColor="#9a1218" />
-                <stop offset="100%" stopColor="#5c0a0e" />
-              </linearGradient>
-              <linearGradient id={`pocketBlk${uid}`} x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#2a2a2a" />
-                <stop offset="55%" stopColor="#121212" />
-                <stop offset="100%" stopColor="#050505" />
-              </linearGradient>
-              <linearGradient id={`pocketGrn${uid}`} x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#1a9a52" />
-                <stop offset="55%" stopColor="#0c6a34" />
-                <stop offset="100%" stopColor="#064020" />
-              </linearGradient>
-            </defs>
-            {WHEEL.map((p, i) => {
-              const a0 = i * slice - 90;
-              const a1 = (i + 1) * slice - 90;
-              const col = pocketColor(p);
-              const fill =
-                col === "green"
-                  ? `url(#pocketGrn${uid})`
-                  : col === "red"
-                    ? `url(#pocketRed${uid})`
-                    : `url(#pocketBlk${uid})`;
-              const mid = ((i * slice + slice / 2 - 90) * Math.PI) / 180;
-              const tx = cx + 132 * Math.cos(mid);
-              const ty = cy + 132 * Math.sin(mid);
-              const fret0 = (a0 * Math.PI) / 180;
-              const fx0 = cx + r0 * Math.cos(fret0);
-              const fy0 = cy + r0 * Math.sin(fret0);
-              const fx1 = cx + r1 * Math.cos(fret0);
-              const fy1 = cy + r1 * Math.sin(fret0);
-              return (
-                <g key={p + i}>
-                  <path d={sectorPath(cx, cy, r0, r1, a0, a1)} fill={fill} stroke="#0a0604" strokeWidth="0.4" />
-                  <line
-                    x1={fx0.toFixed(2)}
-                    y1={fy0.toFixed(2)}
-                    x2={fx1.toFixed(2)}
-                    y2={fy1.toFixed(2)}
-                    stroke="#f0e0b0"
-                    strokeWidth="1.35"
-                    opacity="0.9"
-                  />
-                  <text
-                    x={tx.toFixed(2)}
-                    y={ty.toFixed(2)}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill="#f8f0e0"
-                    fontSize={p.length > 1 ? 12 : 14}
-                    fontWeight="800"
-                    style={{ textShadow: "0 1px 2px rgba(0,0,0,.6)" }}
-                    transform={`rotate(${i * slice + slice / 2}, ${tx.toFixed(2)}, ${ty.toFixed(2)})`}
-                  >
-                    {p}
-                  </text>
-                </g>
-              );
-            })}
-            <circle cx="220" cy="220" r="72" fill="none" stroke="#c9a227" strokeWidth="3.5" />
-            <circle cx="220" cy="220" r="68" fill="none" stroke="#e8d5a3" strokeWidth="1" opacity="0.4" />
-          </svg>
-        </div>
-
-        <div className="rl-hub" aria-hidden>
-          <svg viewBox="0 0 440 440">
-            <defs>
-              <radialGradient id={`cap${uid}`} cx="38%" cy="32%" r="68%">
-                <stop offset="0%" stopColor="#4a3424" />
-                <stop offset="55%" stopColor="#1a120c" />
-                <stop offset="100%" stopColor="#080604" />
-              </radialGradient>
-              <linearGradient id={`hubBrass${uid}`} x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#f0e0b0" />
-                <stop offset="50%" stopColor="#c9a227" />
-                <stop offset="100%" stopColor="#7a5a10" />
-              </linearGradient>
-            </defs>
-            {DIAMONDS.map((d) => {
-              const a = (d * Math.PI) / 180;
-              const x = 220 + R_DEFLECT * Math.sin(a);
-              const y = 220 - R_DEFLECT * Math.cos(a);
-              return (
-                <polygon
-                  key={d}
-                  points="0,-7 3.2,0 0,7 -3.2,0"
-                  transform={`translate(${x.toFixed(2)} ${y.toFixed(2)}) rotate(${d})`}
-                  fill={`url(#hubBrass${uid})`}
-                  stroke="#5a400c"
-                  strokeWidth="0.8"
-                />
-              );
-            })}
-            <circle cx="220" cy="220" r="64" fill={`url(#cap${uid})`} stroke={`url(#hubBrass${uid})`} strokeWidth="4.5" />
-            <circle cx="220" cy="220" r="52" fill="none" stroke="#e8d5a3" strokeWidth="1.2" opacity="0.5" />
-            <circle cx="220" cy="220" r="18" fill={`url(#hubBrass${uid})`} opacity="0.95" />
-            <circle cx="220" cy="220" r="10" fill="#1a120c" />
-            <text x="220" y="208" textAnchor="middle" fill="#c9a227" fontSize="18" letterSpacing="5" fontFamily="Palatino, Georgia, serif">
-              PIT
-            </text>
-            <text x="220" y="228" textAnchor="middle" fill="#e8d5a3" fontSize="11" letterSpacing="1.6">
-              AMERICAN
-            </text>
-          </svg>
-        </div>
-
-        <svg viewBox="0 0 440 440" className="rl-ball-layer" aria-hidden style={{ visibility: plan ? "visible" : "hidden" }}>
-          <defs>
-            <radialGradient id={`ivory${uid}`} cx="34%" cy="30%" r="70%">
-              <stop offset="0%" stopColor="#ffffff" />
-              <stop offset="45%" stopColor="#ece4d6" />
-              <stop offset="100%" stopColor="#8f877c" />
-            </radialGradient>
-          </defs>
-          <circle ref={shadowRef} cx="220" cy="25" r="7" fill="#000" opacity="0.45" />
-          <circle ref={ballRef} cx="220" cy="23" r="7" fill={`url(#ivory${uid})`} />
-        </svg>
-
-        <div className="rl-wheel-pointer" title="Pointer">
-          <svg viewBox="0 0 28 36" width="24" height="30">
-            <polygon points="14,34 2,4 26,4" fill="#e8d5a3" stroke="#8a6a12" strokeWidth="1.4" />
-            <polygon points="14,28 8,8 20,8" fill="#c9a227" />
-          </svg>
-        </div>
-      </div>
-
-      <div className="rl-wheel-readout" aria-live="polite">
-        {settled && pocket ? (
-          <>
-            <span className={`rl-pocket-pip ${pocketColor(pocket)}`}>{pocket}</span>
-            <span className="muted">Ball</span>
-          </>
-        ) : spinning ? (
-          <span className="muted">No more bets</span>
-        ) : (
-          <span className="muted">American · 0 / 00</span>
-        )}
-      </div>
     </div>
   );
 }
@@ -454,6 +203,7 @@ export default function RouletteCloth({
 onClick={() => tap({ kind: "straight", numbers: ["00"], label: "00" })}
         >
           00
+          {hit === "00" && <Dolly />}
           <OnChip cents={onAmount("00")} paid={paidOf("00")} />
         </button>
         <button
@@ -465,6 +215,7 @@ onClick={() => tap({ kind: "straight", numbers: ["00"], label: "00" })}
 onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
         >
           0
+          {hit === "0" && <Dolly />}
           <OnChip cents={onAmount("0")} paid={paidOf("0")} />
         </button>
 
@@ -484,6 +235,7 @@ onClick={() => tap({ kind: "straight", numbers: ["0"], label: "0" })}
           onClick={() => tap({ kind: "straight", numbers: [label], label })}
               >
                 {n}
+                {hit === label && <Dolly />}
                 <OnChip cents={onAmount(label)} paid={paidOf(label)} />
               </button>
             );

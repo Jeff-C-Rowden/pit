@@ -15,12 +15,18 @@ import LiveAnnounce, { resultPhrase } from "@/components/LiveAnnounce";
 import RouletteCloth, {
   PIT_ROULETTE_BOTS,
   RouletteBots,
-  RouletteWheel,
   type ClothBet,
   type GhostChip,
 } from "@/components/RouletteCloth";
+import RouletteWheel3D from "@/components/RouletteWheel3D";
+import { SPEEDS, VIEWS, type Speed, type View } from "@/lib/games/wheel3d";
 
 const TURBO_KEY = "pit-rl-turbo";
+const OPTS_KEY = "pit-rl-table-v1";
+type Felt = "crimson" | "jade" | "slate";
+const FELTS: { id: Felt; label: string; sw: string }[] = [
+  { id: "crimson", label: "Crimson", sw: "#8a0a12" }, { id: "jade", label: "Jade", sw: "#0d5a3a" }, { id: "slate", label: "Slate", sw: "#3c5262" },
+];
 const HINT_KEY = "pit-rl-hint-v1";
 const CHIPS = [25, 100, 500, 1000, 2500];
 const HISTORY_N = 20;
@@ -39,6 +45,18 @@ function HistoryStrip({ pockets }: { pockets: string[] }) {
         if (!p) return <span key={`e${i}`} className="rl-hpip empty" />;
         return <span key={`${i}-${p}`} className={`rl-hpip ${pocketColor(p)}${i === 0 ? " newest" : ""}`}>{p}</span>;
       })}
+    </div>
+  );
+}
+
+/** Tote board: last real results, red left, black right, green centre. */
+function Tote({ pockets }: { pockets: string[] }) {
+  return (
+    <div className="rl-tote" aria-label="Last results board">
+      <div className="rl-tote-h">Last 12</div>
+      {pockets.slice(0, 12).map((p, i) => (
+        <div key={`${i}-${p}`} className={`rl-tote-row${i === 0 ? " newest" : ""}`}><span className={pocketColor(p)}>{p}</span></div>
+      ))}
     </div>
   );
 }
@@ -124,13 +142,22 @@ export default function RoulettePage() {
   const [customOpen, setCustomOpen] = useState(false);
   const [customVal, setCustomVal] = useState("");
 
-  const [turbo, setTurbo] = useState(false);
+  const [speed, setSpeed] = useState<Speed>("regular");
+  const [seat, setSeat] = useState<View>("rail"); // camera seat
+  const [felt, setFelt] = useState<Felt>("crimson");
+  const turbo = speed !== "regular";
   const [reduced, setReduced] = useState(false);
   const [skipped, setSkipped] = useState(false);
   const skipRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
-    try { setTurbo(localStorage.getItem(TURBO_KEY) === "1"); } catch { /* ignore */ }
+    try {
+      const o = JSON.parse(localStorage.getItem(OPTS_KEY) || "null") as { speed?: Speed; view?: View; felt?: Felt } | null;
+      if (o?.speed && SPEEDS.some((x) => x.id === o.speed)) setSpeed(o.speed);
+      else if (localStorage.getItem(TURBO_KEY) === "1") setSpeed("fast");
+      if (o?.view && VIEWS.some((x) => x.id === o.view)) setSeat(o.view);
+      if (o?.felt && FELTS.some((x) => x.id === o.felt)) setFelt(o.felt);
+    } catch { /* ignore */ }
     const mq = window.matchMedia?.("(prefers-reduced-motion: reduce)");
     if (mq) { setReduced(mq.matches); mq.addEventListener?.("change", (e) => setReduced(e.matches)); }
     api("/api/games/roulette/history").then((d) => { if (Array.isArray(d.pockets)) setHistory(d.pockets); }).catch(() => {});
@@ -160,8 +187,8 @@ export default function RoulettePage() {
 
   useEffect(() => {
     if (!hydrated) return;
-    try { localStorage.setItem(TURBO_KEY, turbo ? "1" : "0"); } catch { /* ignore */ }
-  }, [turbo, hydrated]);
+    try { localStorage.setItem(OPTS_KEY, JSON.stringify({ speed, view: seat, felt })); } catch { /* ignore */ }
+  }, [speed, seat, felt, hydrated]);
 
   function waitSpin(ms: number) {
     return new Promise<void>((resolve) => {
@@ -258,7 +285,7 @@ export default function RoulettePage() {
       setPlan(p);
       setSpinning(true);
       playSpin();
-      await waitSpin(reduced ? 0 : p.durationMs);
+      await waitSpin(reduced || speed === "instant" ? 0 : p.durationMs);
       setSpinning(false);
       setSpin(d.spin);
       setHistory(Array.isArray(d.history) ? d.history : (h) => [d.spin.pocket, ...h].slice(0, HISTORY_N));
@@ -284,11 +311,13 @@ export default function RoulettePage() {
   const displayPocket = spinning ? livePocket : (spin?.pocket ?? livePocket);
   const lastWin = spin && !spinning ? net : null;
   const colorName = (p: string) => (pocketColor(p) === "green" ? "green" : pocketColor(p));
+  const instant = reduced || skipped || speed === "instant";
+  const dealerCall = spinning ? "No more bets" : displayPocket && plan ? `${displayPocket} ${colorName(displayPocket)}` : "Place your bets";
 
   return (
     <Shell>
       {(u) => (
-        <div className={`roulette-page rl-ux${spinning ? " is-spinning" : ""}`}>
+        <div className={`roulette-page rl-ux${spinning ? " is-spinning" : ""}${instant || seat === "bird" ? " rl-instant" : ""}`} data-view={seat} data-felt={felt}>
           <div className="rl-chrome">
             <div className="rl-chrome-title">American Roulette · 0 / 00</div>
             <div className="rl-chrome-meta"><span className="rl-sandbox-tag">Sandbox chips · 21+</span> · Not real money</div>
@@ -315,7 +344,10 @@ export default function RoulettePage() {
           <div className="rl-stage">
             <div className="rl-star" ref={wheelRef}>
               <div className="rl-wheel-wrap">
-                <RouletteWheel pocket={displayPocket} spinning={spinning} plan={plan} instant={reduced || skipped} />
+                <div className="rl-wheel-row">
+                  <RouletteWheel3D pocket={displayPocket} spinning={spinning} plan={plan} instant={instant} view={seat} reduced={reduced} call={dealerCall} />
+                  <Tote pockets={history} />
+                </div>
                 {spin && !spinning && tone && !spin.replay && (
                   <div className={`rl-result rl-result-ov ${tone}`}>
                     <span className={`rl-pocket-pip ${pocketColor(spin.pocket)}`}>{spin.pocket}</span>
@@ -348,12 +380,34 @@ export default function RoulettePage() {
                 </ReplayCard>
               )}
               <div className="rl-tools">
-                <label className="rl-toggle"><input type="checkbox" checked={turbo} onChange={(e) => setTurbo(e.target.checked)} /> Turbo spin</label>
+                <details className="rl-opts">
+                  <summary aria-label="Table options: view, game speed and felt colour">⚙ Options</summary>
+                  <div className="rl-opts-panel">
+                    <div className="rl-opt-group" role="group" aria-label="Table view">
+                      <span className="rl-opt-lab">View</span>
+                      <div className="rl-seg">{VIEWS.map((v) => <button key={v.id} type="button" title={v.hint} aria-pressed={seat === v.id} onClick={() => setSeat(v.id)}>{v.label}</button>)}</div>
+                    </div>
+                    <div className="rl-opt-group" role="group" aria-label="Game speed">
+                      <span className="rl-opt-lab">Game speed</span>
+                      <div className="rl-seg">{SPEEDS.map((v) => <button key={v.id} type="button" aria-pressed={speed === v.id} onClick={() => setSpeed(v.id)}>{v.label}</button>)}</div>
+                    </div>
+                    <div className="rl-opt-group" role="group" aria-label="Felt colour">
+                      <span className="rl-opt-lab">Felt</span>
+                      <div className="rl-seg">{FELTS.map((v) => <button key={v.id} type="button" aria-pressed={felt === v.id} onClick={() => setFelt(v.id)}><span className="sw" style={{ background: v.sw }} />{v.label}</button>)}</div>
+                    </div>
+                    <p className="muted" style={{ margin: 0, fontSize: 12 }}>Speed and view only change the animation. The server picks every result before the ball is shown.</p>
+                  </div>
+                </details>
                 {reduced && <span className="muted">Reduced motion: results show instantly</span>}
               </div>
             </div>
             <div className="marquee-felt rl-felt-wrap" ref={feltRef}>
 <TableNameplate name="Roulette" sub="Double zero · 38 pockets" />
+              <div className="rl-betbar">
+                <button type="button" className="rl-lacq" onClick={() => { setBets([]); setRemoveMode(false); }} disabled={busy || !bets.length}>Clear all bets</button>
+                <button type="button" className="rl-lacq" onClick={repeat} disabled={busy || !!bets.length || !lastStake.length}>Rebet</button>
+                <span className="rl-total">Total bets<b>{money(stake)}</b></span>
+              </div>
               <RouletteCloth
                 onAdd={add}
                 onRemove={remove}
@@ -391,7 +445,7 @@ export default function RoulettePage() {
               <>
                 <PauseStatus />
                 <div className="rl-dock-chips" role="group" aria-label="Chip value">
-                  <span className="rl-dock-lab">Chip<b>{money(chip)}</b></span>
+                  <span className="rl-cash">Cash<b>{money(u.balanceCents)}</b></span>
                   {CHIPS.map((c) => (
                     <Chip key={c} cents={c} size={44} selected={chip === c} onClick={() => { setChip(c); setRemoveMode(false); setCustomOpen(false); }} label={`Chip value ${money(c)}`} />
                   ))}
