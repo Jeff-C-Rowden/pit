@@ -3,7 +3,7 @@ export type LobbyGame = { href: string; name: string; meta: string; line: string
 
 export const RECENT_KEY = "pit.recentGames.v1";
 export const RECENT_MAX = 3;
-export const GAME_PATHS = ["/blackjack", "/slot", "/vault", "/buckshot", "/bounty", "/mine", "/prairie", "/holdem", "/roulette", "/craps", "/paigow"];
+export const GAME_PATHS = ["/blackjack", "/slot", "/vault", "/buckshot", "/bounty", "/mine", "/prairie", "/clover", "/holdem", "/roulette", "/craps", "/paigow"];
 
 const norm = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z0-9 ]+/g, " ").replace(/\s+/g, " ").trim();
 

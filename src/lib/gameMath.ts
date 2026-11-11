@@ -118,6 +118,30 @@ export const PRAIRIE_MATH = {
 
 export const PRAIRIE_FEATURE_LINE = `Free spins about 1 in ${Math.round(1 / PRAIRIE_MATH.freeSpinsChance)} spins · Hold & Spin about 1 in ${Math.round(1 / PRAIRIE_MATH.holdChance)} spins`;
 
+/**
+ * Frozen Kettle of Clover figures. RTP, feature chances and SD are exact (cloverExactFull: closed-form lines,
+ * two 30^5 enumerations (base; free spins with expanding wilds), retrigger moment DP and exact wheel moments);
+ * winRate is from the seeded 10M-spin Monte Carlo in audit/clover.ts. Locked in tests/clover.test.ts.
+ */
+export const CLOVER_MATH = {
+  rtp: 0.953549,
+  baseRtp: 0.654471, // lines 63.58% + kettle scatter pays 1.87%
+  lineRtp: 0.635771,
+  scatterRtp: 0.0187,
+  freeSpinsRtp: 0.173383,
+  wheelRtp: 0.125695,
+  sdPerUnit: 4.21078,
+  hitRate: 0.414959,
+  winRate: 0.169437,
+  freeSpinsChance: 0.00856,
+  wheelChance: 0.008,
+  freeSpinsPerFeature: 8.718841,
+  freeSpinFeatureX: 20.25505,
+  wheelExpectedX: 15.71189,
+} as const;
+
+export const CLOVER_FEATURE_LINE = `Free spins about 1 in ${Math.round(1 / CLOVER_MATH.freeSpinsChance)} spins · Rainbow Wheel about 1 in ${Math.round(1 / CLOVER_MATH.wheelChance)} spins`;
+
 export const TABLE_MATH = {
   blackjack: { edge: 0.00405, sdPerUnit: 1.15 },
   paigow: { edge: 0.0285, sdPerUnit: 0.79 },
@@ -184,6 +208,16 @@ const GAMES: Record<string, GameMath> = {
     volatility: "Medium",
     sdPerUnit: PRAIRIE_MATH.sdPerUnit,
     line: slotLine("95.25%", "Medium", "features included", winsAbout(PRAIRIE_MATH.winRate)),
+    tip: TIP,
+    filterBuckets: ["Medium"],
+  },
+  clover: {
+    id: "clover",
+    href: "/clover",
+    rtpLine: "RTP 95.35%",
+    volatility: "Medium",
+    sdPerUnit: CLOVER_MATH.sdPerUnit,
+    line: slotLine("95.35%", "Medium", "features included", winsAbout(CLOVER_MATH.winRate)),
     tip: TIP,
     filterBuckets: ["Medium"],
   },

@@ -62,8 +62,8 @@ function SoundToggle() {
   );
 }
 
-const STORY_PATHS = ["/stories", "/mine", "/prairie"];
-const GAME_PATHS = ["/blackjack", "/slot", "/vault", "/buckshot", "/bounty", "/mine", "/prairie", "/holdem", "/roulette", "/craps", "/paigow"];
+const STORY_PATHS = ["/stories", "/mine", "/prairie", "/clover"];
+const GAME_PATHS = ["/blackjack", "/slot", "/vault", "/buckshot", "/bounty", "/mine", "/prairie", "/clover", "/holdem", "/roulette", "/craps", "/paigow"];
 
 const ico = (d: string) => <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d={d} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 const ICONS = {

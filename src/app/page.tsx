@@ -76,6 +76,7 @@ function Gate() {
           ["Sundown Trail", "Five-reel video slot"],
           ["Canary Creek Mine", "Story slot · free spins · pick bonus"],
           ["Thunderhoof Prairie", "Story slot · 243 ways · Hold & Spin"],
+          ["Kettle of Clover", "Story slot · Rainbow Wheel · free spins"],
           ["Antler Ridge", "4-tier progressive"],
           ["Hold'em", "Heads-up vs the house"],
           ["Roulette", "American 0 / 00"],

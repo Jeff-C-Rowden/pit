@@ -279,3 +279,23 @@ Free spins and Hold & Spin cannot trigger on the same spin (a storm window on an
 so 3 storm reels leave at most 4 coins); the code still handles both. Max observed return in 10M spins:
 2,586× bet. 219 full screens, 29,077 MINI / 7,675 MINOR / 1,999 MAJOR coins landed in Hold & Spin.
 Feature cap never reached. Theoretical top free-spin line: 5 buffalo reels through three 3× wilds.
+
+## Kettle of Clover (story slot #3) — 11 Nov 2026
+
+Name check: web searches for "Kettle of Clover" slot / casino game found no existing title (only unrelated pages). Original character (Orla Tully, leprechaun cobbler, and Bramble the hare) and original SVG art; no third-party branding.
+
+Mechanics: 5×3, 10 fixed lines, bet = coin × 10, 30-stop strips with uniform stops (server `crypto` RNG). WILD clover on reels 2–4; KETTLE scatter once per strip; RAINBOW bridge twice on reels 1, 3, 5 (never two in one window). 3/4/5 kettles pay 2/5/25× bet and award 8/10/15 free spins (retrigger, cap 100). In free spins any wild on reels 2–4 expands to fill the reel. Rainbow on reels 1+3+5 spins the Rainbow Wheel: 12 uniform wedges (credits 5–20×, 10 free spins, UPGRADE); the upgrade spins the 12-wedge Pot-of-Gold wheel (credits 25–250×, 20 free spins). Wedges are drawn on the server in `playClover` and paid in the same ledger transaction as the bet; the client animation is driven by `spin.wheel.inner/outer` (`landingRotation` / `wedgeAtPointer` round-trip locked in tests). The wheel and kettle free spins cannot trigger on the same spin (a rainbow reel never shows a kettle, so at most 2 kettles).
+
+Exact (`cloverExactFull`, two full 30^5 enumerations, closed-form line check per (reel,row) law, free-spin retrigger moment DP, exact wheel moments):
+
+| Part | RTP |
+|---|---|
+| Lines (base) | 63.5771% |
+| Kettle scatter pays | 1.8700% |
+| Kettle free spins | 17.3383% |
+| Rainbow Wheel (incl. wheel free spins) | 12.5695% |
+| **Total** | **95.3549%** |
+
+SD 4.2108 per unit bet → Medium. Hit rate 41.50% (any return), free spins 1 in 116.8 (0.856%), wheel 1 in 125 (0.8%), 8.72 free spins and 20.26× bet per kettle feature, wheel mean 15.71× bet, upgrade 1/12, wheel free spins 9.03%.
+
+Seeded Monte Carlo (audit/clover.ts, seeds 1–8 × 1.25M = 10M spins of the production `playClover`): RTP 95.361% ± 0.261% (95% CI), SD 4.2117, base 65.446%, free spins 17.390%, wheel 12.526%, hit 41.48%, win (net > bet) 16.94% ≈ 1 in 6, free spins 1 in 116.8, wheel 1 in 125.3, 8.73 spins/feature, upgrade share 8.26%, wheel-FS share 8.89%, cap never hit, max 330.2× bet.

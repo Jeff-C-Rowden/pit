@@ -5,13 +5,19 @@ import GameArt from "@/components/GameArt";
 import { MathStrip } from "@/components/VolatilityMeter";
 import { ClemPortrait } from "@/components/MineSymbols";
 import { AdaPortrait } from "@/components/PrairieSymbols";
-import { MINE_FEATURE_LINE, PRAIRIE_FEATURE_LINE } from "@/lib/gameMath";
+import { OrlaPortrait } from "@/components/CloverSymbols";
+import { MINE_FEATURE_LINE, PRAIRIE_FEATURE_LINE, CLOVER_FEATURE_LINE } from "@/lib/gameMath";
 
 const STORIES = [
   {
+    href: "/clover", art: "clover", name: "Kettle of Clover", who: "Orla Tully, leprechaun cobbler, and Bramble the hare", Portrait: OrlaPortrait,
+    blurb: "10 lines. Three rainbow bridges spin the Rainbow Wheel (credits, free spins, or an upgrade to the Pot-of-Gold wheel); kettles bring free spins with expanding clover wilds.",
+    feature: CLOVER_FEATURE_LINE, isNew: true,
+  },
+  {
     href: "/prairie", art: "prairie", name: "Thunderhoof Prairie", who: "Ada Thornbury, storm-chasing ranch hand", Portrait: AdaPortrait,
     blurb: "243 ways. Storm clouds bring free spins where every wild carries 2× or 3×; six gold herd coins start a Hold & Spin round-up.",
-    feature: PRAIRIE_FEATURE_LINE, isNew: true,
+    feature: PRAIRIE_FEATURE_LINE, isNew: false,
   },
   {
     href: "/mine", art: "mine", name: "Canary Creek Mine", who: "Clem Hollis and Pip the canary", Portrait: ClemPortrait,

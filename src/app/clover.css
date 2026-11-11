@@ -1,0 +1,51 @@
+/* Kettle of Clover: glen-green cabinet, expanding clover reels, Rainbow Wheel. Original art. */
+.slot-cabinet.cab.cab-clover { --cab-green: #0a2a14; --cab-green-hi: #2fa84f; --cab-stripe: #134a24; }
+.cab-clover .cab-sign-title { -webkit-text-stroke-color: #0a2a14; filter: drop-shadow(0 3px 0 #0a2a14) drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+.cab-clover.cl-free { --cab-green: #1a1046; --cab-green-hi: #7a4ab8; --cab-stripe: #2a1a5a; }
+.cab-clover .reel { position: relative; background: linear-gradient(180deg, #f2f7e6, #dcebc6 50%, #f2f7e6); }
+.cab-clover.cl-free .reel { background: linear-gradient(180deg, #eee8fa, #d6cdef 50%, #eee8fa); }
+.cab-clover .sym .sym-label { color: #10301a; text-shadow: none; }
+
+.cl-expand {
+  position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  background: radial-gradient(120% 70% at 50% 50%, #2fa84f, #0f4a24 80%); border: 3px solid #fedd52; border-radius: 6px;
+  transform-origin: 50% 50%; animation: cl-grow .45s cubic-bezier(.2,1.3,.4,1) both;
+}
+.cl-expand-art { width: 78%; aspect-ratio: 1; line-height: 0; }
+.cl-expand-art svg { width: 100%; height: 100%; }
+.cl-expand-label { font: 400 clamp(11px, 2vw, 15px)/1 var(--st-display, Impact), sans-serif; color: #fedd52; letter-spacing: .06em; }
+@keyframes cl-grow { from { transform: scaleY(.33); opacity: .4; } to { transform: scaleY(1); opacity: 1; } }
+
+@keyframes cl-flash { 0%, 100% { filter: none; transform: scale(1); } 50% { filter: drop-shadow(0 0 10px #ffd23a) brightness(1.35); transform: scale(1.1); } }
+.cl-trig-fs .sym.tone-cl-kettle .sym-icon, .cl-trig-wheel .sym.tone-cl-rainbow .sym-icon { animation: cl-flash .5s ease-in-out 4; }
+.cl-trig .sym.win { outline: 3px solid #ffd23a; outline-offset: -3px; border-radius: 6px; }
+.cl-trigger .mine-trigger-card { background: radial-gradient(120% 120% at 50% 0%, #2fa84f, #0a2414 70%); }
+.cl-trigger-wheel .mine-trigger-card { background: radial-gradient(120% 120% at 50% 0%, #7a4ab8, #1a1046 70%); }
+.cl-fs-bar { background: linear-gradient(180deg, #2a1a5a, #1a1046); }
+.cl-modal .mine-modal-card { background: radial-gradient(130% 90% at 50% 0%, #1f5a32, #071a0e 75%); }
+.cl-story .cl-orla { display: block; margin: 0 auto 6px; }
+
+/* Rainbow Wheel */
+.cl-wheel-card { width: min(440px, 100%); }
+.cl-wheel { position: relative; width: min(320px, 82vw); aspect-ratio: 1; margin: 8px auto 6px; }
+.cl-wheel-outer, .cl-wheel-inner { position: absolute; inset: 0; transform-origin: 50% 50%; will-change: transform; border-radius: 50%; overflow: hidden; pointer-events: none; }
+/* the rotated square layers must never cover the buttons below the wheel */
+.cl-wheel-card .btn { position: relative; z-index: 4; }
+.cl-wheel-outer { opacity: .45; filter: saturate(.5); transition: opacity .3s; }
+.cl-wheel.outer-live .cl-wheel-outer { opacity: 1; filter: none; }
+.cl-wheel-pointer {
+  position: absolute; left: 50%; top: -6px; z-index: 3; width: 0; height: 0; transform: translateX(-50%);
+  border-left: 13px solid transparent; border-right: 13px solid transparent; border-top: 26px solid #fff1a8;
+  filter: drop-shadow(0 2px 0 #1a0e04) drop-shadow(0 0 6px rgba(254,221,82,.8));
+}
+.cl-wheel-hub {
+  position: absolute; left: 50%; top: 50%; z-index: 2; width: 54px; height: 54px; margin: -27px 0 0 -27px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 30px; color: #2fa84f; background: radial-gradient(circle, #fff1a8, #b86f00); border: 3px solid #1a0e04;
+}
+.cl-wheel-status p { margin: 6px 0; font-size: 14px; line-height: 1.4; }
+.cl-wheel-res { font: 400 22px/1.15 var(--st-display, Impact), sans-serif !important; color: #fedd52; }
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-trig-fs .sym.tone-cl-kettle .sym-icon, .cl-trig-wheel .sym.tone-cl-rainbow .sym-icon, .cl-expand { animation: none !important; }
+  .cl-wheel-outer, .cl-wheel-inner { transition: none !important; }
+}
