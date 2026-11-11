@@ -69,6 +69,7 @@ export function ensureHitsTable(db: Database.Database = getDb()) {
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_progressive_hits_at ON progressive_hits(created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_progressive_hits_tier_at ON progressive_hits(tier_id, created_at DESC);
   `);
 }
 
@@ -254,6 +255,10 @@ export function getRecentProgressiveHits(
     )
     .all(cap) as ProgressiveHitRow[];
 
+  return toPublicHits(db, rows);
+}
+
+function toPublicHits(db: Database.Database, rows: ProgressiveHitRow[]): RecentHitPublic[] {
   const hasUsers = Boolean(
     db.prepare("SELECT 1 AS ok FROM sqlite_master WHERE type = 'table' AND name = 'users'").get(),
   );
@@ -274,4 +279,30 @@ export function getRecentProgressiveHits(
     at: r.created_at,
     displayName: privacyDisplayName(r.user_id ? nameById.get(r.user_id) : null),
   }));
+}
+
+export const HIT_HISTORY_PER_TIER_MAX = 10;
+
+/**
+ * J3: last N genuine hits for EACH tier (Mini / Minor / Major / Grand), newest
+ * first, from progressive_hits. The amount is the meter at the hit. Same
+ * privacy-safe names as recentHits; empty arrays when a tier never hit.
+ */
+export function getHitHistoryByTier(
+  db: Database.Database = getDb(),
+  perTier = HIT_HISTORY_PER_TIER_MAX,
+): RecentHitPublic[] {
+  ensureHitsTable(db);
+  const cap = Math.max(0, Math.min(HIT_HISTORY_PER_TIER_MAX, Math.floor(perTier)));
+  if (cap === 0) return [];
+  const stmt = db.prepare(
+    `SELECT tier_id, tier_name, amount_cents, user_id, created_at
+     FROM progressive_hits
+     WHERE tier_id = ?
+     ORDER BY created_at DESC
+     LIMIT ?`,
+  );
+  const rows: ProgressiveHitRow[] = [];
+  for (const t of VS_TIERS) rows.push(...(stmt.all(t.id, cap) as ProgressiveHitRow[]));
+  return toPublicHits(db, rows);
 }

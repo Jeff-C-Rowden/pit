@@ -14,6 +14,7 @@ import {
 import {
   applyProgressiveSpin,
   getAllProgressives,
+  getHitHistoryByTier,
   getRecentProgressiveHits,
   publicMeters,
 } from "@/lib/progressive";
@@ -26,6 +27,9 @@ async function _GET() {
     lines: VS_PAYLINES.length,
     meters: publicMeters(meters),
     recentHits: getRecentProgressiveHits(),
+    // J3: last 10 real hits per tier (amount = meter at hit). GET only, so an
+    // own hit never shows here before the reels stop.
+    hitHistory: getHitHistoryByTier(),
     sandbox: true,
     rtpPublished: VAULT_SPIRE_INFO.rtpNote,
   });

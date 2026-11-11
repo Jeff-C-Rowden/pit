@@ -4,6 +4,7 @@ import { VS_SYM_ART } from "@/components/VaultSpireMachine";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import VaultSpireMachine, { type VaultSpireMachineHandle, type WinCell } from "@/components/VaultSpireMachine";
+import HitHistoryStrip from "@/components/HitHistory";
 import ProgressiveMeterStrip, { type MeterPublic, useReseedMoments } from "@/components/ProgressiveMeter";
 import { momentsFromNewHits, momentsFromSpinHits } from "@/lib/reseedMoment";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
@@ -415,6 +416,8 @@ export default function VaultPage() {
               </div>
             </div>
           )}
+
+          <HitHistoryStrip tiers={meters} hits={info ? (Array.isArray(info.hitHistory) ? info.hitHistory : []) : null} />
 
           <div className="vault-info-blurb panel">
             <p>
