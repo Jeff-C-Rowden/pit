@@ -245,3 +245,37 @@ always a prize; reveal order drawn at trigger). Code: `src/lib/games/mine.ts`; h
 
 Free spins and the Mine Cart can never trigger on the same spin (DYNAMITE and CART never share a
 window on reels 1/3/5). Max observed return in 10M spins: 194.9× bet. Feature cap never reached.
+
+## Thunderhoof Prairie (story slot #2) — 11 Nov 2026
+
+5×3, 243 ways (left to right, any row; pay × matching cells per reel; longest run per symbol), 30-stop
+strips, 10 coins per spin. Features: STORM scatter (3/4/5 pay 2×/5×/20× bet and award 8/12/20 free
+spins; retriggers; cap 100) where the free-spin strips print each WILD as 2× or 3× and wilds on one way
+multiply (max 27×); and Hold & Spin (6+ COIN anywhere in the base game; coins lock, 3 respins, each empty
+cell lands a coin with p = 5% per respin, any new coin resets to 3; ends at 0 respins or a full screen;
+pays the sum of coin values 0.5/1/2/3/5/MINI 10/MINOR 25/MAJOR 100× bet, weights 350/300/160/90/60/30/8/2
+per mille, fixed, no progressive). Code: `src/lib/games/prairie.ts`; harness `audit/prairie.ts`.
+
+Exact method: ways RTP in closed form (independent reels: pay × ΠE[f_r] × P(f_{k+1}=0)), cross-checked
+by a full 30^5 enumeration of the base strips binned by (storm reels, coin count) with first and second
+moments, a second 30^5 enumeration of the free-spin strips binned by storm count, a retrigger moment DP
+over (awarded, remaining), and an exact Markov chain for the Hold & Spin final coin count
+(S = sum of N i.i.d. coin values, so E[S] = E[N]μ and E[S²] = E[N]σ² + E[N²]μ²).
+
+| Part | Exact | MC 10M (8 seeds × 1.25M, $0.25 coin) |
+|---|---|---|
+| Ways | 56.657% | |
+| Storm scatter pays | 1.865% | |
+| **Base game** | **58.522%** (closed form = 30^5 enumeration) | 58.82% |
+| **Free spins** | **16.689%** (P = 0.856%, 8.847 spins avg incl. retriggers, 19.50× bet avg) | 16.74% |
+| **Hold & Spin** | **20.038%** (P = 1.152%, 17.39× bet avg; full screen 0.17% of rounds) | 20.02% |
+| **Total RTP** | **95.250%** | **95.581% ± 0.420** |
+| SD per $1 | 6.811 (exact) → **Medium** | 6.784 |
+| Hit rate (any return or feature) | 40.24% | 40.27% |
+| Net-win rate | | 12.80% (1 in 8) |
+| Free spins / Hold & Spin frequency | 1 in 116.8 / 1 in 86.8 | 1 in 116.9 / 1 in 86.9 |
+
+Free spins and Hold & Spin cannot trigger on the same spin (a storm window on any reel holds no coin,
+so 3 storm reels leave at most 4 coins); the code still handles both. Max observed return in 10M spins:
+2,586× bet. 219 full screens, 29,077 MINI / 7,675 MINOR / 1,999 MAJOR coins landed in Hold & Spin.
+Feature cap never reached. Theoretical top free-spin line: 5 buffalo reels through three 3× wilds.

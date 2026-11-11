@@ -93,6 +93,31 @@ export const MINE_MATH = {
 /** Feature frequencies shown on the lobby tile, game info panel and /rules. */
 export const MINE_FEATURE_LINE = `Free spins about 1 in ${Math.round(1 / MINE_MATH.freeSpinsChance)} spins · Mine Cart pick about 1 in ${Math.round(1 / MINE_MATH.pickChance)} spins`;
 
+/**
+ * Frozen Thunderhoof Prairie figures. RTP, feature chances and SD are exact (prairieExactFull: closed-form
+ * ways + two 30^5 enumerations + free-spin moment DP + Hold & Spin Markov chain); winRate (net profit incl.
+ * features) is from the seeded 10M-spin Monte Carlo in audit/prairie.ts. Locked in tests/prairie.test.ts.
+ */
+export const PRAIRIE_MATH = {
+  rtp: 0.9525,
+  baseRtp: 0.585223, // ways 56.66% + storm scatter pays 1.87%
+  waysRtp: 0.566573,
+  scatterRtp: 0.01865,
+  freeSpinsRtp: 0.166892,
+  holdRtp: 0.200385,
+  sdPerUnit: 6.81082,
+  hitRate: 0.40238,
+  winRate: 0.128017,
+  freeSpinsChance: 0.00856,
+  holdChance: 0.011524,
+  freeSpinsPerFeature: 8.847138,
+  freeSpinFeatureX: 19.49675,
+  holdFeatureX: 17.38853,
+  holdFullScreenChance: 0.001735,
+} as const;
+
+export const PRAIRIE_FEATURE_LINE = `Free spins about 1 in ${Math.round(1 / PRAIRIE_MATH.freeSpinsChance)} spins · Hold & Spin about 1 in ${Math.round(1 / PRAIRIE_MATH.holdChance)} spins`;
+
 export const TABLE_MATH = {
   blackjack: { edge: 0.00405, sdPerUnit: 1.15 },
   paigow: { edge: 0.0285, sdPerUnit: 0.79 },
@@ -149,6 +174,16 @@ const GAMES: Record<string, GameMath> = {
     volatility: "Medium",
     sdPerUnit: MINE_MATH.sdPerUnit,
     line: slotLine("95.42%", "Medium", "features included", winsAbout(MINE_MATH.winRate)),
+    tip: TIP,
+    filterBuckets: ["Medium"],
+  },
+  prairie: {
+    id: "prairie",
+    href: "/prairie",
+    rtpLine: "RTP 95.25%",
+    volatility: "Medium",
+    sdPerUnit: PRAIRIE_MATH.sdPerUnit,
+    line: slotLine("95.25%", "Medium", "features included", winsAbout(PRAIRIE_MATH.winRate)),
     tip: TIP,
     filterBuckets: ["Medium"],
   },

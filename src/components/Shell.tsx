@@ -62,7 +62,8 @@ function SoundToggle() {
   );
 }
 
-const GAME_PATHS = ["/blackjack", "/slot", "/vault", "/buckshot", "/bounty", "/mine", "/holdem", "/roulette", "/craps", "/paigow"];
+const STORY_PATHS = ["/stories", "/mine", "/prairie"];
+const GAME_PATHS = ["/blackjack", "/slot", "/vault", "/buckshot", "/bounty", "/mine", "/prairie", "/holdem", "/roulette", "/craps", "/paigow"];
 
 const ico = (d: string) => <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d={d} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 const ICONS = {
@@ -87,7 +88,7 @@ const RAIL: [string, string, keyof typeof ICONS][] = [
   ["/floor", "Home", "home"],
   ["/buckshot", "3-Reel Slots", "classic"],
   ["/floor#slots", "Video Slots", "video"],
-  ["/mine", "Story Slots", "mine"],
+  ["/stories", "Story Slots", "mine"],
   ["/vault", "Progressives", "jackpot"],
   ["/bounty", "Bonus to Cash", "bonus"],
   ["/tournaments", "Tournaments", "trophy"],
@@ -102,7 +103,7 @@ const RAIL: [string, string, keyof typeof ICONS][] = [
 function Rail({ path, open, onClose, isOperator }: { path: string; open: boolean; onClose: () => void; isOperator?: boolean }) {
   const router = useRouter();
   const [q, setQ] = useState("");
-  const isOn = (h: string) => !h.includes("#") && (path === h || path.startsWith(h + "/"));
+  const isOn = (h: string) => !h.includes("#") && (path === h || path.startsWith(h + "/") || (h === "/stories" && STORY_PATHS.includes(path)));
   const items = isOperator ? [...RAIL, ["/pit", "Pit Boss", "boss"] as [string, string, keyof typeof ICONS]] : RAIL;
   return (
     <>

@@ -1,7 +1,7 @@
 /** Original inline SVG banner art per Floor lobby table. No external images, no brands, decorative only. */
 import type { ReactNode } from "react";
 
-export const GAME_ART_KINDS = ["bb", "bj", "slot", "vault", "mine", "he", "rl", "cr", "pg"] as const;
+export const GAME_ART_KINDS = ["bb", "bj", "slot", "vault", "mine", "prairie", "he", "rl", "cr", "pg"] as const;
 
 const GOLD = "#fedd52", CREAM = "#f7f1e3", RED = "#b3261e", INK = "#1c1c1c";
 
@@ -67,6 +67,16 @@ function art(kind: string): { bg: [string, string]; body: ReactNode } {
         <path d="M24 1 L30 3 L24 5 Z" fill="#ef8a2a" /><circle cx="19" cy="1" r="1.3" fill={INK} />
       </g>,
       <circle key="lamp" cx="160" cy="30" r="16" fill="#ffb02a" opacity=".35" />] };
+    case "prairie": return { bg: ["#7a3a1c", "#1e0a2a"], body: [
+      <path key="cloud" d="M40 40 C28 40 28 24 42 24 C44 10 64 6 74 16 C82 4 108 8 106 24 C120 24 120 40 106 40 Z" fill="#5a5a7a" opacity=".9" />,
+      <path key="bolt" d="M76 36 L66 56 H74 L68 74 L86 50 H78 L84 36 Z" fill={GOLD} stroke={INK} strokeWidth="1.4" />,
+      <circle key="sun" cx="250" cy="70" r="30" fill="#ffb347" opacity=".55" />,
+      <path key="grass" d="M0 112 C60 100 120 108 160 104 C210 100 260 108 320 102 V130 H0 Z" fill="#5a6a22" />,
+      <g key="bison" transform="translate(150 62)">
+        <path d="M0 40 C0 22 10 12 28 12 C32 4 46 2 54 8 C64 6 72 12 72 24 L74 38 C70 40 68 38 66 36 L64 50 H58 L56 40 H24 L22 50 H16 L14 40 C8 42 2 42 0 40 Z" fill="#3a200e" stroke={INK} strokeWidth="1.6" />
+        <path d="M58 10 C62 4 66 4 68 0" stroke="#e8dcc0" strokeWidth="3" fill="none" strokeLinecap="round" />
+      </g>,
+      <g key="coin" transform="translate(48 78)"><circle r="14" fill={GOLD} stroke={INK} strokeWidth="1.6" /><circle r="9" fill="none" stroke="#b86f00" strokeWidth="1.4" strokeDasharray="2 2" /></g>] };
     case "he": return { bg: ["#1f5a7a", "#0b2435"], body: [
       <ellipse key="o" cx="160" cy="62" rx="120" ry="40" fill="none" stroke={GOLD} strokeOpacity=".55" strokeWidth="2" />,
       card(130, 34, -6, "Q", "♦", true, "a"), card(158, 34, 6, "Q", "♣", false, "b"),
@@ -106,7 +116,7 @@ function art(kind: string): { bg: [string, string]; body: ReactNode } {
 }
 
 const TILE_BG: Record<string, [string, string]> = {
-  bb: ["#2a7a3a", "#06200c"], bj: ["#9c3835", "#2a0a0a"], slot: ["#ef8a2a", "#4b1211"], vault: ["#2f7a4a", "#0a2414"], mine: ["#b8762a", "#2a1206"],
+  bb: ["#2a7a3a", "#06200c"], bj: ["#9c3835", "#2a0a0a"], slot: ["#ef8a2a", "#4b1211"], vault: ["#2f7a4a", "#0a2414"], mine: ["#b8762a", "#2a1206"], prairie: ["#c2541c", "#2a0e3a"],
   he: ["#6a3a8a", "#1e0628"], rl: ["#c0392b", "#2a0606"], cr: ["#1f7a52", "#05261a"], pg: ["#2a4fb0", "#0a0e3a"],
 };
 

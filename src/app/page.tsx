@@ -75,6 +75,7 @@ function Gate() {
           ["Buckshot Bars", "Classic 3-reel slot"],
           ["Sundown Trail", "Five-reel video slot"],
           ["Canary Creek Mine", "Story slot · free spins · pick bonus"],
+          ["Thunderhoof Prairie", "Story slot · 243 ways · Hold & Spin"],
           ["Antler Ridge", "4-tier progressive"],
           ["Hold'em", "Heads-up vs the house"],
           ["Roulette", "American 0 / 00"],

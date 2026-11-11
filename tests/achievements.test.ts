@@ -26,9 +26,9 @@ describe("exploration achievements", () => {
     const order = [...GAME_PATHS].reverse();
     let last: string[] = [];
     for (const h of order) { const r = applyEvent(p, { kind: "seat", href: h }); p = r.next; last = r.unlocked; }
-    expect(GAME_PATHS).toHaveLength(10);
+    expect(GAME_PATHS).toHaveLength(11);
     expect(last).toEqual(["every-table"]);
-    expect(summary(p)).toMatchObject({ tablesSeen: 10, tablesTotal: 10, done: 2, total: 5 });
+    expect(summary(p)).toMatchObject({ tablesSeen: 11, tablesTotal: 11, done: 2, total: 5 });
   });
   it("rules, coach and limit unlock independently", () => {
     let p = emptyProgress();

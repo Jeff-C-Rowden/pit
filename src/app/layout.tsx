@@ -3,6 +3,7 @@ import "./globals.css";
 import "./roulette3d.css";
 import "./cabinet.css";
 import "./mine.css";
+import "./prairie.css";
 import "./stag.css";
 import { Nunito, Passion_One, PT_Sans_Narrow } from "next/font/google";
 

@@ -4,7 +4,7 @@ export type LobbyTab = (typeof LOBBY_TABS)[number];
 
 export const TAB_LABEL: Record<LobbyTab, string> = { all: "All", slots: "Slots", tables: "Tables" };
 
-const SLOT_PATHS = new Set(["/slot", "/vault", "/buckshot", "/bounty", "/mine"]);
+const SLOT_PATHS = new Set(["/slot", "/vault", "/buckshot", "/bounty", "/mine", "/prairie"]);
 
 export function categoryOf(href: string): Exclude<LobbyTab, "all"> {
   return SLOT_PATHS.has(href) ? "slots" : "tables";

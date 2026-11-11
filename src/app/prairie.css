@@ -1,0 +1,60 @@
+/* Thunderhoof Prairie: sunset-and-thunderhead cabinet, coin values, Hold & Spin board. Original art. */
+.slot-cabinet.cab.cab-prairie { --cab-green: #2a0e3a; --cab-green-hi: #c2541c; --cab-stripe: #4a1a4a; }
+.cab-prairie .cab-sign-title { -webkit-text-stroke-color: #2a0e3a; filter: drop-shadow(0 3px 0 #2a0e3a) drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+.cab-prairie.pr-free { --cab-green: #0e1a3a; --cab-green-hi: #4a6ab8; --cab-stripe: #1a2a5a; }
+.cab-prairie .reel { background: linear-gradient(180deg, #fbe9cf, #f0cf9e 50%, #fbe9cf); position: relative; }
+.cab-prairie.pr-free .reel { background: linear-gradient(180deg, #e2e6f6, #c2c9e6 50%, #e2e6f6); }
+.cab-prairie .sym .sym-label { color: #3a1a0a; text-shadow: none; }
+.cab-prairie .cab-payline, .cab-prairie .cab-tabs { visibility: hidden; }
+.cab-prairie .sym { position: relative; }
+.cab-prairie .sym.tone-pr-letter .sym-label { display: none; }
+
+.pr-coin-val {
+  position: absolute; left: 50%; bottom: 14%; transform: translateX(-50%); z-index: 2; padding: 1px 6px; border-radius: 6px;
+  font: 400 clamp(12px, 2.2vw, 16px)/1.1 var(--st-display, Impact), sans-serif; letter-spacing: .02em; white-space: nowrap;
+  background: #2a0e3a; color: #fedd52; border: 1.5px solid #fedd52; box-shadow: 0 2px 0 rgba(0,0,0,.35);
+}
+.pr-coin-val.jp, .pr-hold-cell.jp .pr-coin-val { background: #9c1c1c; color: #fff; border-color: #fff1a8; }
+
+/* trigger flash: only the storms / coins that triggered */
+@keyframes pr-flash { 0%, 100% { filter: none; transform: scale(1); } 50% { filter: drop-shadow(0 0 10px #ffd23a) brightness(1.35); transform: scale(1.1); } }
+.pr-trig-fs .sym.tone-pr-storm .sym-icon,
+.pr-trig-hold .sym.tone-pr-coin .sym-icon { animation: pr-flash .5s ease-in-out 4; }
+.pr-trig .sym.win { outline: 3px solid #ffd23a; outline-offset: -3px; border-radius: 6px; }
+.pr-trigger .mine-trigger-card { background: radial-gradient(120% 120% at 50% 0%, #c2541c, #2a0e3a 70%); }
+.pr-trigger-hold .mine-trigger-card { background: radial-gradient(120% 120% at 50% 0%, #b86f00, #3a1a0a 70%); }
+.pr-hold-done { pointer-events: auto; background: rgba(10,4,20,.35); }
+.pr-fs-bar { background: linear-gradient(180deg, #1a2a5a, #0e1a3a); }
+.pr-hold-bar { background: linear-gradient(180deg, #5a3a0a, #2a1606); }
+
+/* Hold & Spin board: fills the reel window */
+.pr-hold { grid-column: 1 / -1; display: flex; flex-direction: column; width: 100%; min-width: 0; border-radius: 6px; overflow: hidden; }
+.pr-hold-grid {
+  display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(3, calc(var(--sym-h, 92px) - 13px)); gap: 3px 6px; padding: 3px;
+  background: linear-gradient(180deg, #2a1606, #140a02);
+}
+.pr-hold-cell { position: relative; display: grid; place-items: center; border-radius: 8px; background: radial-gradient(circle at 50% 40%, #3a2410, #1a0e04); border: 1.5px solid #5a3a14; }
+.pr-hold-cell.locked { background: radial-gradient(circle at 50% 40%, #6a4a14, #2a1606); border-color: #fedd52; }
+.pr-hold-cell.fresh { animation: mine-pop .35s cubic-bezier(.2,1.6,.4,1) both; box-shadow: 0 0 14px rgba(254,221,82,.7); }
+.pr-hold-art { width: 74%; height: 74%; line-height: 0; }
+.pr-hold-art svg { width: 100%; height: 100%; }
+.pr-hold-empty { width: 40%; height: 40%; border-radius: 50%; border: 2px dashed rgba(254,221,82,.25); }
+.pr-hold-meter { height: 27px; align-items: center; display: flex; justify-content: space-around; gap: 8px; padding: 6px 4px; background: #140a02; color: #ffe9a8; font-size: 13px; }
+.pr-hold-meter b { color: #fedd52; font: 400 18px/1 var(--st-display, Impact), sans-serif; margin-left: 4px; }
+
+.pr-modal .mine-modal-card { background: radial-gradient(130% 90% at 50% 0%, #5a2a4a, #1a0a24 75%); }
+.pr-story .pr-ada { display: block; margin: 0 auto 6px; }
+
+/* Story Slots hub */
+.stories-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; margin-top: 12px; }
+.story-tile { display: flex; flex-direction: column; gap: 8px; color: inherit; text-decoration: none; }
+.story-tile:hover { outline: 2px solid #fedd52; }
+.story-tile-body { display: flex; align-items: center; gap: 10px; }
+.story-tile h2 { margin: 0; font-size: 20px; }
+.story-who { margin: 2px 0 0; font-size: 13px; }
+.story-new { margin-left: 8px; padding: 1px 7px; border-radius: 9px; background: #fedd52; color: #3a1010; font-size: 11px; font-weight: 800; vertical-align: middle; }
+.story-cta { align-self: flex-start; margin-top: auto; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pr-trig-fs .sym.tone-pr-storm .sym-icon, .pr-trig-hold .sym.tone-pr-coin .sym-icon, .pr-hold-cell.fresh { animation: none !important; }
+}
