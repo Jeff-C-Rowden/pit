@@ -135,9 +135,12 @@ describe("Bounty Bars (Bonus to Cash) RTP", () => {
     expect(b.window).toEqual(a.window);
   });
   it("Monte Carlo agrees with the exact figure (200k spins, ±1%)", () => {
+    // Seeded: an unseeded 200k run at SD ~9.4 per coin missed the ±3-point band about 1 run in 7.
+    let s = 20261111;
+    const pick = (n: number) => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return Math.floor((s / 4294967296) * n); };
     let pay = 0;
     const N = 200_000;
-    for (let k = 0; k < N; k++) pay += spinBuckshot(1, 100, undefined, BB_BOUNTY_TABLE).payCoins;
+    for (let k = 0; k < N; k++) pay += spinBuckshot(1, 100, pick, BB_BOUNTY_TABLE).payCoins;
     expect(Math.abs(pay / N - BOUNTY_MATH.rtp1)).toBeLessThan(0.01 * 3);
   });
 });

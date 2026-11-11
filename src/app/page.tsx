@@ -74,6 +74,7 @@ function Gate() {
           ["Blackjack", "Six-deck · S17 · 3:2"],
           ["Buckshot Bars", "Classic 3-reel slot"],
           ["Sundown Trail", "Five-reel video slot"],
+          ["Canary Creek Mine", "Story slot · free spins · pick bonus"],
           ["Antler Ridge", "4-tier progressive"],
           ["Hold'em", "Heads-up vs the house"],
           ["Roulette", "American 0 / 00"],

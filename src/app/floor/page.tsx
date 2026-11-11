@@ -49,6 +49,7 @@ const GAMES = [
   { href: "/blackjack", level: "Easy to learn", pace: "Steady", name: "Blackjack", meta: "7-spot · six-deck · S17 · BJ 3:2", line: "The pit staple.", accent: "bj" },
   { href: "/buckshot", level: "Easiest", pace: "Fast", name: "Buckshot Bars", meta: "Classic 3 reels · 1 line · 94.44% RTP", line: "Cherries, bars and a horseshoe wild. Play 1 to 3 coins.", accent: "bb", isNew: true },
   { href: "/bounty", level: "Easiest", pace: "Fast", name: "Bounty Bars", meta: "Bonus to Cash · 3 reels · 1 line · 90.31% RTP", line: "Play your Bonus here: bonus-funded winnings pay out in cash.", accent: "bb", bonusCash: true },
+  { href: "/mine", level: "Easy", pace: "Fast", name: "Canary Creek Mine", meta: "Story slot · 5 reels · 9 lines · 95.42% RTP", line: "Dynamite free spins and a Mine Cart pick bonus with Clem and Pip.", accent: "mine", isNew: true },
   { href: "/slot", level: "Easiest", pace: "Fast", name: "Sundown Trail", meta: "5 reels · 9 lines · exact RTP 95.53%", line: "A western video slot with a real paytable.", accent: "slot" },
   {
     href: "/vault", level: "Easiest", pace: "Fast",
@@ -189,7 +190,8 @@ function WeekCard({ w }: { w?: { weekStart: string; minutes: number; netCents: n
 }
 
 const SLIDES = [
-  { k: "Sandbox casino · 21+", h: "Saddle up, partner", p: "Eight games, honest odds and real casino rules. Sandbox chips only, never real money.", cta: "Play now", href: "#games" },
+  { k: "Sandbox casino · 21+", h: "Saddle up, partner", p: "Nine games, honest odds and real casino rules. Sandbox chips only, never real money.", cta: "Play now", href: "#games" },
+  { k: "New story slot", h: "Canary Creek Mine", p: "Light the dynamite for free spins, roll the mine carts for a pick bonus. Exact RTP 95.42% with features included.", cta: "Meet Clem & Pip", href: "/mine" },
   { k: "New on the floor", h: "Buckshot Bars", p: "A classic three-reel machine with a horseshoe wild. Exact RTP published on the glass.", cta: "Spin Buckshot Bars", href: "/buckshot" },
   { k: "The Cage", h: "Daily sandbox chips", p: "Claim free test chips once a Chicago day. No cash value, nothing to withdraw.", cta: "Open the Cage", href: "/wallet" },
 ];

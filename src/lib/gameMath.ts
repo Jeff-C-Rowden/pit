@@ -68,6 +68,31 @@ export const BOUNTY_MATH = {
   winRate: 0.08800747863247864,
 } as const;
 
+/**
+ * Frozen Canary Creek Mine figures. RTP, feature chances and SD are exact (mineExactFull: closed
+ * form + 30^5 enumeration + free-spin moment DP); winRate (net profit incl. features) is from the
+ * seeded 10M-spin Monte Carlo in audit/mine.ts. Locked in tests/mine.test.ts.
+ */
+export const MINE_MATH = {
+  rtp: 0.954245,
+  baseRtp: 0.724509, // lines 70.33% + dynamite scatter pays 2.12%
+  lineRtp: 0.703309,
+  scatterRtp: 0.0212,
+  freeSpinsRtp: 0.109736,
+  pickRtp: 0.12,
+  sdPerUnit: 3.11214,
+  hitRate: 0.447034,
+  winRate: 0.188634,
+  freeSpinsChance: 0.00856,
+  pickChance: 0.008,
+  freeSpinsPerFeature: 8.847138,
+  freeSpinFeatureX: 12.819661,
+  pickExpectedX: 15,
+} as const;
+
+/** Feature frequencies shown on the lobby tile, game info panel and /rules. */
+export const MINE_FEATURE_LINE = `Free spins about 1 in ${Math.round(1 / MINE_MATH.freeSpinsChance)} spins · Mine Cart pick about 1 in ${Math.round(1 / MINE_MATH.pickChance)} spins`;
+
 export const TABLE_MATH = {
   blackjack: { edge: 0.00405, sdPerUnit: 1.15 },
   paigow: { edge: 0.0285, sdPerUnit: 0.79 },
@@ -116,6 +141,16 @@ const GAMES: Record<string, GameMath> = {
     line: slotLine("90.31–90.53%", "High", "Bonus to Cash", winsAbout(BOUNTY_MATH.winRate)),
     tip: TIP,
     filterBuckets: ["High"],
+  },
+  mine: {
+    id: "mine",
+    href: "/mine",
+    rtpLine: "RTP 95.42%",
+    volatility: "Medium",
+    sdPerUnit: MINE_MATH.sdPerUnit,
+    line: slotLine("95.42%", "Medium", "features included", winsAbout(MINE_MATH.winRate)),
+    tip: TIP,
+    filterBuckets: ["Medium"],
   },
   blackjack: {
     id: "blackjack",

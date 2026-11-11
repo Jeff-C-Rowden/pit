@@ -62,7 +62,7 @@ function SoundToggle() {
   );
 }
 
-const GAME_PATHS = ["/blackjack", "/slot", "/vault", "/buckshot", "/bounty", "/holdem", "/roulette", "/craps", "/paigow"];
+const GAME_PATHS = ["/blackjack", "/slot", "/vault", "/buckshot", "/bounty", "/mine", "/holdem", "/roulette", "/craps", "/paigow"];
 
 const ico = (d: string) => <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d={d} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></svg>;
 const ICONS = {
@@ -79,6 +79,7 @@ const ICONS = {
   rules: "M6 3h9l3 3v15H6zM9 9h6M9 13h6M9 17h4",
   boss: "M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z",
   bonus: "M4 9h16v11H4zM3 6h18v3H3zM12 6v14M12 6c-2-3-6-3-5 0M12 6c2-3 6-3 5 0",
+  mine: "M4 20 20 4M14 4c3 0 5 1 6 3-2-1-4-1-6 0M6 14l4 4M3 21h6",
   trophy: "M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4M12 14v4M8 21h8M9 18h6",
 };
 
@@ -86,6 +87,7 @@ const RAIL: [string, string, keyof typeof ICONS][] = [
   ["/floor", "Home", "home"],
   ["/buckshot", "3-Reel Slots", "classic"],
   ["/floor#slots", "Video Slots", "video"],
+  ["/mine", "Story Slots", "mine"],
   ["/vault", "Progressives", "jackpot"],
   ["/bounty", "Bonus to Cash", "bonus"],
   ["/tournaments", "Tournaments", "trophy"],

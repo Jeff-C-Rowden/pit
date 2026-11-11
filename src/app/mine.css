@@ -1,0 +1,85 @@
+/* Canary Creek Mine: timber-and-lamp cabinet, feature banners, pick board. Original art. */
+.slot-cabinet.cab.cab-mine { --cab-green: #2a160c; --cab-green-hi: #8a5a2a; --cab-stripe: #4a2a14; }
+.cab-mine .cab-sign-title { -webkit-text-stroke-color: #2a160c; filter: drop-shadow(0 3px 0 #2a160c) drop-shadow(0 4px 6px rgba(0,0,0,.5)); }
+.cab-mine.mine-free { --cab-green: #10202e; --cab-green-hi: #2f5a7a; --cab-stripe: #1a3246; }
+.cab-mine .reel { background: linear-gradient(180deg, #f3e7c8, #e2cfa0 50%, #f3e7c8); }
+.cab-mine.mine-free .reel { background: linear-gradient(180deg, #e6eef4, #c9d8e4 50%, #e6eef4); }
+.cab-mine .sym .sym-label { color: #3a2412; text-shadow: none; }
+
+/* trigger flash: only the dynamite / cart symbols that triggered */
+@keyframes mine-flash { 0%, 100% { filter: none; transform: scale(1); } 50% { filter: drop-shadow(0 0 10px #ffd23a) brightness(1.35); transform: scale(1.1); } }
+.mine-trig-fs .sym.tone-mine-dyn .sym-icon,
+.mine-trig-pick .sym.tone-mine-cart .sym-icon { animation: mine-flash .5s ease-in-out 4; }
+.mine-trig .sym.win { outline: 3px solid #ffd23a; outline-offset: -3px; border-radius: 6px; }
+
+.mine-stage { position: relative; }
+.mine-trigger { position: absolute; inset: 0; display: grid; place-items: center; z-index: 20; pointer-events: none; }
+.mine-trigger-card {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 22px; border-radius: 14px;
+  background: radial-gradient(120% 120% at 50% 0%, #9c3835, #3a1010 70%); border: 3px solid #fedd52;
+  box-shadow: 0 0 0 3px #3a1010, 0 18px 50px rgba(0,0,0,.7), 0 0 40px rgba(254,221,82,.45); text-align: center;
+  animation: mine-pop .45s cubic-bezier(.2,1.6,.4,1) both;
+}
+.mine-trigger.still .mine-trigger-card { animation: none; }
+@keyframes mine-pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.mine-trigger-k { font: 800 12px/1 var(--st-narrow, "Arial Narrow"), sans-serif; letter-spacing: .18em; text-transform: uppercase; color: #ffe9a8; }
+.mine-trigger-h { font: 400 clamp(26px, 8vw, 44px)/1 var(--st-display, Impact), sans-serif; color: #fedd52; text-shadow: 0 3px 0 #3a1010; }
+.mine-trigger-s { font-size: 13px; color: #fff; }
+
+.mine-fs-bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 14px; margin: 0 0 8px; padding: 8px 10px;
+  border-radius: 10px; background: linear-gradient(180deg, #1a3246, #10202e); border: 2px solid #fedd52; color: #fff; font-size: 14px;
+}
+.mine-fs-k { font: 400 18px/1 var(--st-display, Impact), sans-serif; color: #fedd52; letter-spacing: .04em; }
+.mine-fs-bar b { color: #fedd52; }
+.mine-skip { padding: 4px 10px; font-size: 12px; min-height: 0; }
+
+.mine-modal { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 14px; background: rgba(10,4,2,.72); }
+.mine-modal-card {
+  width: min(460px, 100%); max-height: calc(100dvh - 28px); overflow: auto; padding: 18px 16px 16px; border-radius: 16px; text-align: center;
+  background: radial-gradient(130% 90% at 50% 0%, #5a2a18, #1f0b06 75%); border: 3px solid #fedd52; color: #f7f1e3;
+  box-shadow: 0 0 0 3px #3a1010, 0 24px 70px rgba(0,0,0,.8);
+}
+.mine-modal-card h2 { margin: 2px 0 8px; font: 400 30px/1.05 var(--st-display, Impact), sans-serif; color: #fedd52; letter-spacing: .02em; }
+.mine-kicker { margin: 4px 0 0; font: 800 11px/1 var(--st-narrow, "Arial Narrow"), sans-serif; letter-spacing: .2em; text-transform: uppercase; color: #ffe9a8; }
+.mine-story p { margin: 0 0 10px; line-height: 1.45; font-size: 15px; }
+.mine-story .mine-clem { display: block; margin: 0 auto 6px; }
+.mine-story-note, .mine-honest { font-size: 12px !important; color: rgba(247,241,227,.78); }
+.mine-honest { margin: 12px 0 0; line-height: 1.4; }
+.mine-modal-card .btn { margin-top: 6px; min-width: 200px; }
+
+.mine-pick-sub { margin: 0 0 10px; font-size: 14px; }
+.mine-pick-total { display: flex; justify-content: center; align-items: baseline; gap: 10px; margin: 0 0 12px; font-size: 13px; }
+.mine-pick-total b { font: 400 28px/1 var(--st-display, Impact), sans-serif; color: #fedd52; }
+.mine-carts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 0 0 12px; }
+.mine-cart-btn {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 2px 8px; border-radius: 10px; cursor: pointer;
+  background: linear-gradient(180deg, #4a2a14, #2a160c); border: 2px solid #b8862a; color: #fff; min-height: 76px;
+  transition: transform .15s ease;
+}
+.mine-cart-btn:not(:disabled):hover { transform: translateY(-2px); border-color: #fedd52; }
+.mine-cart-btn:focus-visible { outline: 3px solid #fedd52; outline-offset: 2px; }
+.mine-cart-btn:disabled { cursor: default; }
+.mine-cart-btn.still { transition: none; }
+.mine-cart-art { width: 46px; height: 46px; line-height: 0; }
+.mine-cart-art svg { width: 100%; height: 100%; }
+.mine-cart-val { font: 400 18px/1 var(--st-display, Impact), sans-serif; color: #ffe9a8; letter-spacing: .02em; }
+.mine-cart-btn.open.prize { background: linear-gradient(180deg, #fff1a8, #fedd52 50%, #b86f00); border-color: #fff6c8; }
+.mine-cart-btn.open.prize .mine-cart-val { color: #3a1010; font-size: 22px; }
+.mine-cart-btn.open.collect { background: linear-gradient(180deg, #2f5a7a, #10202e); border-color: #9cc4e4; }
+.mine-cart-btn.open.collect .mine-cart-val { font-size: 13px; color: #fff; }
+.mine-cart-btn.open:not(.still) { animation: mine-pop .3s ease-out both; }
+
+.mine-sum-table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 14px; }
+.mine-sum-table td { padding: 6px 4px; border-bottom: 1px solid rgba(254,221,82,.25); text-align: left; }
+.mine-sum-table td:last-child { text-align: right; font-weight: 800; }
+.mine-sum-total td { color: #fedd52; font-size: 16px; border-bottom: 0; }
+
+.mine-feature-line { margin-top: 2px; }
+.mine-rules { margin: 0 0 10px; padding-left: 18px; line-height: 1.45; font-size: 14px; }
+.mine-rules li { margin: 0 0 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mine-trig-fs .sym.tone-mine-dyn .sym-icon, .mine-trig-pick .sym.tone-mine-cart .sym-icon, .mine-trigger-card, .mine-cart-btn.open { animation: none !important; }
+  .mine-cart-btn { transition: none; }
+}

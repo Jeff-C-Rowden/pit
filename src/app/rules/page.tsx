@@ -1,4 +1,5 @@
 import Logo from "@/components/Logo";
+import { MINE_MATH, MINE_FEATURE_LINE } from "@/lib/gameMath";
 import Link from "next/link";
 import ShowTipsSwitch from "@/components/ShowTipsSwitch";
 import { RecordAchievement } from "@/components/Achievements";
@@ -29,6 +30,9 @@ export default function Rules() {
         <h3 id="bounty" className="rules-anchor">Bounty Bars (Bonus to Cash machine)</h3>
         <p className="muted">The Buckshot Bars reels and strips on a leaner pay table: 3 × 7 pays 75, triple bar 35, double bar 20, single bar 9 per coin; three horseshoes 800 / 1,600 / 2,500. Exact theoretical RTP 90.31% at 1–2 coins and 90.53% at 3 coins (all 14,976 stop combinations), a few points below the regular slots because bonus-funded winnings here pay out as cash. Bets draw from your Bonus balance first. Same uniform stops, no near-miss staging.</p>
         <MathStrip game="bounty" variant="panel" />
+        <h3 id="mine" className="rules-anchor">Canary Creek Mine (story slot with features)</h3>
+        <p className="muted">5 reels, 3 rows, 9 left-to-right paylines, 30-stop strips with uniform stops. Clem&apos;s lamp-hat WILD (reels 2–4) substitutes for every pay symbol. DYNAMITE scatters pay anywhere: 3 / 4 / 5 pay 2× / 10× / 50× the total bet and award 8 / 12 / 20 free spins on the same reels with every win doubled; 3+ dynamite in free spins retrigger the same awards, capped at 100 free spins per feature. A MINE CART on reels 1, 3 and 5 (any row) opens the Mine Cart pick: 12 carts hold 2, 2, 3, 3, 4, 5, 6, 8 and 12× bet plus 3 COLLECT lamps; the first cart always holds a prize and picks continue until a COLLECT (average 15× bet). Carts do nothing during free spins. The server decides the spin, every free spin and the pick reveal order at trigger time and pays it all at once; whichever cart you tap shows the next pre-drawn result, so there is no better or worse pick. Exact theoretical RTP {(MINE_MATH.rtp * 100).toFixed(2)}%: base game {(MINE_MATH.baseRtp * 100).toFixed(2)}%, free spins {(MINE_MATH.freeSpinsRtp * 100).toFixed(2)}%, Mine Cart {(MINE_MATH.pickRtp * 100).toFixed(2)}%. Hit rate {(MINE_MATH.hitRate * 100).toFixed(1)}%. {MINE_FEATURE_LINE}. Confirmed by a seeded 10-million-spin simulation of the server code.</p>
+        <MathStrip game="mine" variant="panel" />
         <h3 id="vault" className="rules-anchor">Antler Ridge (progressive slot)</h3>
         <p className="muted">Frontier-themed 5-reel video slot with four shared progressive meters (Mini / Minor / Major / Grand). Seeds $10 / $50 / $250 / $2,500. Must-hit-by ceilings on Mini / Minor / Major ($30 / $150 / $1,000); Grand is a mystery whose chance grows with your bet (about 1 in 35,000 spins at a $1 coin). Each spin contributes exactly 3.00% (300 bps: 100/70/50/80) of coin-in from the same bet debit. All sandbox bets qualify. Hits reseed; meters move only on real spins. Exact theoretical RTP 94.8–95.0% by coin size: base game 89.2% plus 5.6–5.8% from the jackpots. Demo chips only — not a licensed casino jackpot.</p>
         <MathStrip game="vault" variant="panel" />

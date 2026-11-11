@@ -97,6 +97,13 @@ export function playSpin() {
   tone(c, 220, 0, 0.05, 0.025, "triangle");
 }
 
+/** Feature trigger fanfare (free spins / Mine Cart). Gated like every other sound and buzz. */
+export function playFeature() {
+  buzz([20, 40, 20, 40, 60]);
+  const c = ac(); if (!c) return;
+  [523, 659, 784, 1047].forEach((f, i) => tone(c, f, i * 0.1, 0.3, 0.05, "triangle"));
+}
+
 /** Soft kick when a deal actually starts. Gated like every other buzz. */
 export function playDeal() {
   buzz(vibratePattern("deal"));
@@ -167,6 +174,7 @@ export type TableTip = { title: string; steps: string[]; odds: string };
 export const TABLE_TIPS: Record<string, TableTip> = {
   slot: { title: "Sundown Trail in 10 seconds", steps: ["Pick a coin size.", "Tap Spin. Each spin bets all 9 lines.", "Wins pay from the paytable below the reels."], odds: "Exact theoretical RTP 95.53%, so the house keeps about 4.5% of coin-in over time." },
   buckshot: { title: "Buckshot Bars in 10 seconds", steps: ["Pick a coin value with − and +.", "Bet one adds a coin (up to 3). Spin reels plays.", "Only the centre payline pays. The horseshoe is wild."], odds: "Exact RTP 94.44% at 1–2 coins and 94.67% at 3 coins, computed from the reel strips." },
+  mine: { title: "Canary Creek Mine in 10 seconds", steps: ["Pick a coin size and tap Spin. Each spin bets all 9 lines.", "3 or more dynamite anywhere: 8, 12 or 20 free spins, every win doubled.", "A mine cart on reels 1, 3 and 5 opens the Mine Cart pick."], odds: "Exact theoretical RTP 95.42% with both features included (base game 72.45%, free spins 10.97%, Mine Cart 12.00%)." },
   vault: { title: "Antler Ridge in 10 seconds", steps: ["Pick a coin size and tap Spin.", "A small part of every bet feeds the four jackpots.", "Jackpots are rare. Most spins pay nothing."], odds: "Exact theoretical RTP about 95% including the jackpots (89.2% base game). 3% of each bet feeds the meters." },
   roulette: { title: "Roulette in 10 seconds", steps: ["Pick a chip.", "Tap a spot on the table, like Red.", "Tap Spin. Red wins 18 of 38 spins and pays 1 to 1. Undo takes a chip back."], odds: "American wheel: house edge 5.26% (RTP 94.74%) on standard bets." },
   blackjack: { title: "Blackjack in 10 seconds", steps: ["Pick a chip and tap Deal.", "Get closer to 21 than the dealer without going over.", "Hit takes a card. Stand keeps your hand."], odds: "House edge about 0.4% with basic strategy, higher if you play by feel." },
