@@ -91,7 +91,15 @@ function migrateBonus(db: Database.Database) {
   if (!u.has("bonus_cents")) db.exec("ALTER TABLE users ADD COLUMN bonus_cents INTEGER NOT NULL DEFAULT 0");
   const l = new Set((db.prepare("PRAGMA table_info(ledger)").all() as { name: string }[]).map((c) => c.name));
   if (!l.has("currency")) db.exec("ALTER TABLE ledger ADD COLUMN currency TEXT NOT NULL DEFAULT 'cash'");
+  // Test accounts (automated checks, e2e scripts): hidden from every public board, count and hit
+  // history, and never paid a tournament prize. Any address at TEST_EMAIL_DOMAIN is a test account.
+  if (!u.has("is_test")) db.exec("ALTER TABLE users ADD COLUMN is_test INTEGER NOT NULL DEFAULT 0");
+  db.prepare("UPDATE users SET is_test = 1 WHERE is_test = 0 AND lower(email) LIKE ?").run(`%@${TEST_EMAIL_DOMAIN}`);
 }
+
+/** Every e2e/automated account signs up at this domain; the server marks it is_test. */
+export const TEST_EMAIL_DOMAIN = "pit.test";
+export const isTestEmail = (email: string) => email.trim().toLowerCase().endsWith(`@${TEST_EMAIL_DOMAIN}`);
 
 let singleton: Database.Database | null = null;
 let dirty = false;
@@ -185,6 +193,7 @@ export type UserRow = {
   display_name: string;
   age_confirmed: number;
   is_operator: number;
+  is_test?: number;
   balance_cents: number;
   bonus_cents?: number;
   deposit_limit_cents: number | null;

@@ -1,7 +1,7 @@
 /** Deterministic tournament schedule from templates (pure). Chicago local times, stored as UTC. */
 import { createHash } from "crypto";
 import { FEE_BPS, FREEROLL_DAILY_CAP_CENTS } from "./payout";
-import { GAME_INFO, TEMPLATES, minQualifying, rebuyLimit, type PrizeType, type Template, type TGame } from "./templates";
+import { GAME_INFO, TABLE_FORMATS, TEMPLATES, minQualifying, rebuyLimit, type PrizeType, type Template, type TGame } from "./templates";
 import type { RankMode } from "./scoring";
 
 export const SCHEDULE_SALT = "pit-tournaments-v1";
@@ -31,8 +31,12 @@ export type TournamentDraft = {
   rebuy_stack_cents: number | null;
   rebuy_max_balance_cents: number | null;
   rebuy_limit: number;
+  /** Fixed-play formats end a player's run after this many hands/rolls (null = time only). */
+  fixed_plays: number | null;
   chicago_day: string;
   seed: string;
+  /** Freeroll budget priority (not stored). */
+  cap_priority?: number;
 };
 
 const YMD_FMT = new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" });
@@ -63,8 +67,10 @@ export function draftFor(t: Template, ymd: string, hour: number): TournamentDraf
   const start = chicagoAt(ymd, hour);
   const startIso = start.toISOString();
   const seed = createHash("sha256").update(`${t.id}|${startIso}|${SCHEDULE_SALT}`).digest();
-  const game = pick(t.games, seed[0]!);
-  const mode = pick(t.modes, seed[1]!);
+  const dayNo = Math.round(Date.parse(ymd + "T12:00:00Z") / 86_400_000);
+  const game = t.rotate ? t.games[(dayNo + t.hours.indexOf(hour)) % t.games.length]! : pick(t.games, seed[0]!);
+  const tf = TABLE_FORMATS[game];
+  const mode = tf ? tf.mode : pick(t.modes, seed[1]!);
   const buyin = pick(t.buyins, seed[2]!);
   const info = GAME_INFO[game];
   const end = new Date(start.getTime() + t.durationMin * 60_000);
@@ -75,8 +81,8 @@ export function draftFor(t: Template, ymd: string, hour: number): TournamentDraf
   return {
     id: `T-${t.id}-${compact(startIso).slice(0, 13)}Z`,
     template_id: t.id,
-    name: t.name,
-    format: t.format,
+    name: t.names?.[game] ?? t.name,
+    format: tf ? tf.format : t.format,
     category: info.category,
     game,
     rank_mode: mode,
@@ -91,11 +97,13 @@ export function draftFor(t: Template, ymd: string, hour: number): TournamentDraf
     start_stack_cents: t.startStackCents,
     min_bet_cents: info.minBet,
     max_bet_cents: info.maxBet,
-    min_qualifying_bets: minQualifying(t.durationMin, info.category),
+    min_qualifying_bets: Math.min(minQualifying(t.durationMin, info.category), tf?.fixedPlays ?? Infinity),
     rebuy_fee_cents: rebuys ? buyin : null,
     rebuy_stack_cents: rebuys ? t.startStackCents : null,
     rebuy_max_balance_cents: rebuys ? Math.floor(t.startStackCents / 10) : null,
     rebuy_limit: rebuys ? rebuyLimit(t.durationMin) : 0,
+    fixed_plays: tf?.fixedPlays ?? null,
+    cap_priority: t.capPriority ?? 10,
     chicago_day: ymd,
     seed: seed.toString("hex").slice(0, 16),
   };
@@ -114,13 +122,16 @@ export function instancesForDay(ymd: string, templates: Template[] = TEMPLATES, 
 function buildDay(ymd: string, templates: Template[], capCents: number): TournamentDraft[] {
   const all = templates.flatMap((t) => t.hours.map((h) => draftFor(t, ymd, h)))
     .sort((a, b) => (a.starts_at < b.starts_at ? -1 : a.starts_at > b.starts_at ? 1 : a.id < b.id ? -1 : 1));
+  // The $50/day house budget: the daily freerolls are funded first (priority), then the short
+  // freerolls in start order; anything that would break the budget isn't scheduled.
   let seeded = 0;
-  return all.filter((d) => {
-    if (d.house_seed_cents <= 0) return true;
-    if (seeded + d.house_seed_cents > capCents) return false; // would break the $50/day house budget
+  const keep = new Set<string>();
+  for (const d of [...all].filter((x) => x.house_seed_cents > 0).sort((a, b) => (a.cap_priority ?? 10) - (b.cap_priority ?? 10) || (a.starts_at < b.starts_at ? -1 : 1))) {
+    if (seeded + d.house_seed_cents > capCents) continue;
     seeded += d.house_seed_cents;
-    return true;
-  });
+    keep.add(d.id);
+  }
+  return all.filter((d) => d.house_seed_cents <= 0 || keep.has(d.id)).map(({ cap_priority: _p, ...d }) => d);
 }
 
 function addDays(ymd: string, n: number): string {

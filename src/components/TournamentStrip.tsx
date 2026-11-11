@@ -13,6 +13,7 @@ export type Hud = {
   prizeType: "cash" | "bonus"; entrants: number; qualifiedCount: number; poolCents: number; ladder: number[]; minBetCents: number; maxBetCents: number;
   minQualifyingBets: number; entered: boolean; rank: number | null; score: number; stackCents: number; betsMade: number; toQualify: number; qualified: boolean;
   prizeIfEndedNowCents: number; canRebuy: boolean; top: { rank: number; name: string; score: number; qualified: boolean }[];
+  testAccount?: boolean; fixedPlays?: number | null; playsUsed?: number; playsLeft?: number | null; unit?: string;
 };
 
 export const scoreLabel = (mode: string, score: number) => (mode === "accumulated" ? `${(score / 100).toFixed(2)}×` : money(score));
@@ -66,7 +67,8 @@ export default function TournamentStrip({ tournamentId, hud, onHud }: { tourname
           <>
             {hud.qualified ? <span className="tny-q ok">Qualified ✓</span> : <span className="tny-q">Remaining bets to qualify: <b data-testid="tny-toq">{hud.toQualify}</b></span>}
             <span>Bets made: <b data-testid="tny-made">{hud.betsMade}</b></span>
-            <span>Rank <b>{hud.rank ?? "—"}</b>/{hud.entrants}</span>
+            {hud.fixedPlays ? <span>{hud.unit === "rolls" ? "Rolls" : "Hands"} left: <b data-testid="tny-left-plays">{hud.playsLeft}</b>/{hud.fixedPlays}</span> : null}
+            {hud.testAccount ? <span className="tny-test" title="Test accounts never rank, count or win">Test account · not ranked</span> : <span>Rank <b>{hud.rank ?? "—"}</b>/{hud.entrants}</span>}
             <span>Score <b>{scoreLabel(hud.mode, hud.score)}</b></span>
           </>
         )}

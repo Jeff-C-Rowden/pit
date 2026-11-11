@@ -680,3 +680,5 @@ a { color: var(--st-link); }
 .tny-lobby-link small { display: block; font-size: 12px; color: var(--ivory-dim); margin-top: 3px; }
 .tny-lobby-trophy { font-size: 28px; }
 .tny-lobby-go { margin-left: auto; font-size: 28px; color: var(--st-gold); }
+.tny-test { color: #9fd3ff; font-weight: 700; }
+.tny-board tr.tny-test-row td { background: rgba(80,140,200,.18); white-space: normal; }

@@ -4,6 +4,8 @@ import { debitBet, creditPayout, applyLedger, saveGame, loadOpenGame, getBalance
 import { toPublic } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
+import { crapsTournament } from "@/lib/tournaments/tables";
+import { tournamentHud } from "@/lib/tournaments/play";
 import {
   layoutActions,
   newCrapsTable, applyBet, rollDice, resolveRoll, publicCraps,
@@ -62,6 +64,12 @@ function applyRepeat(
 
 async function _GET(req: Request) {
   return withUser(req, async (user) => {
+    const tid = new URL(req.url).searchParams.get("t");
+    if (tid) {
+      // Tournament table: its own hand/table on the tournament stack (never the wallet).
+      const db = getDb();
+      return json({ user: toPublic(user), ...crapsTournament(db, user.id, tid, { action: "state" }), tournament: tournamentHud(db, user.id, tid) });
+    }
     const t = table(user.id);
     return json({ user: toPublic(user), table: publicCraps(t.state) });
   });
@@ -70,6 +78,12 @@ async function _GET(req: Request) {
 async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
+    if (body.tournamentId) {
+      const db = getDb();
+      const tid = String(body.tournamentId);
+      const out = crapsTournament(db, user.id, tid, body);
+      return json({ ...out, tournament: tournamentHud(db, user.id, tid) });
+    }
     const t = table(user.id);
     const action = String(body.action || "");
     const key = String(body.idempotencyKey || newId());

@@ -80,6 +80,10 @@ CREATE TABLE IF NOT EXISTS tournament_house_book (
 );
 CREATE INDEX IF NOT EXISTS idx_thb_day ON tournament_house_book(chicago_day, kind);
 `);
+  const tc = new Set((db.prepare("PRAGMA table_info(tournaments)").all() as { name: string }[]).map((c) => c.name));
+  if (!tc.has("fixed_plays")) db.exec("ALTER TABLE tournaments ADD COLUMN fixed_plays INTEGER");
+  const ec = new Set((db.prepare("PRAGMA table_info(tournament_entries)").all() as { name: string }[]).map((c) => c.name));
+  if (!ec.has("plays_used")) db.exec("ALTER TABLE tournament_entries ADD COLUMN plays_used INTEGER NOT NULL DEFAULT 0");
 }
 
 export type TournamentRow = {
@@ -88,12 +92,12 @@ export type TournamentRow = {
   buyin_cents: number; fee_bps: number; house_seed_cents: number; prize_type: "cash" | "bonus"; start_stack_cents: number;
   min_bet_cents: number; max_bet_cents: number; min_qualifying_bets: number; rebuy_fee_cents: number | null;
   rebuy_stack_cents: number | null; rebuy_max_balance_cents: number | null; rebuy_limit: number; chicago_day: string;
-  status: "scheduled" | "live" | "finished"; seed: string; created_at: string; finalized_at: string | null;
+  status: "scheduled" | "live" | "finished"; seed: string; created_at: string; finalized_at: string | null; fixed_plays: number | null;
 };
 
 export type EntryRow = {
   id: string; tournament_id: string; user_id: string; display_name: string; stack_cents: number; score: number;
   score_reached_at: string | null; bets_made: number; wagered_cents: number; best_round_points: number; rebuys: number;
   last_round_at: string | null; status: "registered" | "withdrawn" | "paid" | "unplaced"; final_rank: number | null;
-  prize_cents: number | null; created_at: string;
+  prize_cents: number | null; created_at: string; plays_used: number;
 };

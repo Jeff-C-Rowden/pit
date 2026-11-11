@@ -217,6 +217,13 @@ const RECENT_HITS_DEFAULT = 8;
  * Genuine past progressive wins only — empty when nobody has hit yet.
  * Joins users for a privacy-safe display name when user_id is present.
  */
+/** Test accounts (users.is_test) never appear in public hit lists. */
+function hideTestHits(db: Database.Database, kw: "WHERE" | "AND"): string {
+  const cols = db.prepare("SELECT name FROM pragma_table_info('users')").all() as { name: string }[];
+  if (!cols.some((c) => c.name === "is_test")) return "";
+  return `${kw} (user_id IS NULL OR user_id NOT IN (SELECT id FROM users WHERE is_test = 1))`;
+}
+
 export function getRecentProgressiveHits(
   db: Database.Database = getDb(),
   limit = RECENT_HITS_DEFAULT,
@@ -229,6 +236,7 @@ export function getRecentProgressiveHits(
     .prepare(
       `SELECT tier_id, tier_name, amount_cents, user_id, created_at
        FROM progressive_hits
+       ${hideTestHits(db, "WHERE")}
        ORDER BY created_at DESC
        LIMIT ?`,
     )
@@ -277,7 +285,7 @@ export function getHitHistoryByTier(
   const stmt = db.prepare(
     `SELECT tier_id, tier_name, amount_cents, user_id, created_at
      FROM progressive_hits
-     WHERE tier_id = ?
+     WHERE tier_id = ? ${hideTestHits(db, "AND")}
      ORDER BY created_at DESC
      LIMIT ?`,
   );

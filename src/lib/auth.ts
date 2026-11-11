@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
-import { getDb, type UserRow } from "./db";
+import { getDb, isTestEmail, type UserRow } from "./db";
 import { newId } from "./rng";
 
 const SESSION_COOKIE = "pit_session";
@@ -13,6 +13,7 @@ export type PublicUser = {
   displayName: string;
   ageConfirmed: boolean;
   isOperator: boolean;
+  isTest?: boolean;
   balanceCents: number;
   /** Play-only bonus balance (sandbox). Never withdrawable. */
   bonusCents: number;
@@ -27,6 +28,7 @@ export function toPublic(u: UserRow): PublicUser {
     displayName: u.display_name,
     ageConfirmed: !!u.age_confirmed,
     isOperator: !!u.is_operator,
+    isTest: !!u.is_test,
     balanceCents: u.balance_cents,
     bonusCents: u.bonus_cents ?? 0,
     depositLimitCents: u.deposit_limit_cents,
@@ -57,14 +59,15 @@ export function createUser(opts: { email: string; password: string; displayName:
     display_name: opts.displayName.trim().slice(0, 40) || email.split("@")[0]!,
     age_confirmed: 1,
     is_operator: email === operatorEmail ? 1 : 0,
+    is_test: isTestEmail(email) ? 1 : 0,
     balance_cents: 0,
     deposit_limit_cents: null,
     loss_limit_cents: null,
     created_at: now,
   };
   db.prepare(
-    `INSERT INTO users (id, email, password_hash, display_name, age_confirmed, is_operator, balance_cents, deposit_limit_cents, loss_limit_cents, created_at)
-     VALUES (@id, @email, @password_hash, @display_name, @age_confirmed, @is_operator, @balance_cents, @deposit_limit_cents, @loss_limit_cents, @created_at)`
+    `INSERT INTO users (id, email, password_hash, display_name, age_confirmed, is_operator, is_test, balance_cents, deposit_limit_cents, loss_limit_cents, created_at)
+     VALUES (@id, @email, @password_hash, @display_name, @age_confirmed, @is_operator, @is_test, @balance_cents, @deposit_limit_cents, @loss_limit_cents, @created_at)`
   ).run(row);
   return row;
 }

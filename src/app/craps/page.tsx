@@ -7,6 +7,7 @@ import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, ResultsStrip
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 import { usePausedLabel } from "@/components/PauseStatus";
+import TournamentStrip, { scoreLabel } from "@/components/TournamentStrip";
 import LiveAnnounce from "@/components/LiveAnnounce";
 import { paidPhrase } from "@/lib/paidPhrase";
 import { exactAddAmount, friendlyPayoutUnitCents, oddsPayoutUnitCents, placePayoutUnitCents } from "@/lib/games/craps";
@@ -47,19 +48,28 @@ function BoxChip({ cents }: { cents: number }) {
   );
 }
 
-export default function CrapsPage() {
+export default function CrapsPage({ searchParams }: { searchParams?: { t?: string } }) {
   const { setUser } = useUser();
   const paused = usePausedLabel();
+  // Craps Hot Roll: same dice and payouts, tournament stack only, 40 rolls, no repeat/auto.
+  const tournamentId = searchParams?.t ?? null;
+  const tny = !!tournamentId;
+  const [tourney, setTourney] = useState<any>(null);
+  const [newAction, setNewAction] = useState(0);
+  const [lastPoints, setLastPoints] = useState<number | null>(null);
+  const tb = (extra: Record<string, unknown>) => JSON.stringify({ ...extra, idempotencyKey: crypto.randomUUID(), ...(tournamentId ? { tournamentId } : {}) });
+  const take = (d: any) => { if (d.tournament) setTourney(d.tournament); if (typeof d.newActionCents === "number") setNewAction(d.newActionCents); };
   const [table, setTable] = useState<any>(null);
-  const [chip, setChip] = useState(500);
+  const [chip, setChip] = useState(tny ? 100 : 500);
   const [err, setErr] = useState<string | null>(null);
   useClearErrOnBalance(setErr);
   const [lastPay, setLastPay] = useState<number | null>(null);
   const [lastBack, setLastBack] = useState<number | undefined>(undefined);
   const [lastRisk, setLastRisk] = useState(0);
   const [rollRef, setRollRef] = useState<string | null>(null);
-  const hasPlayed = useHasPlayed("craps", rollRef);
-  const canRoll = crapsFeltCents(table) > 0 || (!!table?.alwaysRepeat && !!table?.canRepeat);
+  const hasPlayed = useHasPlayed("craps", rollRef) && !tny;
+  const playsDone = tny && tourney?.fixedPlays != null && tourney.playsLeft === 0;
+  const canRoll = !playsDone && (crapsFeltCents(table) > 0 || (!tny && !!table?.alwaysRepeat && !!table?.canRepeat));
   const hasWorking = crapsFeltCents(table) > 0; // chips already on the felt can still be rolled out during a pause
   const [replay, setReplay] = useState<any>(null);
   const closeReplay = useCallback(() => setReplay(null), []);
@@ -82,8 +92,9 @@ export default function CrapsPage() {
   }
 
   async function load() {
-    const d = await api("/api/games/craps");
+    const d = await api(tny ? `/api/games/craps?t=${encodeURIComponent(tournamentId!)}` : "/api/games/craps");
     setTable(d.table);
+    take(d);
     if (d.user) setUser(d.user);
     if (d.table?.lastRound?.length) remember(d.table.lastRound);
     else {
@@ -119,9 +130,10 @@ export default function CrapsPage() {
     try {
       const d = await api("/api/games/craps", {
         method: "POST",
-        body: JSON.stringify({ action: "bet", bet: { ...b, amount: sizedChip(b) }, idempotencyKey: crypto.randomUUID() }),
+        body: tb({ action: "bet", bet: { ...b, amount: sizedChip(b) } }),
       });
       setTable(d.table);
+      take(d);
       if (d.user) setUser(d.user);
     } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
     finally { setBusy(false); }
@@ -134,13 +146,15 @@ export default function CrapsPage() {
     try {
       const snap = layoutFromTable(table);
       if (snap.length) remember(snap);
-      const d = await api("/api/games/craps", { method: "POST", body: JSON.stringify({ action: "roll", idempotencyKey: crypto.randomUUID() }) });
-      setTable(d.table);
+      const d = await api("/api/games/craps", { method: "POST", body: tb({ action: "roll" }) });
+      setTable(tny && d.lastRoll ? { ...d.table, lastRoll: d.roll, lastTotal: d.roll[0] + d.roll[1] } : d.table);
+      take(d);
+      setLastPoints(tny ? d.points ?? 0 : null);
       if (d.user) setUser(d.user);
       setLastRisk(crapsRiskedCents(snap));
       setLastPay(d.payoutCents);
       setLastBack(typeof d.stakeBackCents === "number" ? d.stakeBackCents : undefined);
-      setRollRef(d.rollRef || null);
+      setRollRef(d.rollRef || (tny ? crypto.randomUUID() : null));
       setReplay(null);
       if (d.table?.lastRound?.length) remember(d.table.lastRound);
       if (d.repeatedCents) setRepeatNote(`Last bet back on the felt · ${money(d.repeatedCents)}`);
@@ -168,8 +182,9 @@ export default function CrapsPage() {
     setRepeatNote(null);
     setBusy(true);
     try {
-      const d = await api("/api/games/craps", { method: "POST", body: JSON.stringify({ action: "undo", idempotencyKey: crypto.randomUUID() }) });
+      const d = await api("/api/games/craps", { method: "POST", body: tb({ action: "undo" }) });
       setTable(d.table);
+      take(d);
       if (d.user) setUser(d.user);
     } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
     finally { setBusy(false); }
@@ -201,6 +216,7 @@ export default function CrapsPage() {
     <Shell>
       {(u) => (
         <div className="craps-page">
+          {tny && <TournamentStrip tournamentId={tournamentId!} hud={tourney} onHud={setTourney} />}
           <div className="cr-status" aria-live="polite">
             <div className={`cr-puck ${table?.comeOut ? "off" : "on"}`} aria-label={table?.comeOut ? "Puck off: come-out roll" : `Puck on: point is ${table?.point}`}>
               <span className="cr-puck-word">{table?.comeOut ? "OFF" : "ON"}</span>
@@ -228,7 +244,7 @@ export default function CrapsPage() {
           </div>
           <FirstVisitTip game="craps" />
           <LiveAnnounce text={rollRef && table?.lastRoll ? `Rolled ${table.lastRoll[0]} and ${table.lastRoll[1]}, total ${table.lastTotal}. ${lastPay ? `You ${paidPhrase(lastPay, lastBack, money)}.` : "No payout this roll."}` : null} />
-          <ResultsStrip game="craps" refreshKey={rollRef} />
+          {!tny && <ResultsStrip game="craps" refreshKey={rollRef} />}
           {replay ? (
             <ReplayCard onClose={closeReplay} cageHref={cageHref("craps", replay.ref)}>
               <div className="replay-body">
@@ -250,8 +266,8 @@ export default function CrapsPage() {
               title="YOU WIN"
               amountCents={lastPay}
               stakeCents={lastRisk}
-              cageHref={cageHref("craps", rollRef)}
-              subtitle={`${money(lastPay)} added to your stack: ${paidPhrase(lastPay, lastBack, money)}`}
+              cageHref={tny ? undefined : cageHref("craps", rollRef)}
+              subtitle={tny ? `${money(lastPay)} back to your tourney stack${lastPoints ? ` · +${scoreLabel("accumulated", lastPoints)} score` : ""}` : `${money(lastPay)} added to your stack: ${paidPhrase(lastPay, lastBack, money)}`}
             />
           )}
           {lastPay === 0 && lastRisk === 0 && (
@@ -261,7 +277,7 @@ export default function CrapsPage() {
             <OutcomeBanner
               title="NOTHING PAID"
               subtitle="Nothing paid on that roll."
-              cageHref={cageHref("craps", rollRef)}
+              cageHref={tny ? undefined : cageHref("craps", rollRef)}
             />
           )}
           {repeatNote && (
@@ -321,9 +337,11 @@ export default function CrapsPage() {
             </div>
             </details>
           </div>
-          <StandingRail youName={u.displayName} youStack={u.balanceCents} />
+          {!tny && <StandingRail youName={u.displayName} youStack={u.balanceCents} />}
           {table?.log && <div className="panel log" style={{ marginTop: 12 }}>{table.log.slice().reverse().map((l: string, i: number) => <div key={i}>{l}</div>)}</div>}
-          <ActionDock busy={busy} hint={table?.alwaysRepeat
+          <ActionDock busy={busy} hint={tny
+            ? (playsDone ? "All 40 rolls made. Your score stands; see the leaderboard." : `Tourney stack ${money(tourney?.stackCents ?? 0)} · new bets this roll ${money(newAction)} of ${money(tourney?.maxBetCents ?? 1000)}`)
+            : table?.alwaysRepeat
             ? "Auto-repeat is on: each roll restacks your chips."
             : canRoll ? "Pick a chip, tap the felt, then Roll." : "Tap Pass line to place your first bet."}>
             <div className="cr-dock-status" aria-hidden="true">
@@ -332,16 +350,20 @@ export default function CrapsPage() {
                 ? <span className="cr-dock-dice"><span className="dice cr-die">{table.lastRoll[0]}</span><span className="dice cr-die">{table.lastRoll[1]}</span><b>= {table.lastTotal}</b></span>
                 : <span className="muted">No roll yet</span>}
             </div>
-            <ChipRow amounts={[100, 500, 1000, 2500]} selected={chip} onSelect={setChip} minCents={100} maxCents={500_000} />
+            {tny
+              ? <ChipRow amounts={[50, 100, 250, 500, 1000]} selected={chip} onSelect={setChip} minCents={50} maxCents={tourney?.maxBetCents ?? 1000} />
+              : <ChipRow amounts={[100, 500, 1000, 2500]} selected={chip} onSelect={setChip} minCents={100} maxCents={500_000} />}
             <div className="cr-tools">
               <button className="btn" disabled={busy || !table?.canUndo} onClick={undo}>Undo</button>
-              <button className="btn" disabled={busy || !canRepeat} onClick={repeat}>Repeat</button>
-              <button className={`btn toggle${table?.alwaysRepeat ? " on" : ""}`} disabled={busy} onClick={toggleAlways} aria-pressed={!!table?.alwaysRepeat}>
-                Auto-repeat {table?.alwaysRepeat ? "on" : "off"}
-              </button>
+              {!tny && <button className="btn" disabled={busy || !canRepeat} onClick={repeat}>Repeat</button>}
+              {!tny && (
+                <button className={`btn toggle${table?.alwaysRepeat ? " on" : ""}`} disabled={busy} onClick={toggleAlways} aria-pressed={!!table?.alwaysRepeat}>
+                  Auto-repeat {table?.alwaysRepeat ? "on" : "off"}
+                </button>
+              )}
             </div>
             <div className="felt-total" aria-live="polite">Your felt: <b key={crapsFeltCents(table)} className="felt-amt">{money(crapsFeltCents(table))}</b></div>
-            <button className="btn primary hero-act" disabled={busy || !canRoll || (!!paused && !hasWorking)} data-paused={paused && !hasWorking ? "1" : undefined} onClick={roll}>{busy ? "Rolling…" : paused && !hasWorking ? paused : canRoll ? "Roll" : "Place a bet to roll"}</button>{paused && !hasWorking && <a className="paused-why" href="/wallet#time">Why is this paused?</a>}
+            <button className="btn primary hero-act" disabled={busy || !canRoll || (!!paused && !hasWorking)} data-paused={paused && !hasWorking ? "1" : undefined} onClick={roll}>{busy ? "Rolling…" : playsDone ? "All rolls made" : paused && !hasWorking ? paused : canRoll ? "Roll" : "Place a bet to roll"}</button>{paused && !hasWorking && <a className="paused-why" href="/wallet#time">Why is this paused?</a>}
           </ActionDock>
         </div>
       )}

@@ -5,7 +5,8 @@ import { serverNow } from "../clock";
 import { breakUntil, sessionBlock } from "../session";
 import { chicagoTime } from "../limitText";
 import { roundPoints } from "./scoring";
-import { TnyError, boardOf, getTournament, myEntry, ensureSchedule } from "./store";
+import { TnyError, boardOf, getTournament, myEntry, ensureSchedule, viewerEntry } from "./store";
+import { GAME_INFO, type TGame } from "./templates";
 import type { EntryRow, TournamentRow } from "./schema";
 
 export const MIN_ROUND_GAP_MS = 700;
@@ -45,7 +46,7 @@ export function playTournamentRound<R>(db: Database.Database, userId: string, ti
     const nowIso = now.toISOString();
     const score = t.rank_mode === "balance" ? stack : e!.score + pts;
     const reached = score !== e!.score ? nowIso : e!.score_reached_at;
-    db.prepare(`UPDATE tournament_entries SET stack_cents = ?, score = ?, score_reached_at = ?, bets_made = bets_made + 1, wagered_cents = wagered_cents + ?,
+    db.prepare(`UPDATE tournament_entries SET stack_cents = ?, score = ?, score_reached_at = ?, bets_made = bets_made + 1, plays_used = plays_used + 1, wagered_cents = wagered_cents + ?,
       best_round_points = MAX(best_round_points, ?), last_round_at = ? WHERE id = ?`).run(stack, score, reached, out.stake, pts, nowIso, e!.id);
     db.prepare(`INSERT INTO tournament_rounds (id, entry_id, game, stake_cents, return_cents, points, stack_after_cents, idempotency_key, summary, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(newId(), e!.id, game, out.stake, out.ret, pts, stack, `${tid}:${key}`, (out.summary ?? "").slice(0, 120), nowIso);
@@ -57,8 +58,8 @@ export function playTournamentRound<R>(db: Database.Database, userId: string, ti
 export function tournamentHud(db: Database.Database, userId: string, tid: string) {
   const now = serverNow();
   const t: TournamentRow = getTournament(db, tid);
-  const b = boardOf(db, t);
-  const me = b.rows.find((r) => r.user_id === userId) as (EntryRow & { rank: number; qualified: boolean; prizeCents: number }) | undefined;
+  const b = boardOf(db, t, now);
+  const me = viewerEntry(db, t, b, userId) as (EntryRow & { rank: number | null; qualified: boolean; prizeCents: number; testAccount: boolean }) | null;
   return {
     id: t.id,
     name: t.name,
@@ -77,6 +78,11 @@ export function tournamentHud(db: Database.Database, userId: string, tid: string
     maxBetCents: t.max_bet_cents,
     minQualifyingBets: t.min_qualifying_bets,
     entered: !!me,
+    testAccount: !!me?.testAccount,
+    fixedPlays: t.fixed_plays ?? null,
+    playsUsed: me?.plays_used ?? 0,
+    playsLeft: t.fixed_plays ? Math.max(0, t.fixed_plays - (me?.plays_used ?? 0)) : null,
+    unit: GAME_INFO[t.game as TGame]?.unit ?? "rounds",
     rank: me?.rank ?? null,
     score: me?.score ?? 0,
     stackCents: me?.stack_cents ?? 0,

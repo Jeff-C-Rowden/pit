@@ -16,11 +16,12 @@ type Row = {
   startsAt: string; endsAt: string; regClosesAt: string; durationMin: number; buyinCents: number; feeBps: number; seedCents: number; prizeType: string;
   rebuyFeeCents: number | null; status: string; entrants: number; qualifiedCount: number; poolCents: number; firstPrizeCents: number; placesPaid: number;
   minQualifyingBets: number;
-  my: null | { rank?: number; qualified?: boolean; betsMade?: number; score?: number; prizeCents?: number; finalPrizeCents?: number | null; withdrawn?: boolean };
+  fixedPlays?: number | null; unit?: string;
+  my: null | { testAccount?: boolean; rank?: number | null; qualified?: boolean; betsMade?: number; score?: number; prizeCents?: number; finalPrizeCents?: number | null; withdrawn?: boolean };
 };
 type Tab = "live" | "upcoming" | "finished";
 type Filter = "all" | "free" | "slots" | "tables" | "mine";
-const ART: Record<string, string> = { buckshot: "bb", slot: "slot", roulette: "rl" };
+const ART: Record<string, string> = { buckshot: "bb", slot: "slot", roulette: "rl", blackjack: "bj", craps: "cr" };
 const ct = (iso: string) => new Date(iso).toLocaleString("en-US", { timeZone: "America/Chicago", weekday: "short", hour: "numeric", minute: "2-digit" }) + " CT";
 const dur = (m: number) => (m < 60 ? `${m} min` : `${m / 60} h`);
 const buyin = (c: number) => (c ? money(c) : "Free");
@@ -126,7 +127,7 @@ export default function TournamentsPage() {
               <article key={r.id} className={`tny-card${sel === r.id ? " on" : ""}`}>
                 <header><span className="mono">#{r.shortId}</span> · <b>{r.name}</b></header>
                 <div className="tny-card-body">
-                  <div className="tny-card-art"><GameArt kind={ART[r.game] ?? "bb"} variant="tile" /><span className="tny-card-rank">{r.my?.rank ? `Your rank: ${r.my.rank} / ${r.entrants}` : "Not entered"}</span></div>
+                  <div className="tny-card-art"><GameArt kind={ART[r.game] ?? "bb"} variant="tile" /><span className="tny-card-rank">{r.my?.testAccount ? "Test account · not ranked" : r.my?.rank ? `Your rank: ${r.my.rank} / ${r.entrants}` : "Not entered"}</span></div>
                   <dl>
                     <div><dt>Status</dt><dd><StatusPill r={r} tab={tab} /></dd></div>
                     <div><dt>Mode</dt><dd><ModeBadge mode={r.mode} /></dd></div>
@@ -186,7 +187,7 @@ type DetailData = {
   feeSplit: { toPoolCents: number; feeCents: number };
   qualifiedCount: number; fallback: boolean; ladder: number[]; legend: string;
   top: { rank: number; name: string; score: number; betsMade: number; qualified: boolean; prizeCents: number; me: boolean }[];
-  me: null | { rank: number; name: string; score: number; stackCents: number; betsMade: number; qualified: boolean; prizeCents: number; rebuys: number; status: string };
+  me: null | { rank: number | null; name: string; score: number; stackCents: number; betsMade: number; playsUsed?: number; qualified: boolean; prizeCents: number; rebuys: number; status: string; testAccount?: boolean };
   canRebuy: boolean; canWithdraw: boolean; regOpen: boolean;
 };
 
@@ -252,13 +253,13 @@ function Detail({ id, now, onUser, onChanged }: { id: string; now: () => number;
           <h3>Tournament Info</h3>
           <dl className="tny-dl">
             <div><dt>Game</dt><dd>{t.gameName}</dd></div>
-            <div><dt>Format</dt><dd>{t.format} · {dur(t.durationMin)}</dd></div>
+            <div><dt>Format</dt><dd>{t.format} · {t.fixedPlays ? `${t.fixedPlays} ${t.unit} within ${dur(t.durationMin)}` : dur(t.durationMin)}</dd></div>
             <div><dt>Mode</dt><dd>{t.mode === "balance" ? "Highest stack at the end" : "Only wins count (net × bet)"}</dd></div>
             <div><dt>Starts</dt><dd>{ct(t.startsAt)}</dd></div>
             <div><dt>Ends</dt><dd>{ct(t.endsAt)}</dd></div>
             <div><dt>Registration closes</dt><dd>{ct(t.regClosesAt)}</dd></div>
-            <div><dt>Qualify</dt><dd>{t.minQualifyingBets} bets of {money(t.minBetCents)}+</dd></div>
-            <div><dt>Bet limits</dt><dd>{money(t.minBetCents)} – {money(t.maxBetCents)}</dd></div>
+            <div><dt>Qualify</dt><dd>{t.game === "craps" ? `${t.minQualifyingBets} rolls that settle ${money(t.minBetCents)}+` : `${t.minQualifyingBets} ${t.game === "blackjack" ? "hands" : "bets"} of ${money(t.minBetCents)}+`}</dd></div>
+            <div><dt>Bet limits</dt><dd>{money(t.minBetCents)} – {money(t.maxBetCents)}{t.game === "craps" ? " new bets a roll" : t.game === "blackjack" ? " a hand (doubles/splits may exceed)" : ""}</dd></div>
           </dl>
         </div>
         <div className="tny-c3">
@@ -284,7 +285,10 @@ function Detail({ id, now, onUser, onChanged }: { id: string; now: () => number;
                   <td className="tny-gold">{r.prizeCents ? money(r.prizeCents) : r.qualified ? "—" : "needs bets"}</td>
                 </tr>
               ) : <tr key={i} className="empty"><td>{i + 1}</td><td>—</td><td>—</td><td>—</td><td>{d.ladder[i] && !d.top.length ? money(d.ladder[i]!) : "—"}</td></tr>)}
-              {d.me && d.me.rank > 10 && (
+              {d.me && d.me.testAccount && (
+                <tr className="me tny-test-row" data-testid="tny-my-row"><td>—</td><td>{d.me.name} (you) · test account, not ranked</td><td>{scoreLabel(t.mode, d.me.score)}</td><td>{d.me.qualified ? d.me.betsMade : `${d.me.betsMade}/${t.minQualifyingBets}`}</td><td>—</td></tr>
+              )}
+              {d.me && !d.me.testAccount && (d.me.rank ?? 0) > 10 && (
                 <tr className="me"><td>{d.me.rank}</td><td>{d.me.name} (you)</td><td>{scoreLabel(t.mode, d.me.score)}</td><td>{d.me.betsMade}</td><td>{d.me.prizeCents ? money(d.me.prizeCents) : "—"}</td></tr>
               )}
             </tbody>

@@ -73,3 +73,28 @@ export function ladderLegend(): string {
     return `${range} → ${bps.length}`;
   }).join(" · ");
 }
+
+/**
+ * Per-account prize cap (spec §2.9 freerolls: $25/day). Walks the board in rank order; a place
+ * over its account's cap keeps what fits and the excess moves to the next eligible place, which
+ * may be beyond the paid ladder. What no one can take stays unpaid (the seed isn't spent).
+ * Each account is counted once even if (in theory) it appears twice. Σ prizes + unpaid = Σ input.
+ */
+export function applyPrizeCap(rows: { key: string; eligible: boolean; prizeCents: number }[], capLeft: (key: string) => number) {
+  const left = new Map<string, number>();
+  const prizes: number[] = [];
+  const cut: number[] = [];
+  let carry = 0;
+  for (const r of rows) {
+    if (!left.has(r.key)) left.set(r.key, Math.max(0, Math.floor(capLeft(r.key))));
+    const want = r.prizeCents + (r.eligible ? carry : 0);
+    if (r.eligible) carry = 0;
+    const room = left.get(r.key)!;
+    const got = Math.min(want, room);
+    left.set(r.key, room - got);
+    prizes.push(got);
+    cut.push(Math.max(0, r.prizeCents - got));
+    carry += want - got;
+  }
+  return { prizes, cut, unpaidCents: carry };
+}

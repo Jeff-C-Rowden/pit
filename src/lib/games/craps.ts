@@ -437,7 +437,7 @@ export function rollDice(): [number, number] {
   return [randInt(6) + 1, randInt(6) + 1];
 }
 
-export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCents: number; stakeBackCents: number; notes: string[] } {
+export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCents: number; stakeBackCents: number; stayCents: number; notes: string[] } {
   const [d1, d2] = dice;
   const t = d1 + d2;
   s.lastRoll = [d1, d2];
@@ -446,6 +446,9 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
   let pay = 0;
   // Part of `pay` that is the player's own stake coming back off the felt (the rest is winnings).
   let back = 0;
+  // Stake of bets that WON this roll and stay up on the felt (pass, don't pass, place). Display and
+  // tournament scoring only: those chips never left the table, so no money moves for them.
+  let stay = 0;
   const hard = d1 === d2;
 
   // one-roll props always working
@@ -523,11 +526,11 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
 
   if (comeOut) {
     if (t === 7 || t === 11) {
-      if (s.pass) { pay += s.pass; notes.push("pass wins 1:1 (bet stays)"); }
+      if (s.pass) { pay += s.pass; stay += s.pass; notes.push("pass wins 1:1 (bet stays)"); }
       if (s.dontPass) { notes.push("don't pass loses"); s.dontPass = 0; s.dontPassOdds = 0; }
     } else if (t === 2 || t === 3) {
       if (s.pass) { notes.push("pass loses craps"); s.pass = 0; s.passOdds = 0; }
-      if (s.dontPass) { pay += s.dontPass; notes.push("don't pass wins 1:1 (bet stays)"); }
+      if (s.dontPass) { pay += s.dontPass; stay += s.dontPass; notes.push("don't pass wins 1:1 (bet stays)"); }
     } else if (t === 12) {
       if (s.pass) { notes.push("pass loses 12"); s.pass = 0; s.passOdds = 0; }
       if (s.dontPass) notes.push("don't pass bar 12 (push)");
@@ -540,7 +543,7 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
     if (PLACE_NUMS.includes(t)) {
       const amt = s.place[String(t)] || 0;
       if (amt) {
-        pay += placePay(t, amt) - amt;
+        pay += placePay(t, amt) - amt; stay += amt;
         notes.push(`place ${t} wins (bet stays)`);
       }
     }
@@ -548,7 +551,7 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
       notes.push("seven-out");
       if (s.pass) { s.pass = 0; s.passOdds = 0; notes.push("pass loses"); }
       if (s.dontPass) {
-        pay += s.dontPass + (s.dontPassOdds ? oddsPay(s.point!, s.dontPassOdds, true) : 0); back += s.dontPassOdds || 0;
+        pay += s.dontPass + (s.dontPassOdds ? oddsPay(s.point!, s.dontPassOdds, true) : 0); back += s.dontPassOdds || 0; stay += s.dontPass;
         notes.push("don't pass wins");
         s.dontPassOdds = 0;
       }
@@ -568,7 +571,7 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
     } else if (t === s.point) {
       notes.push("point hit");
       if (s.pass) {
-        pay += s.pass + (s.passOdds ? oddsPay(s.point, s.passOdds, false) : 0); back += s.passOdds || 0;
+        pay += s.pass + (s.passOdds ? oddsPay(s.point, s.passOdds, false) : 0); back += s.passOdds || 0; stay += s.pass;
         notes.push("pass wins 1:1 (bet stays)");
       }
       if (s.dontPass) { s.dontPass = 0; s.dontPassOdds = 0; notes.push("don't pass loses"); }
@@ -621,7 +624,7 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
 
   s.log.push(`Roll ${d1}+${d2}=${t}. ${notes.join("; ") || "no action"}`);
   if (s.log.length > 40) s.log = s.log.slice(-40);
-  return { payoutCents: pay, stakeBackCents: back, notes };
+  return { payoutCents: pay, stakeBackCents: back, stayCents: stay, notes };
 }
 
 export function publicCraps(s: CrapsState) {

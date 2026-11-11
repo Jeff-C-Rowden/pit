@@ -9,11 +9,15 @@ import { DealerBooth, TableHeart, TableSeat, botBlackjackHand, botHandValue, use
 import LiveAnnounce from "@/components/LiveAnnounce";
 import { api, money, useUser } from "@/components/useUser";
 import { usePausedLabel } from "@/components/PauseStatus";
+import TournamentStrip from "@/components/TournamentStrip";
 
-export default function BlackjackPage() {
+export default function BlackjackPage({ searchParams }: { searchParams?: { t?: string } }) {
   const { setUser } = useUser();
+  // Blackjack Chip Race: same shoe and rules, tournament stack only, no bot seats, no wallet.
+  const tournamentId = searchParams?.t ?? null;
+  const [tourney, setTourney] = useState<any>(null);
   const [game, setGame] = useState<any>(null);
-  const [bet, setBet] = useState(1000);
+  const [bet, setBet] = useState(tournamentId ? 500 : 1000);
   const [err, setErr] = useState<string | null>(null);
   useClearErrOnBalance(setErr);
   const [busy, setBusy] = useState(false);
@@ -30,8 +34,9 @@ export default function BlackjackPage() {
   const settledFor = useRef<string | null>(null);
 
   async function load() {
-    const d = await api("/api/games/blackjack");
+    const d = await api(tournamentId ? `/api/games/blackjack?t=${encodeURIComponent(tournamentId)}` : "/api/games/blackjack");
     setGame(d.game);
+    if (d.tournament) setTourney(d.tournament);
     if (d.user) setUser(d.user);
   }
   useEffect(() => { load().catch((e) => setErr(e.message)); }, []);
@@ -44,9 +49,10 @@ export default function BlackjackPage() {
     try {
       const d = await api("/api/games/blackjack", {
         method: "POST",
-        body: JSON.stringify({ action, gameId: game?.id, betCents: bet, ...extra, idempotencyKey: crypto.randomUUID() }),
+        body: JSON.stringify({ action, gameId: game?.id, betCents: bet, ...extra, idempotencyKey: crypto.randomUUID(), ...(tournamentId ? { tournamentId } : {}) }),
       });
       setGame(d.game);
+      if (d.tournament) setTourney(d.tournament);
       if (d.user) setUser(d.user);
     } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
     finally { setBusy(false); }
@@ -83,28 +89,39 @@ export default function BlackjackPage() {
           result={result}
           hint={hint}
           settledFor={settledFor}
+          tournamentId={tournamentId}
+          tourney={tourney}
+          setTourney={setTourney}
         />
       )}
     </Shell>
   );
 }
 
-function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, err, busy, act, betting, isPush, isWin, isLoss, result, hint, settledFor }: any) {
+function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, err, busy, act, betting, isPush, isWin, isLoss, result, hint, settledFor, tournamentId, tourney, setTourney }: any) {
   const paused = usePausedLabel();
-  const hasPlayed = useHasPlayed("blackjack", `${game?.id}-${game?.phase}`);
-  const { occupants, setYouSeat, n, nudgeBot } = useTableSeats("blackjack", u.displayName, u.balanceCents);
+  const tny = !!tournamentId;
+  const stack: number = tny ? (tourney?.stackCents ?? 0) : u.balanceCents;
+  const playsDone = tny && tourney?.fixedPlays != null && tourney.playsLeft === 0;
+  const hasPlayed = useHasPlayed("blackjack", `${game?.id}-${game?.phase}`) && !tny;
+  const seats = useTableSeats("blackjack", u.displayName, stack);
+  const { setYouSeat, n, nudgeBot } = seats;
+  // A tournament table shows only you: no house seats next to a real leaderboard.
+  const occupants = tny ? seats.occupants.map((o) => (o.kind === "bot" ? { ...o, kind: "empty" as const, name: `Seat ${o.seat + 1}`, stackCents: 0 } : o)) : seats.occupants;
   const dealerRank = game?.dealer?.cards?.[0]?.rank;
   const youBet = game?.playerHands?.reduce((s: number, h: any) => s + (h.betCents || 0), 0)
     || (game?.insuranceCents || 0)
     || (betting ? bet : 0);
-  const canAfford = u.balanceCents >= bet;
+  const canAfford = stack >= bet && !playsDone;
   const openHand = game && game.phase !== "settled";
-  const dealHint = betting && !canAfford
-    ? "Add sandbox chips above to deal."
-    : hint;
+  const dealHint = playsDone
+    ? "All 30 hands played. Your stack is your score; see the leaderboard."
+    : betting && !canAfford
+      ? (tny ? "Not enough tournament chips for that bet. Pick a smaller chip." : "Add sandbox chips above to deal.")
+      : hint;
 
   useEffect(() => {
-    if (!game || game.phase !== "settled") return;
+    if (!game || game.phase !== "settled" || tny) return;
     if (settledFor.current === game.id) return;
     settledFor.current = game.id;
     const dealerTotal = game.dealer?.value?.total;
@@ -125,9 +142,10 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
 
   return (
     <>
-      <div className="rail-label" style={{ marginTop: 20 }}>Blackjack · 7-spot · 6 decks · S17 · 3:2</div>
+      {tny && <TournamentStrip tournamentId={tournamentId} hud={tourney} onHud={setTourney} />}
+      <div className="rail-label" style={{ marginTop: 20 }}>{tny ? `Blackjack Chip Race · tourney stack ${money(stack)}` : "Blackjack · 7-spot · 6 decks · S17 · 3:2"}</div>
       <LiveAnnounce text={game?.phase === "settled" && result !== "hand closed" ? `Hand over: ${result}. ${(game.payoutCents || 0) > 0 ? `Paid ${money(game.payoutCents)}.` : "No payout."}` : null} />
-      <ResultsStrip game="blackjack" refreshKey={`${game?.id}-${game?.phase}`} />
+      {!tny && <ResultsStrip game="blackjack" refreshKey={`${game?.id}-${game?.phase}`} />}
       <div className="marquee-felt felt-table seated bj-table">
 <TableNameplate name="Blackjack" sub="Pays 3 to 2" game="blackjack" />
         <DealerBooth>
@@ -151,17 +169,17 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
             <OutcomeBanner
               win
               title="YOU WIN"
-              cageHref={cageHref("blackjack", game?.id)}
+              cageHref={tny ? undefined : cageHref("blackjack", game?.id)}
               amountCents={game.payoutCents}
               stakeCents={youBet}
-              subtitle={`${money(game.payoutCents)} added to your stack`}
+              subtitle={`${money(game.payoutCents)} added to your ${tny ? "tourney " : ""}stack`}
             />
           )}
           {isPush && (
             <OutcomeBanner
               push
               title="PUSH"
-              cageHref={cageHref("blackjack", game?.id)}
+              cageHref={tny ? undefined : cageHref("blackjack", game?.id)}
               amountCents={game.payoutCents}
               subtitle={`${money(game.payoutCents || 0)} returned to your stack`}
             />
@@ -169,7 +187,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
           {isLoss && (
             <OutcomeBanner
               title="DEALER WINS"
-              cageHref={cageHref("blackjack", game?.id)}
+              cageHref={tny ? undefined : cageHref("blackjack", game?.id)}
               subtitle={blackjackResultLabel(result) || "You lost this hand."}
             />
           )}
@@ -235,7 +253,9 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
         )}
         {betting && (
           <>
-            <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} minCents={100} maxCents={500_000} />
+            {tny
+              ? <ChipRow amounts={[100, 200, 500, 1000, 2000]} selected={bet} onSelect={setBet} minCents={tourney?.minBetCents ?? 100} maxCents={tourney?.maxBetCents ?? 2000} />
+              : <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} minCents={100} maxCents={500_000} />}
             <button
               className="btn primary hero-act"
               disabled={busy || !canAfford || !!paused}
@@ -243,7 +263,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
               title={!canAfford ? "Add sandbox chips above to deal." : undefined}
               onClick={() => act("deal")}
             >
-              {paused || (busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal")}
+              {paused || (playsDone ? "All hands played" : busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal")}
             </button>{paused && <a className="paused-why" href="/wallet#time">Why is this paused?</a>}
           </>
         )}
@@ -263,7 +283,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
         )}
         {openHand && (
           <button className="btn" disabled={busy} onClick={() => act("abandon")}>
-            Leave hand
+            {tny ? "Stand all" : "Leave hand"}
           </button>
         )}
       </ActionDock>

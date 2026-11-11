@@ -4,6 +4,8 @@ import { debitBet, creditPayout, saveGame, loadGame, loadOpenGame, getBalance } 
 import { toPublic } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
+import { blackjackTournament } from "@/lib/tournaments/tables";
+import { tournamentHud } from "@/lib/tournaments/play";
 import {
   startBlackjack, hit, stand, double, split, takeInsurance, abandonHand, publicBlackjack, type BjState,
 } from "@/lib/games/blackjack";
@@ -14,6 +16,12 @@ function freshUser(id: string) {
 
 async function _GET(req: Request) {
   return withUser(req, async (user) => {
+    const tid = new URL(req.url).searchParams.get("t");
+    if (tid) {
+      // Tournament table: its own hand/table on the tournament stack (never the wallet).
+      const db = getDb();
+      return json({ user: toPublic(user), ...blackjackTournament(db, user.id, tid, { action: "state" }), tournament: tournamentHud(db, user.id, tid) });
+    }
     const open = loadOpenGame<BjState>(user.id, "blackjack");
     return json({
       user: toPublic(user),
@@ -34,6 +42,12 @@ async function _GET(req: Request) {
 async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
+    if (body.tournamentId) {
+      const db = getDb();
+      const tid = String(body.tournamentId);
+      const out = blackjackTournament(db, user.id, tid, body);
+      return json({ ...out, tournament: tournamentHud(db, user.id, tid) });
+    }
     const action = String(body.action || "");
     const key = String(body.idempotencyKey || newId());
 

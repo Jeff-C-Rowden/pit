@@ -159,7 +159,7 @@ describe("schedule", () => {
 function seedDb() {
   const db = resetDbForTests();
   const ins = db.prepare(`INSERT INTO users (id, email, password_hash, display_name, age_confirmed, is_operator, balance_cents, created_at) VALUES (?, ?, 'h', ?, 1, 0, ?, datetime('now'))`);
-  for (let i = 1; i <= 12; i++) ins.run(`u${i}`, `u${i}@pit.test`, i === 1 ? "Jeff Rowden" : `Player ${i}`, 100_000);
+  for (let i = 1; i <= 12; i++) ins.run(`u${i}`, `u${i}@pit.example`, i === 1 ? "Jeff Rowden" : `Player ${i}`, 100_000);
   return db;
 }
 const live = (db: ReturnType<typeof seedDb>, tpl: string) => db.prepare("SELECT * FROM tournaments WHERE template_id = ? AND status = 'live' ORDER BY starts_at DESC LIMIT 1").get(tpl) as TournamentRow;
@@ -306,7 +306,7 @@ describe("tournament lifecycle on the ledger", () => {
     expect(() => registerEntry(db, user(6), frees[0]!.id, now())).toThrow(/break/);
     // three entries today, the fourth is refused
     const extra = Array.from({ length: 4 }, (_, i) => `T-x-${i}`);
-    for (const id of extra) db.prepare(`INSERT INTO tournaments SELECT ?, 'x' || ?, name, format, category, game, rank_mode, starts_at, ends_at, reg_closes_at, duration_min, buyin_cents, fee_bps, house_seed_cents, prize_type, start_stack_cents, min_bet_cents, max_bet_cents, min_qualifying_bets, rebuy_fee_cents, rebuy_stack_cents, rebuy_max_balance_cents, rebuy_limit, chicago_day, status, seed, created_at, finalized_at FROM tournaments WHERE id = ?`).run(id, id, frees[0]!.id);
+    for (const id of extra) db.prepare(`INSERT INTO tournaments SELECT ?, 'x' || ?, name, format, category, game, rank_mode, starts_at, ends_at, reg_closes_at, duration_min, buyin_cents, fee_bps, house_seed_cents, prize_type, start_stack_cents, min_bet_cents, max_bet_cents, min_qualifying_bets, rebuy_fee_cents, rebuy_stack_cents, rebuy_max_balance_cents, rebuy_limit, chicago_day, status, seed, created_at, finalized_at, fixed_plays FROM tournaments WHERE id = ?`).run(id, id, frees[0]!.id);
     for (let i = 0; i < 3; i++) registerEntry(db, user(7), extra[i]!, now());
     expect(() => registerEntry(db, user(7), extra[3]!, now())).toThrow(/3 free tournaments today/);
   });

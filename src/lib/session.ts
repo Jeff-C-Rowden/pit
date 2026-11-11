@@ -30,10 +30,25 @@ export function migrateSession(db: Database.Database) {
 
 export type Session = { active: boolean; startedAt: string | null; lastAt: string | null; minutes: number; netCents: number; breakEndsAt: string | null };
 
+const roundsTable = new WeakMap<Database.Database, boolean>();
+function hasTournamentRounds(db: Database.Database): boolean {
+  let v = roundsTable.get(db);
+  if (v === undefined) {
+    v = !!db.prepare("SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'tournament_rounds'").get();
+    if (v) roundsTable.set(db, v); // only cache "present": the table may be created later
+  }
+  return v;
+}
+
 export function currentSession(db: Database.Database, userId: string, now = new Date()): Session {
   const since = new Date(now.getTime() - 24 * 3600_000).toISOString();
+  // Tournament rounds count as play time too (they move no wallet money, so they add 0 to net).
+  const tny = hasTournamentRounds(db)
+    ? `UNION ALL SELECT 'tournament' AS type, 0 AS a, r.created_at AS t FROM tournament_rounds r JOIN tournament_entries e ON e.id = r.entry_id
+       WHERE e.user_id = @u AND r.created_at >= @since`
+    : "";
   const rows = db.prepare(`SELECT type, CASE WHEN currency = 'cash' THEN amount_cents ELSE 0 END AS a, created_at AS t FROM ledger
-    WHERE user_id = ? AND type IN ('bet','payout','refund') AND created_at >= ? ORDER BY created_at DESC`).all(userId, since) as { type: string; a: number; t: string }[];
+    WHERE user_id = @u AND type IN ('bet','payout','refund') AND created_at >= @since ${tny} ORDER BY t DESC`).all({ u: userId, since }) as { type: string; a: number; t: string }[];
   if (!rows.length || now.getTime() - Date.parse(rows[0].t) >= BREAK_MS) {
     return { active: false, startedAt: null, lastAt: rows[0]?.t ?? null, minutes: 0, netCents: 0, breakEndsAt: null };
   }
