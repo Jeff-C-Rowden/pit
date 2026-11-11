@@ -13,6 +13,8 @@ import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
+import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
+import { bellyPays, ledText, stepCoin } from "@/lib/cabinet";
 
 type LineWin = { line: number; symbol: VsSymbol | null; count: number; pay: number; winCents: number };
 type ProgHit = { tierId: string; name: string; awardCents: number; reseedsTo?: number };
@@ -54,7 +56,7 @@ function CountUp({ cents, active }: { cents: number; active: boolean }) {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [cents, active]);
-  return <>{money(display)}</>;
+  return <>{ledText(display)}</>;
 }
 
 export default function VaultPage() {
@@ -115,6 +117,18 @@ export default function VaultPage() {
   const machineRef = useRef<VaultSpireMachineHandle>(null);
 
   const coinIn = coin * 9;
+  const [settleTick, setSettleTick] = useState(0);
+  const auto = useAutoSpin({
+    settleTick,
+    spinOnce: () => void go(),
+    balanceCents: useCallback(() => balRef.current, []),
+    costCents: coinIn,
+    jackpot: useCallback(() => ((spinRef.current?.progressiveHits as ProgHit[] | undefined)?.length ?? 0) > 0, []),
+  });
+  const winLines = useMemo(
+    () => (showOutcome ? ((spin?.lineWins as LineWin[] | undefined) ?? []).filter((w) => w.winCents > 0).map((w) => w.line) : []),
+    [spin, showOutcome],
+  );
   const contribPreview = Math.floor((coinIn * VS_TOTAL_CONTRIBUTION_BPS) / 10_000);
 
   // J4: a real hit by anyone that lands while we watch shows a reseed moment.
@@ -162,6 +176,7 @@ export default function VaultPage() {
     setSpinning(false);
     setBusy(false);
     setShowOutcome(true);
+    setSettleTick((n) => n + 1);
     const hits = (spinRef.current?.progressiveHits as ProgHit[] | undefined) ?? [];
     if (pendingMetersRef.current) {
       // Reseeded meters were held back so the reels, not the meter, reveal the hit.
@@ -196,6 +211,7 @@ export default function VaultPage() {
       setErr(
         `This spin costs ${money(cost)} (coin × 9). Add sandbox chips above.`,
       );
+      auto.fail();
       return;
     }
     setErr(null);
@@ -228,6 +244,7 @@ export default function VaultPage() {
       if (d.user) setUser(d.user);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "failed");
+      auto.fail();
       setSpinning(false);
       setBusy(false);
     }
@@ -236,8 +253,10 @@ export default function VaultPage() {
   function onPrimary() {
     if (spinning) {
       machineRef.current?.stopAll();
+      if (auto.running) auto.cancel();
       return;
     }
+    if (auto.running) { auto.cancel(); return; }
     void go();
   }
 
@@ -254,6 +273,11 @@ export default function VaultPage() {
     setCoin(5000);
     setMaxArmed(false);
   }
+
+  const pays = bellyPays(info?.paytable).flatMap((p) => {
+    const a = (VS_SYM_ART as any)[p.sym];
+    return a ? [{ key: p.sym, label: a.label, tone: a.tone, Svg: a.Svg, pay5: p.pay5 }] : [];
+  });
 
   const hits = (spin?.progressiveHits as ProgHit[] | undefined) ?? [];
   const hasJackpot = showOutcome && hits.length > 0;
@@ -282,14 +306,6 @@ export default function VaultPage() {
           {err && <p className="err">{err}</p>}
 
           <div className="vault-hero">
-            <ProgressiveMeterStrip
-              meters={meters}
-              quiet={spinning || busy}
-              hitTierIds={hitTierIds}
-              reseed={reseed}
-              onOpenInfo={(m) => setInfoSheet(m)}
-            />
-
             <div className="vault-stage-wrap">
               <VaultSpireMachine
                 ref={machineRef}
@@ -300,24 +316,40 @@ export default function VaultPage() {
                 glow={showOutcome ? slotGlowTier(coinIn, lastWinCents) : 0}
                 glowLive={feelLive}
                 turbo={turboOn}
+                winLines={winLines}
+                topper={
+                  <CabinetTopper title="Canopy Spire" kicker="Jade dragon progressive" emblem={<span className="cab-pearl jade" />}>
+                    <ProgressiveMeterStrip
+                      meters={meters}
+                      quiet={spinning || busy}
+                      hitTierIds={hitTierIds}
+                      reseed={reseed}
+                      onOpenInfo={(m) => setInfoSheet(m)}
+                    />
+                  </CabinetTopper>
+                }
+                belly={<CabinetBelly pays={pays} note={<>Pays left to right on 9 lines · × coin · 3% of each bet feeds the pots</>} />}
+                deck={
+                  <CabinetDeck
+                    creditCents={u.balanceCents}
+                    betCents={coinIn}
+                    win={showOutcome ? <CountUp cents={lastWinCents} active={showOutcome} /> : "0.00"}
+                    winLit={showOutcome && lastWinCents > 0}
+                    spinning={spinning}
+                    busy={busy}
+                    canBetDown={coin > SLOT_COIN_MIN}
+                    canBetUp={coin < SLOT_COIN_MAX}
+                    onBetDown={() => setCoinAndClear(stepCoin(coin, -1))}
+                    onBetUp={() => setCoinAndClear(stepCoin(coin, 1))}
+                    onMax={onMaxBet}
+                    maxArmed={maxArmed}
+                    onSpin={onPrimary}
+                    auto={auto}
+                    note="Sandbox / test chips · no cash value · 21+"
+                  />
+                }
+                lever={<CabinetLever onPull={() => void go()} disabled={busy || spinning || auto.running} reduced={reduced} />}
               />
-            </div>
-
-            <div className="vault-hud-strip" aria-label="Balance bet and win">
-              <div className="vault-hud-cell">
-                <span className="vault-hud-label">Balance</span>
-                <strong>{money(u.balanceCents)}</strong>
-              </div>
-              <div className="vault-hud-cell">
-                <span className="vault-hud-label">Bet</span>
-                <strong>{money(coinIn)}</strong>
-              </div>
-              <div className="vault-hud-cell">
-                <span className="vault-hud-label">Win</span>
-                <strong className={showOutcome && lastWinCents > 0 ? "vault-win-lit" : ""}>
-                  {showOutcome ? <CountUp cents={lastWinCents} active={showOutcome} /> : money(0)}
-                </strong>
-              </div>
             </div>
           </div>
 
@@ -483,7 +515,7 @@ export default function VaultPage() {
                   onSelect={setCoinAndClear}
                   lastCoinCents={lastCoin}
                   balanceCents={u.balanceCents}
-                  busy={busy || spinning}
+                  busy={busy || spinning || auto.running}
                   onRepeat={(c) => { setCoinAndClear(c); void go(c); }}
                   minCents={SLOT_COIN_MIN}
                   maxCents={SLOT_COIN_MAX}

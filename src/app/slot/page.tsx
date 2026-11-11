@@ -10,6 +10,8 @@ import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
+import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
+import { bellyPays, ledText, stepCoin } from "@/lib/cabinet";
 
 type LineWin = { line: number; symbol: Symbol | null; count: number; pay: number; winCents: number };
 
@@ -76,6 +78,22 @@ export default function SlotPage() {
     api("/api/games/slot").then(setInfo).catch((e) => setErr(e.message));
   }, []);
 
+  const [maxArmed, setMaxArmed] = useState(false);
+  const [settleTick, setSettleTick] = useState(0);
+  const balRef = useRef(0);
+  const coinIn = coin * 9;
+  const auto = useAutoSpin({
+    settleTick,
+    spinOnce: () => void go(),
+    balanceCents: useCallback(() => balRef.current, []),
+    costCents: coinIn,
+    jackpot: useCallback(() => false, []),
+  });
+  const winLines = useMemo(
+    () => (showOutcome ? ((spin?.lineWins as LineWin[] | undefined) ?? []).filter((w) => w.winCents > 0).map((w) => w.line) : []),
+    [spin, showOutcome],
+  );
+
   const winCells = useMemo(
     () => (showOutcome ? cellsFromLineWins(spin?.lineWins as LineWin[] | undefined) : []),
     [spin, showOutcome],
@@ -85,12 +103,14 @@ export default function SlotPage() {
     setSpinning(false);
     setBusy(false);
     setShowOutcome(true);
+    setSettleTick((n) => n + 1);
   }, []);
 
   async function go(coinOverride?: number) {
     if (busy || spinning) return;
     const c = coinOverride ?? coin;
     setErr(null);
+    setMaxArmed(false);
     setBusy(true);
     setShowOutcome(false);
     setGrid(null); // force filler until server result arrives
@@ -107,6 +127,7 @@ export default function SlotPage() {
       if (d.user) setUser(d.user);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "failed");
+      auto.fail();
       setSpinning(false);
       setBusy(false);
     }
@@ -115,16 +136,27 @@ export default function SlotPage() {
   function onPrimary() {
     if (spinning) {
       machineRef.current?.stopAll();
+      if (auto.running) auto.cancel();
       return;
     }
+    if (auto.running) { auto.cancel(); return; }
     void go();
   }
 
-  const coinIn = coin * 9;
+  function onMaxBet() {
+    if (!maxArmed) { setMaxArmed(true); return; }
+    setCoin(SLOT_COIN_MAX);
+    setMaxArmed(false);
+  }
+
+  const pays = bellyPays(info?.paytable).flatMap((p) => {
+    const a = (SYM_ART as any)[p.sym];
+    return a ? [{ key: p.sym, label: a.label, tone: a.tone, Svg: a.Svg, pay5: p.pay5 }] : [];
+  });
 
   return (
     <Shell>
-      {(u) => (
+      {(u) => { balRef.current = u.balanceCents; return (
         <div className="slot-page">
           <div className="slot-page-hero">
             <p className="lede">Video slot</p>
@@ -144,13 +176,30 @@ export default function SlotPage() {
               glow={showOutcome && spin ? slotGlowTier(coinIn, spin.winCents) : 0}
               glowLive={feelLive}
               turbo={turboOn}
+              winLines={winLines}
+              topper={<CabinetTopper title="Gilded Track" kicker="Red dragon · 9 lines" emblem={<span className="cab-pearl" />} />}
+              belly={<CabinetBelly pays={pays} note={<>Pays left to right on 9 lines · × coin · {info?.rtpPublished ? "published RTP 94–96%" : "Sandbox"}</>} />}
+              deck={
+                <CabinetDeck
+                  creditCents={u.balanceCents}
+                  betCents={coinIn}
+                  win={ledText(showOutcome && spin ? spin.winCents : 0)}
+                  winLit={!!(showOutcome && spin && spin.winCents > 0)}
+                  spinning={spinning}
+                  busy={busy}
+                  canBetDown={coin > SLOT_COIN_MIN}
+                  canBetUp={coin < SLOT_COIN_MAX}
+                  onBetDown={() => { setCoin((c) => stepCoin(c, -1)); setMaxArmed(false); }}
+                  onBetUp={() => { setCoin((c) => stepCoin(c, 1)); setMaxArmed(false); }}
+                  onMax={onMaxBet}
+                  maxArmed={maxArmed}
+                  onSpin={onPrimary}
+                  auto={auto}
+                  note="Sandbox / test chips · no cash value · 21+"
+                />
+              }
+              lever={<CabinetLever onPull={() => void go()} disabled={busy || spinning || auto.running} reduced={reduced} />}
             />
-          </div>
-
-          <div className="slot-meter" aria-live="polite">
-            <div><span>Your chips</span><strong>{money(u.balanceCents)}</strong></div>
-            <div><span>Bet</span><strong>{money(coinIn)}</strong></div>
-            <div><span>Last win</span><strong>{showOutcome && spin ? money(spin.winCents) : "—"}</strong></div>
           </div>
 
           {showOutcome && spin && spin.winCents > 0 && spin.winCents <= coinIn && (
@@ -220,7 +269,7 @@ export default function SlotPage() {
               onSelect={setCoin}
               lastCoinCents={lastCoin}
               balanceCents={u.balanceCents}
-              busy={busy || spinning}
+              busy={busy || spinning || auto.running}
               onRepeat={(c) => { setCoin(c); void go(c); }}
               minCents={SLOT_COIN_MIN}
               maxCents={SLOT_COIN_MAX}
@@ -236,7 +285,7 @@ export default function SlotPage() {
             </button>
           </ActionDock>
         </div>
-      )}
+      ); }}
     </Shell>
   );
 }

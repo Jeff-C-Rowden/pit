@@ -6,14 +6,14 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useId,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react";
-import { VS_SYMBOLS, type VsSymbol } from "@/lib/games/slotProgressive";
+import { VS_PAYLINES, VS_SYMBOLS, type VsSymbol } from "@/lib/games/slotProgressive";
+import { CabinetChrome, CabinetTopper } from "./SlotCabinet";
 import { slotBlurCycleMs, slotStopMs } from "@/lib/slotFeel";
 import { JADE_ART } from "./DragonSymbols";
 
@@ -268,14 +268,14 @@ const IDLE: VsSymbol[][] = [
 
 export type VaultTheme = {
   title?: string;
-  kickLabels?: [string, string, string];
+  kickLabels?: string[];
   /** Extra class on cabinet root for CSS theme hooks */
   cabinetClass?: string;
 };
 
 const DEFAULT_THEME: Required<VaultTheme> = {
   title: "Canopy Spire",
-  kickLabels: ["9 LINES", "JUNGLE", "PROGRESSIVE"],
+  kickLabels: ["9 lines", "Progressive", "Sandbox / test chips"],
   cabinetClass: "vault-cabinet",
 };
 
@@ -301,8 +301,15 @@ const VaultSpireMachine = forwardRef<
     glowLive?: boolean;
     /** Shorten reel settle times; outcomes still come from the server. */
     turbo?: boolean;
+    /** Cabinet parts (physical-cabinet chrome). */
+    topper?: ReactNode;
+    belly?: ReactNode;
+    deck?: ReactNode;
+    lever?: ReactNode;
+    /** 0-based winning lines from the server result; lit after settle only. */
+    winLines?: number[];
   }
->(function VaultSpireMachine({ grid, spinning, winCells, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false }, ref) {
+>(function VaultSpireMachine({ grid, spinning, winCells, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines }, ref) {
   const t = { ...DEFAULT_THEME, ...theme, kickLabels: theme?.kickLabels ?? DEFAULT_THEME.kickLabels };
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
@@ -358,75 +365,46 @@ const VaultSpireMachine = forwardRef<
     return map;
   }, [winCells]);
 
+  const reels = [0, 1, 2, 3, 4].map((r) => {
+    let final: VsSymbol[] | null = null;
+    if (grid?.[r]) final = grid[r]!;
+    else if (!spinning) final = IDLE[r]!;
+    return (
+      <Reel
+        key={r}
+        index={r}
+        final={final}
+        spinning={spinning}
+        settled={settled}
+        winRows={winByReel[r]!}
+        spinGen={spinGen}
+        stopAllTick={stopAllTick}
+        turbo={turbo}
+        onStopped={onStopped}
+      />
+    );
+  });
+
   return (
     <SymHCtx.Provider value={symH}>
-      <div
-        className={`slot-cabinet ${t.cabinetClass}${settled && !spinning && glow > 0 ? ` glow-t${glow}${glowLive ? " glow-live" : ""}` : ""}`}
-        data-glow={settled && !spinning ? glow : 0}
-        style={{ ["--sym-h" as string]: `${symH}px` }}
-        data-theme="vault-spire"
+      <CabinetChrome
+        themeClass={`cab-canopy ${t.cabinetClass}`}
+        glow={glow}
+        glowLive={glowLive}
+        spinning={spinning}
+        settled={settled}
+        symH={symH}
+        topper={topper ?? <CabinetTopper title={t.title} kicker="Jade dragon progressive" />}
+        belly={belly}
+        deck={deck}
+        lever={lever}
+        paylines={VS_PAYLINES}
+        winLines={winLines}
+        windowLabel={`${t.title} reels`}
+        kick={t.kickLabels}
       >
-        <div className="slot-lamp" aria-hidden />
-        <div className="slot-win-halo" aria-hidden />
-        <div className="slot-top-lights" aria-hidden>
-          <span /><span /><span /><span /><span /><span /><span />
-        </div>
-        <div className="slot-marquee">
-          <span className="slot-marquee-gem" aria-hidden />
-          <span className="slot-marquee-text">{t.title}</span>
-          <span className="slot-marquee-gem" aria-hidden />
-        </div>
-        <div className="slot-body">
-          <div className="slot-pillar slot-pillar-l" aria-hidden>
-            <div className="slot-pillar-cap" />
-            <div className="slot-pillar-shaft" />
-            <div className="slot-pillar-base" />
-          </div>
-          <div className="slot-stage">
-            <div className="slot-payline-marks" aria-hidden>
-              <span className="plc top" /><span className="plc mid" /><span className="plc bot" />
-            </div>
-            <div className="slot-window" role="img" aria-label={`${t.title} reels`}>
-              <div className="slot-glass" aria-hidden />
-              {[0, 1, 2, 3, 4].map((r) => {
-                let final: VsSymbol[] | null = null;
-                if (grid?.[r]) final = grid[r]!;
-                else if (!spinning) final = IDLE[r]!;
-                return (
-                  <Reel
-                    key={r}
-                    index={r}
-                    final={final}
-                    spinning={spinning}
-                    settled={settled}
-                    winRows={winByReel[r]!}
-                    spinGen={spinGen}
-                    stopAllTick={stopAllTick}
-                    turbo={turbo}
-                    onStopped={onStopped}
-                  />
-                );
-              })}
-            </div>
-            <div className="slot-payline-marks right" aria-hidden>
-              <span className="plc top" /><span className="plc mid" /><span className="plc bot" />
-            </div>
-          </div>
-          <div className="slot-pillar slot-pillar-r" aria-hidden>
-            <div className="slot-pillar-cap" />
-            <div className="slot-pillar-shaft" />
-            <div className="slot-pillar-base" />
-          </div>
-        </div>
-        <div className="slot-rail" aria-hidden />
-        <div className="slot-kickplate" aria-hidden>
-          <span>{t.kickLabels[0]}</span>
-          <span className="slot-kick-dot" />
-          <span>{t.kickLabels[1]}</span>
-          <span className="slot-kick-dot" />
-          <span>{t.kickLabels[2]}</span>
-        </div>
-      </div>
+        {reels}
+      </CabinetChrome>
     </SymHCtx.Provider>
   );
 });
