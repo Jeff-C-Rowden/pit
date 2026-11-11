@@ -53,11 +53,14 @@ for (const [w, h] of [[320, 700], [360, 780], [390, 844], [430, 932], [768, 1024
   await p.setViewport({ width: w, height: h, isMobile: w < 768, hasTouch: w < 768, deviceScaleFactor: w < 768 ? 2 : 1 });
   await W(500);
   const m = await p.evaluate(() => {
-    const r = document.querySelector(".hh").getBoundingClientRect();
+    const el = document.querySelector(".hh");
+    if (!el) return { overflowX: document.documentElement.scrollWidth > innerWidth + 1, right: -1, left: -1, iw: innerWidth, missing: location.pathname };
+    const r = el.getBoundingClientRect();
     return { overflowX: document.documentElement.scrollWidth > innerWidth + 1, right: r.right, left: r.left, iw: innerWidth };
   });
-  check(`${w}px: no page overflow, strip inside viewport`, !m.overflowX && m.left >= -1 && m.right <= m.iw + 1, `strip ${m.left.toFixed(0)}–${m.right.toFixed(0)} / ${m.iw}`);
+  check(`${w}px: no page overflow, strip inside viewport`, !m.overflowX && m.left >= -1 && m.right <= m.iw + 1, `strip ${m.left.toFixed(0)}–${m.right.toFixed(0)} / ${m.iw}${m.missing ? " MISSING at " + m.missing : ""}`);
   const el = await p.$(".hh");
+  if (!el) continue;
   await el.evaluate((e) => e.scrollIntoView({ block: "center" })); await W(200);
   if ([360, 390, 1280].includes(w)) {
     // Strip-only crop: hide the fixed top bar / bottom dock so they don't cover it.
@@ -68,6 +71,7 @@ for (const [w, h] of [[320, 700], [360, 780], [390, 844], [430, 932], [768, 1024
 }
 await p.setViewport({ width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
 await W(400);
+if (!(await p.$(".hh"))) { await p.reload({ waitUntil: "networkidle2" }); await p.waitForSelector(".hh", { timeout: 20000 }); await W(1500); }
 await p.$eval(".hh", (e) => e.scrollIntoView({ block: "center" })); await W(300);
 await p.screenshot({ path: `${OUT}/hit-history-page-390.png` });
 console.log(log.join("\n"));
