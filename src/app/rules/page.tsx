@@ -17,10 +17,12 @@ export default function Rules() {
         <p>Pit is 21+ only. The server owns every card, reel, die, pocket, and chip. Your browser cannot credit money. Bets debit before resolution; wins credit after. Each ledger row is idempotent.</p>
         <h3 id="blackjack" className="rules-anchor">Blackjack</h3>
         <p className="muted">6-deck shoe. Dealer stands on soft 17. Blackjack pays 3:2. Insurance 2:1. Hit, stand, double, split once. House edge roughly 0.5% with basic strategy.</p>
-        <h3 id="slot" className="rules-anchor">Gilded Track (slot)</h3>
+        <h3 id="slot" className="rules-anchor">Sundown Trail (slot)</h3>
         <p className="muted">5 reels, 3 rows, 9 paylines. Left-to-right. WILD substitutes. Theoretical RTP is enumerated from the published 20-stop strips and kept in the 94–96% band (see tests).</p>
-        <h3 id="vault" className="rules-anchor">Canopy Spire (progressive slot)</h3>
-        <p className="muted">Jungle-themed 5-reel video slot with four shared progressive meters (Mini / Minor / Major / Grand). Seeds $10 / $50 / $250 / $2,500. Must-hit-by ceilings on Mini / Minor / Major ($30 / $150 / $1,000); Grand is a rare mystery (~1/35k). Each spin contributes 3.00% (300 bps: 100/70/50/80) of coin-in from the same bet debit. All sandbox bets qualify. Hits reseed. Demo chips only — not a licensed casino jackpot. Main-game line RTP targets ~93–95% excluding progressive awards.</p>
+        <h3 id="buckshot" className="rules-anchor">Buckshot Bars (classic 3-reel slot)</h3>
+        <p className="muted">3 reels, 1 centre payline, play 1–3 coins at 25¢–$5 a coin. Each reel is a physical strip (24 / 24 / 26 stops, symbols alternating with blanks); every stop is equally likely and the window shows the real neighbours. The horseshoe is wild and doubles the pay for each one used; three horseshoes pay 800 / 1,600 / 2,500 coins. Exact theoretical RTP, enumerated over all 14,976 stop combinations: 94.44% at 1–2 coins, 94.67% at 3 coins. Reels stop on a fixed schedule with no near-miss staging.</p>
+        <h3 id="vault" className="rules-anchor">Antler Ridge (progressive slot)</h3>
+        <p className="muted">Frontier-themed 5-reel video slot with four shared progressive meters (Mini / Minor / Major / Grand). Seeds $10 / $50 / $250 / $2,500. Must-hit-by ceilings on Mini / Minor / Major ($30 / $150 / $1,000); Grand is a rare mystery (~1/35k). Each spin contributes 3.00% (300 bps: 100/70/50/80) of coin-in from the same bet debit. All sandbox bets qualify. Hits reseed. Demo chips only — not a licensed casino jackpot. Main-game line RTP targets ~93–95% excluding progressive awards.</p>
         <h3 id="holdem" className="rules-anchor">Texas Hold&apos;em</h3>
         <p className="muted">Heads-up no-limit vs the house bot. Blinds $1/$2. Standard ranking. Button posts the small blind. No rake: the house bot takes no cut of the pot.</p>
         <h3 id="roulette" className="rules-anchor">Roulette</h3>

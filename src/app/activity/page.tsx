@@ -10,7 +10,7 @@ import { pauseText, type PauseInfo } from "@/lib/pauseText";
 
 type Row = { at: string; type: string; game: string | null; amountCents: number; balanceAfterCents: number; stakeBackCents?: number };
 type Data = { session: { active: boolean; startedAt: string | null; minutes: number; netCents: number }; rows: Row[] };
-const GAME: Record<string, string> = { blackjack: "Blackjack", roulette: "Roulette", craps: "Craps", paigow: "Pai Gow", holdem: "Hold'em", slot: "Slots", slots: "Slots" };
+const GAME: Record<string, string> = { blackjack: "Blackjack", roulette: "Roulette", craps: "Craps", paigow: "Pai Gow", holdem: "Hold'em", slot: "Sundown Trail", slots: "Slots", "vault-spire": "Antler Ridge", buckshot: "Buckshot Bars" };
 const signed = (c: number) => `${c >= 0 ? "+" : "−"}${money(Math.abs(c))}`;
 const time = (iso: string) => new Date(iso).toLocaleTimeString("en-US", { timeZone: "America/Chicago", hour: "numeric", minute: "2-digit", second: "2-digit" });
 
