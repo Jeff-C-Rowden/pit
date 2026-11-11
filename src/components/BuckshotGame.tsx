@@ -13,6 +13,7 @@ import { ledText } from "@/lib/cabinet";
 import { AntlerShoe } from "@/components/WesternArt";
 import { WalletSplit } from "@/components/WalletSplit";
 import TournamentStrip from "@/components/TournamentStrip";
+import SpinNotice from "@/components/SpinNotice";
 
 const denomLabel = (c: number) => (c < 100 ? `${c}¢` : `$${c / 100}`);
 
@@ -148,7 +149,6 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
           </div>
           {tournamentId && <TournamentStrip tournamentId={tournamentId} hud={tourney} onHud={setTourney} />}
           <FirstVisitTip game="buckshot" />
-          {err && <p className="err">{err}</p>}
 
           <div className="slot-stage-wrap">
             <BuckshotMachine
@@ -203,6 +203,7 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
               lever={<CabinetLever onPull={() => void go()} disabled={busy || spinning || auto.running} reduced={reduced} />}
             />
           </div>
+          <SpinNotice msg={err} onClose={() => setErr(null)} where="stage" />
 
           {!tournamentId && <WalletSplit cash={u.balanceCents} bonus={u.bonusCents ?? 0} funding={showOutcome ? funding : null} bonusToCash={variant === "bounty"} />}
           {showOutcome && spin && spin.winCents > 0 && spin.winCents <= stake && (

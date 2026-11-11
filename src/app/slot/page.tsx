@@ -15,6 +15,7 @@ import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } f
 import { bellyPays, ledText, stepCoin } from "@/lib/cabinet";
 import { WalletSplit } from "@/components/WalletSplit";
 import TournamentStrip from "@/components/TournamentStrip";
+import SpinNotice from "@/components/SpinNotice";
 
 type LineWin = { line: number; symbol: Symbol | null; count: number; pay: number; winCents: number };
 
@@ -179,7 +180,6 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
           </div>
           {tournamentId && <TournamentStrip tournamentId={tournamentId} hud={tourney} onHud={setTourney} />}
           <FirstVisitTip game="slot" />
-          {err && <p className="err">{err}</p>}
 
           <div className="slot-stage-wrap">
             <SlotMachine
@@ -286,6 +286,7 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
           </div>
 
           <ActionDock hint={spinning ? "Stop · or tap a reel · reels in motion…" : "Pick a coin size, then Spin."} busy={busy || spinning}>
+              <SpinNotice msg={err} onClose={() => setErr(null)} />
             <QuickBetRow
               amounts={SLOT_COIN_CHIPS}
               selected={coin}

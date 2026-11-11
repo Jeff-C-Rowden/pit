@@ -17,6 +17,7 @@ import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
 import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
 import { ledText, stepCoin } from "@/lib/cabinet";
+import SpinNotice from "@/components/SpinNotice";
 
 type WayWin = { symbol: PrPaySymbol; reels: number; ways: number; mult: number; pay: number; winCents: number };
 type FreeSpin = { n: number; grid: PrSymbol[][]; wins: WayWin[]; scatters: number; winCents: number; retrigger: number; awardedTotal: number };
@@ -375,7 +376,6 @@ export default function PrairiePage() {
               <p className="math-strip math-strip-hero mine-feature-line">{PRAIRIE_FEATURE_LINE}</p>
             </div>
             <FirstVisitTip game="prairie" />
-            {err && <p className="err">{err}</p>}
 
             <div className="slot-stage-wrap mine-stage pr-stage">
               {inFs && (
@@ -520,6 +520,7 @@ export default function PrairiePage() {
             </div>
 
             <ActionDock hint={phase === "fs" ? "Free spins playing · Skip to total any time" : phase === "hold" ? "Hold & Spin playing" : spinning ? "Stop · or tap a reel · reels in motion…" : "Pick a coin size, then Spin."} busy={busy || spinning || phase !== "idle"}>
+              <SpinNotice msg={err} onClose={() => setErr(null)} />
               <QuickBetRow
                 amounts={SLOT_COIN_CHIPS}
                 selected={coin}

@@ -3620,3 +3620,15 @@ label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spa
 .sandbox-chip-j5 { white-space: nowrap; max-width: 100%; }
 .prog-strip-sandbox { display: flex; justify-content: center; margin-top: 6px; }
 .vault-jp-card .vault-jp-sandbox { margin: 0 auto 6px; }
+
+/* Spin refusals sit next to the Spin controls (dock or under the cabinet), never above the fold. */
+.spin-notice {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px;
+  margin: 0 auto 8px; padding: 8px 12px; max-width: 560px; box-sizing: border-box;
+  border: 1px solid rgba(240,160,160,.55); border-radius: 10px;
+  background: rgba(60,10,12,.92); color: #ffd0d0; font-size: 14px; line-height: 1.35; text-align: center;
+}
+.action-dock-row > .spin-notice { flex: 1 0 100%; }
+.spin-notice-stage { margin-top: 10px; }
+.spin-notice-cage { color: var(--gold-hi, #f3d27a); font-weight: 700; text-decoration: underline; white-space: nowrap; }
+.spin-notice-x { background: none; border: 0; color: inherit; font-size: 18px; line-height: 1; padding: 2px 6px; cursor: pointer; min-width: 32px; min-height: 32px; }
