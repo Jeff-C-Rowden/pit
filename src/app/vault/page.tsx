@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import VaultSpireMachine, { type VaultSpireMachineHandle, type WinCell } from "@/components/VaultSpireMachine";
 import HitHistoryStrip from "@/components/HitHistory";
+import PotSheet from "@/components/PotSheet";
 import ProgressiveMeterStrip, { type MeterPublic, useReseedMoments } from "@/components/ProgressiveMeter";
 import { momentsFromNewHits, momentsFromSpinHits } from "@/lib/reseedMoment";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
@@ -433,9 +434,10 @@ export default function VaultPage() {
             </button>
           </div>
 
-          {infoSheet && (
+          {infoSheet && infoSheet !== "game" && <PotSheet meter={meters.find((m) => m.id === infoSheet.id) ?? infoSheet} onClose={() => setInfoSheet(null)} />}
+          {infoSheet === "game" && (
             <div className="vault-sheet-backdrop" onClick={() => setInfoSheet(null)} role="presentation">
-              <div className="vault-sheet panel" role="dialog" onClick={(e) => e.stopPropagation()}>
+              <div className="vault-sheet panel" role="dialog" aria-modal="true" aria-label="Antler Ridge game info" onClick={(e) => e.stopPropagation()}>
                 {infoSheet === "game" ? (
                   <>
                     <h3>Antler Ridge</h3>
@@ -463,21 +465,7 @@ export default function VaultPage() {
                       </tbody>
                     </table>
                   </>
-                ) : (
-                  <>
-                    <h3>{infoSheet.name} progressive</h3>
-                    <p>
-                      Live pot <strong>{money(infoSheet.progressiveCents)}</strong>
-                    </p>
-                    <p className="muted">
-                      Seed {money(infoSheet.seedCents)}
-                      {infoSheet.ceilingCents != null ? ` · must-hit-by ${money(infoSheet.ceilingCents)}` : " · mystery only"}
-                      {" · "}
-                      {(infoSheet.contributionBps / 100).toFixed(2)}% of coin-in
-                    </p>
-                    <p className="muted">Hidden trigger is server-side. Not a licensed jackpot.</p>
-                  </>
-                )}
+                ) : null}
                 <button type="button" className="btn" onClick={() => setInfoSheet(null)}>
                   Close
                 </button>

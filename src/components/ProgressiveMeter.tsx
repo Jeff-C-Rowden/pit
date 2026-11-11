@@ -105,10 +105,11 @@ export default function ProgressiveMeterStrip({
             type="button"
             className={`prog-tier prog-tier-${m.name.toLowerCase()}${hit ? " prog-tier-hit" : ""}${moment ? " prog-tier-reseeding" : ""}${quiet ? " prog-tier-quiet" : ""}`}
             onClick={() => onOpenInfo?.(m)}
+            aria-haspopup="dialog"
             aria-label={
               moment
-                ? `${m.name} progressive: ${reseedLabel(moment)}. Tap for info.`
-                : `${m.name} progressive ${money(m.progressiveCents)}. Tap for info.`
+                ? `${m.name} progressive: ${reseedLabel(moment)}. How this pot works.`
+                : `${m.name} progressive ${money(m.progressiveCents)}. How this pot works.`
             }
           >
             <span className="prog-tier-name">{m.name}</span>

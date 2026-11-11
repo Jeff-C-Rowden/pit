@@ -682,3 +682,20 @@ a { color: var(--st-link); }
 .tny-lobby-go { margin-left: auto; font-size: 28px; color: var(--st-gold); }
 .tny-test { color: #9fd3ff; font-weight: 700; }
 .tny-board tr.tny-test-row td { background: rgba(80,140,200,.18); white-space: normal; }
+
+/* ---------- Jackpot Desk J2: How this pot works sheet ---------- */
+.pot-sheet { background: var(--st-bg-deep, #200C0D) !important; border: 1px solid #cb9831 !important; color: #f6e7c8; overflow-wrap: anywhere; }
+.pot-sheet-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; margin-bottom: 10px; }
+.pot-sheet-head h3 { margin: 0; font-family: var(--st-display); font-weight: 400; color: var(--st-jackpot, #ffd75e); font-size: clamp(18px, 5vw, 22px); }
+.pot-sheet-rows { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0 0 10px; }
+.pot-sheet-row { min-width: 0; padding: 6px 8px; border-radius: 4px; background: var(--st-shortcut, #4a1a19); border: 1px solid rgba(203,152,49,.35); }
+.pot-sheet-row dt { font: 700 10px var(--st-narrow); letter-spacing: .1em; text-transform: uppercase; color: #ffe0a0; }
+.pot-sheet-row dd { margin: 2px 0 0; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pot-sheet-note, .pot-sheet-avg { margin: 0 0 8px; font-size: 13px; line-height: 1.45; }
+.pot-sheet-avg { padding: 8px; border-left: 3px solid #cb9831; background: rgba(0,0,0,.25); }
+.pot-sheet-avg em { display: block; margin-top: 2px; font-style: normal; font-weight: 700; color: #ffe0a0; }
+.pot-sheet-close { width: 100%; margin-top: 4px; }
+.vault-lobby-tier-btn { appearance: none; font: inherit; color: inherit; cursor: pointer; width: 100%; }
+.vault-lobby-tier-btn:focus-visible, .prog-tier:focus-visible { outline: 2px solid #ffd75e; outline-offset: 2px; }
+.vault-lobby-info-hint { display: block; margin-top: 6px; font-size: 11px; opacity: .75; }
+@media (max-width: 360px) { .pot-sheet-rows { grid-template-columns: minmax(0, 1fr); } }
