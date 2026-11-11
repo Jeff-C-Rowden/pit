@@ -6,15 +6,20 @@ import puppeteer from "puppeteer-core";
 const BASE = process.env.BASE || "http://127.0.0.1:3000";
 const OUT = process.env.OUT || "/workspace/pit-shots";
 const MAX = Number(process.env.MAX_SPINS || 800);
+process.on("unhandledRejection", (e) => { console.error("FATAL", e?.message?.slice(0, 400)); process.exit(3); });
 const W = (ms) => new Promise((r) => setTimeout(r, ms));
 const b = await puppeteer.launch({ executablePath: process.env.CHROME || "/usr/bin/google-chrome", args: ["--no-sandbox"] });
 const p = await b.newPage();
 const errors = [];
+let lastStep = Date.now();
+setInterval(async () => { if (Date.now() - lastStep > 90000) { console.error("WATCHDOG stalled; url", p.url()); await p.screenshot({ path: "/tmp/pr-stall.png" }).catch((e) => console.error("shot failed", e.message)); lastStep = Date.now(); } }, 15000).unref();
 p.on("pageerror", (e) => errors.push(String(e)));
 const email = `prairie${Date.now()}@pit.test`, pass = "sandbox-pass-1";
 const click = async (xp, t = 20000) => { const h = await p.waitForSelector(`xpath/${xp}`, { timeout: t }); await h.evaluate((e) => e.scrollIntoView({ block: "center" })); await W(150); await h.click(); };
 const me = () => p.evaluate(async () => (await (await fetch("/api/auth/me", { cache: "no-store" })).json()).user ?? null);
 const log = [];
+const _push = log.push.bind(log);
+log.push = (...a) => { console.error(...a); return _push(...a); };
 let width = 390;
 const vp = async (w) => { width = w; await p.setViewport(w === 390 ? { width: 390, height: 844, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } : { width: 1366, height: 900, deviceScaleFactor: 1 }); };
 const shot = async (name) => { await p.screenshot({ path: `${OUT}/story2-${name}-${width}.png` }); log.push(`shot story2-${name}-${width}.png`); };
@@ -69,6 +74,7 @@ async function spinOnce(n) {
   const res = p.waitForResponse((r) => r.url().includes("/api/games/prairie") && r.request().method() === "POST", { timeout: 30000 });
   await p.$eval("[data-cab-spin]", (e) => e.click());
   const body = await (await res).json();
+  lastStep = Date.now();
   const s = body.spin;
   if (!s) throw new Error(`spin ${n} error ${JSON.stringify(body).slice(0, 200)}`);
   if (body.balanceCents !== bal - s.betCents + s.winCents) { mismatches++; log.push(`LEDGER MISMATCH spin ${n}`); }
@@ -78,7 +84,9 @@ async function spinOnce(n) {
 }
 
 await vp(390);
+console.error("start");
 await p.goto(BASE + "/", { waitUntil: "networkidle2" });
+console.error("home loaded");
 await click('.//button[contains(@class,"home-enter")]'); await W(900);
 await p.goto(BASE + "/signup", { waitUntil: "networkidle2" });
 await p.type("#su-name", "Ranch Hand"); await p.type("#su-email", email); await p.type("#su-pass", pass);
@@ -86,6 +94,7 @@ await p.$eval("input[type=checkbox]", (e) => { if (!e.checked) e.click(); });
 await click('.//button[contains(., "Create account")]'); await W(2500);
 await click('.//button[contains(., "welcome chips")]', 4000).catch(() => {}); await W(1200);
 await click('.//button[contains(., "Skip tour")]', 3000).catch(() => {});
+console.error("signed up");
 await p.evaluate(async () => fetch("/api/wallet/deposit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ amountCents: 100000 }) }));
 let u = await me();
 log.push(`account ${email} balance ${u?.balanceCents}`);
