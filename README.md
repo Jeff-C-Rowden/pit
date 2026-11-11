@@ -11,7 +11,9 @@ Operating this as real-money gambling requires a gambling license and licensed p
 ## Games
 
 1. Blackjack — 6-deck shoe, dealer stands on soft 17, BJ 3:2, hit/stand/double, split once, insurance.
-2. Gilded Track — 5-reel, 9-line video slot. Paytable on the machine. Theoretical RTP 94-96 percent (enumerated in tests).
+2. Sundown Trail — 5-reel, 9-line video slot. Paytable on the machine. Theoretical RTP 94-96 percent (enumerated in tests).
+2a. Antler Ridge — 5-reel, 9-line progressive video slot with four sandbox meters.
+2b. Buckshot Bars — classic 3-reel, 1-line slot, 1–3 coins. Exact RTP 94.44% (1–2 coins) / 94.67% (3 coins), enumerated from the strips in tests/buckshot.test.ts.
 3. Texas Hold'em — heads-up no-limit vs the house bot. Blinds $1 / $2.
 4. Roulette — American wheel (0 and 00). Inside and outside bets.
 5. Craps — pass / don't pass, come / don't come, odds, place, field, props. Come-out, point, seven-out.

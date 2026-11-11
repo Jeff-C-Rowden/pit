@@ -7,6 +7,7 @@ import LimitsPanel from "@/components/LimitsPanel";
 import DailyClaim from "@/components/DailyClaim";
 import SessionPanel from "@/components/SessionPanel";
 import { parseDollarsInput, centsToInput } from "@/lib/money";
+import { DesertScene } from "@/components/WesternArt";
 
 const AMTS = [1000, 2500, 5000, 10000, 25000, 50000, 100000];
 
@@ -29,6 +30,12 @@ export default function WalletPage() {
   const [busyAmt, setBusyAmt] = useState<number | null>(null);
   const [confirmWd, setConfirmWd] = useState<number | null>(null);
   const [wdBusy, setWdBusy] = useState(false);
+  const [tab, setTab] = useState<"get" | "history">("get");
+  useEffect(() => {
+    const q = new URLSearchParams(location.search);
+    if ((q.get("game") && q.get("ref")) || location.hash === "#ledger") setTab("history");
+  }, []);
+  const jump = (id: string) => { setTab("get"); setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }), 30); };
 
   useEffect(() => {
     api("/api/wallet/withdraw").then((d) => setList(d.withdrawals || [])).catch(() => null);
@@ -54,15 +61,64 @@ export default function WalletPage() {
   return (
     <Shell>
       {(u) => (
-        <div className="cage-page">
-          <div className="hero cage-hero">
-            <h1><span className="cage-kicker">The cage · </span>Wallet</h1>
-            <div className="cage-balance" aria-live="polite">
-              <span className="sandbox-chip">Sandbox</span>
-              <span className="cage-balance-amt">{money(u.balanceCents)}</span>
-              <span className="cage-balance-sub muted">ledger · no card · no ACH</span>
+        <div className="cage-page st-cage">
+          <div className="st-cage-banner">
+            <DesertScene />
+            <div className="st-cage-banner-copy">
+              <h1>The Cage</h1>
+              <p>Sandbox chips · no cash value · nothing to pay, ever</p>
             </div>
           </div>
+          <div className="cage-balance st-cage-balance" aria-live="polite">
+            <span className="sandbox-chip">Sandbox</span>
+            <span className="cage-balance-amt">{money(u.balanceCents)}</span>
+            <span className="cage-balance-sub muted">ledger · no card · no ACH</span>
+          </div>
+          <div className="st-cage-tabs" role="tablist" aria-label="Cage">
+            <button type="button" role="tab" aria-selected={tab === "get"} className={`st-cage-tab${tab === "get" ? " on" : ""}`} onClick={() => setTab("get")}>Get chips</button>
+            <button type="button" role="tab" aria-selected={tab === "history"} className={`st-cage-tab${tab === "history" ? " on" : ""}`} onClick={() => setTab("history")}>History</button>
+          </div>
+          {tab === "history" ? <CageLedger /> : <>
+          {isSandbox && (
+            <div className="st-cage-cards">
+              <div className="st-cage-card">
+                <div className="st-plank"><span>Daily Chips</span></div>
+                <dl className="st-cage-rows">
+                  <div><dt>Amount</dt><dd>Free, once a day</dd></div>
+                  <div><dt>Speed</dt><dd>Instant</dd></div>
+                  <div><dt>Cost</dt><dd>$0</dd></div>
+                </dl>
+                <button type="button" className="st-cage-cta" onClick={() => jump("daily-claim")}>Claim</button>
+              </div>
+              <div className="st-cage-card">
+                <div className="st-plank"><span>Test Chips</span></div>
+                <dl className="st-cage-rows">
+                  <div><dt>Amounts</dt><dd>$10 – $1,000</dd></div>
+                  <div><dt>Speed</dt><dd>Instant</dd></div>
+                  <div><dt>Cash value</dt><dd>None</dd></div>
+                </dl>
+                <button type="button" className="st-cage-cta" disabled={busyAmt != null} onClick={() => deposit(u, 10000)}>{busyAmt === 10000 ? "Posting…" : "Add $100"}</button>
+              </div>
+              <div className="st-cage-card">
+                <div className="st-plank"><span>Set Aside</span></div>
+                <dl className="st-cage-rows">
+                  <div><dt>Minimum</dt><dd>$10.00</dd></div>
+                  <div><dt>Status</dt><dd>Pending</dd></div>
+                  <div><dt>Sent to a bank</dt><dd>Never</dd></div>
+                </dl>
+                <button type="button" className="st-cage-cta" onClick={() => jump("withdraw")}>Review</button>
+              </div>
+              <div className="st-cage-card">
+                <div className="st-plank"><span>Play Limits</span></div>
+                <dl className="st-cage-rows">
+                  <div><dt>Loss limits</dt><dd>Daily / weekly</dd></div>
+                  <div><dt>Session timer</dt><dd>Reality checks</dd></div>
+                  <div><dt>Self-exclude</dt><dd>Any time</dd></div>
+                </dl>
+                <button type="button" className="st-cage-cta" onClick={() => jump("limits")}>Set limits</button>
+              </div>
+            </div>
+          )}
           {isSandbox ? (
             <details className="notice cage-notice cage-notice-fold">
               <summary><strong className="cage-notice-title">Practice money only</strong> <span className="muted">· no card, nothing is ever sent</span></summary>
@@ -86,7 +142,7 @@ export default function WalletPage() {
           )}
           {msg && <p className="ok cage-flash" role="status">{msg}</p>}
           {err && <p className="err">{err}</p>}
-          {isSandbox && <DailyClaim onUser={setUser} />}
+          {isSandbox && <div id="daily-claim"><DailyClaim onUser={setUser} /></div>}
           {isSandbox && (
             <div className="panel cage-panel">
               <h3>Add test funds</h3>
@@ -115,7 +171,7 @@ export default function WalletPage() {
               </p>
             </div>
           )}
-          <div className="panel cage-panel">
+          <div className="panel cage-panel" id="withdraw">
             <h3>Withdrawal request</h3>
             <p className="muted">Marks funds pending. Nothing is sent to a bank.</p>
             <label htmlFor="wd-amt">Amount</label>
@@ -160,12 +216,12 @@ export default function WalletPage() {
               </ul>
             )}
           </div>
-          <div className="panel cage-panel">
+          <div className="panel cage-panel" id="limits">
             <h3>Responsible play</h3>
             <LimitsPanel />
             <SessionPanel />
-          <CageLedger />
           </div>
+          </>}
         </div>
       )}
     </Shell>
