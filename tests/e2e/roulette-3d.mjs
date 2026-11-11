@@ -36,9 +36,13 @@ for (const w of [390, 1366]) {
   await p.evaluate(() => document.querySelectorAll(".first-visit-tip button, .fv-tip button").forEach((x) => /got it/i.test(x.textContent || "") && x.click()));
   // chips: $1 on red, $1 straight on 17, $1 on 2nd 12
   for (const sel of ['[data-bet="red"]', '[data-bet="17"]', '[data-bet="2nd 12"]', '[data-bet="17"]']) {
-    const h = await p.$(sel); await h.evaluate((e) => e.scrollIntoView({ block: "center" })); await W(150); await h.click(); await W(250);
+    const h = await p.$(sel);
+    await h.evaluate((e) => { document.documentElement.style.scrollBehavior = "auto"; const r = e.getBoundingClientRect(); window.scrollTo(0, window.scrollY + r.top - innerHeight * 0.35); });
+    await W(250); await h.click(); await W(250);
   }
   await W(400);
+  const placed = await p.$eval(".rl-total b", (e) => e.textContent);
+  check(`${w}: four chips placed`, placed === "$4.00", placed);
   const felt = await p.$(".rl-felt-wrap");
   await felt.evaluate((e) => e.scrollIntoView({ block: "center" })); await W(700);
   await felt.screenshot({ path: `${OUT}/rl3d-chips-${w}.png` });

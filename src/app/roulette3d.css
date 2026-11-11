@@ -157,17 +157,18 @@
 
 /* ---------- Chips on the felt: raised stacks, lift-and-drop, sweep ---------- */
 .rl-felt-wrap .chip-on-num { filter: drop-shadow(0 5px 3px rgba(0,0,0,.55)); }
-.rl-felt-wrap .chip-on-num.rl-mine { animation: rl3d-chip-drop .42s cubic-bezier(.3,1.4,.5,1) both; }
-.rl-felt-wrap .chip-on-num.paid { animation: rl3d-chip-pay .9s ease-out both; filter: drop-shadow(0 0 8px rgba(255,215,90,.95)) drop-shadow(0 5px 3px rgba(0,0,0,.5)); }
+.rl-felt-wrap .chip-on-num.rl-mine { animation: rl3d-chip-drop .42s cubic-bezier(.3,1.4,.5,1) backwards; }
+.rl-felt-wrap .chip-on-num.paid { animation: rl3d-chip-pay .9s ease-out; filter: drop-shadow(0 0 8px rgba(255,215,90,.95)) drop-shadow(0 5px 3px rgba(0,0,0,.5)); }
 .rl-felt-wrap .chip-on-num.lost { animation: rl3d-chip-sweep .7s .5s cubic-bezier(.5,0,.8,.3) both; }
+/* individual translate/scale compose with each spot's own positioning transform */
 @keyframes rl3d-chip-drop {
-  0% { transform: translate(-50%, -40%) translateY(-26px) scale(1.25); opacity: 0; filter: drop-shadow(0 22px 8px rgba(0,0,0,.25)); }
+  0% { translate: 0 -26px; scale: 1.25; opacity: 0; }
   60% { opacity: 1; }
-  80% { transform: translate(-50%, -40%) translateY(2px) scale(.97); }
-  100% { transform: translate(-50%, -40%); }
+  80% { translate: 0 2px; scale: .97; }
+  100% { translate: 0 0; scale: 1; }
 }
-@keyframes rl3d-chip-pay { 0% { transform: translate(-50%, -40%); } 30% { transform: translate(-50%, -40%) translateY(-10px) scale(1.12); } 100% { transform: translate(-50%, -40%); } }
-@keyframes rl3d-chip-sweep { to { transform: translate(-50%, -40%) translateY(-60px) scale(.6); opacity: 0; } }
+@keyframes rl3d-chip-pay { 0% { translate: 0 0; } 30% { translate: 0 -10px; scale: 1.12; } 100% { translate: 0 0; scale: 1; } }
+@keyframes rl3d-chip-sweep { to { translate: 0 -60px; scale: .6; opacity: 0; } }
 
 /* Dolly: gold marker on the winning number */
 .rl-dolly { position: absolute; left: 50%; bottom: 46%; width: 22px; height: 34px; transform: translateX(-50%); z-index: 6; pointer-events: none;
