@@ -43,7 +43,7 @@ async function sweep(where, sel) {
     const info = await d.evaluate((e) => ({ role: e.getAttribute("role"), modal: e.getAttribute("aria-modal"), text: e.textContent, focusIn: e.contains(document.activeElement) }));
     check(`${where} ${name} dialog`, info.role === "dialog" && info.modal === "true" && info.focusIn);
     check(`${where} ${name} cap`, info.text.includes(expectCap[name]), expectCap[name]);
-    check(`${where} ${name} sandbox`, info.text.includes("Sandbox / test chips, no cash value"));
+    check(`${where} ${name} sandbox`, info.text.includes("Sandbox chips · no cash value"));
     check(`${where} ${name} average caveat`, info.text.includes("not the odds of the next spin"));
     check(`${where} ${name} no due/hot`, !/\b(due|hot|overdue)\b/i.test(info.text));
     if (name === "Major") await p.screenshot({ path: `${OUT}/pot-sheet-${where}-390.png` });
