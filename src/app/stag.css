@@ -576,3 +576,107 @@ a { color: var(--st-link); }
 .bb-bounty .slot-page-hero h1 { color: var(--st-gold); }
 .st-ribbon-bonus-to-cash { font-size: 8px !important; letter-spacing: 0 !important; }
 @media (max-width: 430px) { .topbar .brand > div { display: none; } }
+
+/* ───────── Tournaments ───────── */
+.tny-mode, .tny-prize { display: inline-block; font: 700 11px/1 var(--st-narrow); letter-spacing: .04em; text-transform: uppercase; padding: 4px 7px; border-radius: 4px; white-space: nowrap; vertical-align: middle; }
+.tny-mode-balance { background: #2b4f7a; color: #fff; }
+.tny-mode-accumulated { background: #6a2f86; color: #fff; }
+.tny-prize-cash { background: var(--st-gold-grad); color: var(--st-on-gold); }
+.tny-prize-bonus { background: #1f7a4a; color: #fff; }
+.tny-strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin: 8px 0 0; padding: 8px 12px; border-radius: 8px; background: linear-gradient(180deg, #5b1c1b, #3a1212); border: 1px solid #d09038; color: #fff; font: 600 13px/1.3 var(--st-body); }
+.tny-strip b { color: var(--st-gold); }
+.tny-q.ok { color: #7be0a2; font-weight: 800; }
+.tny-left { margin-left: auto; color: var(--st-gold); font-variant-numeric: tabular-nums; }
+.tny-info { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--st-gold); background: transparent; color: var(--st-gold); font: italic 700 14px/1 Georgia, serif; cursor: pointer; }
+.tny-strip-sub { margin: 4px 2px 8px; font-size: 12px; color: var(--ivory-dim); }
+.tny-strip-sub a { color: var(--st-link); }
+.tny-sheet-scrim { position: fixed; inset: 0; z-index: 90; background: rgba(0,0,0,.6); display: flex; align-items: flex-end; justify-content: center; }
+.tny-sheet { width: min(520px, 100%); max-height: 85vh; overflow: auto; background: var(--st-bg); border: 1px solid #d09038; border-radius: 14px 14px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom)); color: #fff; }
+@media (min-width: 768px) { .tny-sheet-scrim { align-items: center; } .tny-sheet { border-radius: 14px; } }
+.tny-sheet h2 { margin: 0 0 6px; font: 400 26px/1.1 var(--st-display); color: var(--st-gold); }
+.tny-dl { display: grid; gap: 6px; margin: 10px 0; }
+.tny-dl > div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid rgba(255,255,255,.08); padding-bottom: 5px; font-size: 13px; }
+.tny-dl dt { color: var(--ivory-dim); }
+.tny-dl dd { margin: 0; text-align: right; font-weight: 700; }
+.tny-top5 { margin: 6px 0 10px; padding-left: 22px; font-size: 13px; }
+.tny-top5 .nq, .tny-board tr.nq { opacity: .6; }
+
+.tny-page { padding: 12px 14px 90px; max-width: 1280px; margin: 0 auto; color: #fff; }
+.tny-head h1 { margin: 6px 0 2px; font: 400 34px/1.05 var(--st-display); color: var(--st-gold); letter-spacing: .01em; }
+.tny-caption { margin: 0; color: var(--ivory-dim); font-size: 13px; }
+.tny-clock { font-variant-numeric: tabular-nums; color: #fff; }
+.tny-sandbox { margin: 6px 0 10px; font-size: 12px; color: var(--ivory-dim); }
+.tny-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 8px 0 12px; }
+.tny-tabs { display: flex; background: var(--st-bg-deep); border-radius: 999px; padding: 3px; }
+.tny-tab { border: 0; background: transparent; color: #fff; font: 700 14px/1 var(--st-body); padding: 10px 16px; border-radius: 999px; cursor: pointer; min-height: 40px; }
+.tny-tab.on { background: var(--st-red-btn); box-shadow: inset 0 0 0 1px #d8524e; }
+.tny-filter select { min-height: 40px; }
+.tny-count { margin-left: auto; color: var(--ivory-dim); font-size: 13px; }
+.tny-empty { padding: 20px 0; }
+.tny-gold { color: var(--st-gold); font-weight: 700; font-variant-numeric: tabular-nums; }
+.tny-sub { font-size: 12px; color: var(--ivory-dim); margin-top: 3px; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+.tny-table { display: none; width: 100%; border-collapse: collapse; font-size: 13px; }
+.tny-table th { text-align: left; font: 700 12px/1 var(--st-narrow); text-transform: uppercase; letter-spacing: .04em; color: var(--st-heading-gold); padding: 10px 8px; background: var(--st-bg-deep); }
+.tny-table td { padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.07); vertical-align: middle; }
+.tny-table tbody tr { background: rgba(138,23,29,.35); cursor: pointer; }
+.tny-table tbody tr:nth-child(even) { background: rgba(138,23,29,.22); }
+.tny-table tbody tr:hover, .tny-table tbody tr.on { background: rgba(156,56,53,.6); }
+.tny-row-btn { padding: 7px 14px; font-size: 13px; }
+.tny-status { display: inline-block; padding: 4px 8px; border-radius: 4px; font: 700 11px/1 var(--st-narrow); text-transform: uppercase; white-space: nowrap; }
+.tny-status.live { background: #1f7a4a; } .tny-status.reg { background: #2b4f7a; } .tny-status.in { background: var(--st-gold-grad); color: var(--st-on-gold); }
+.tny-status.closed { background: #555; } .tny-status.ended { background: #3b2b2b; color: #cbb; }
+
+.tny-cards { display: grid; gap: 12px; }
+.tny-card { background: var(--st-tile); border-radius: 10px; overflow: hidden; border: 1px solid transparent; }
+.tny-card.on { border-color: var(--st-gold); }
+.tny-card > header { padding: 9px 12px; background: var(--st-bg-deep); font-size: 14px; }
+.tny-card-body { display: grid; grid-template-columns: 112px 1fr; gap: 12px; padding: 10px 12px; }
+.tny-card-art { display: flex; flex-direction: column; gap: 6px; }
+.tny-card-art > :first-child { border-radius: 8px; overflow: hidden; aspect-ratio: 1; }
+.tny-card-rank { font-size: 11px; color: var(--ivory-dim); text-align: center; }
+.tny-card dl { margin: 0; display: grid; gap: 4px; font-size: 13px; }
+.tny-card dl > div { display: flex; justify-content: space-between; gap: 8px; }
+.tny-card dt { color: var(--ivory-dim); }
+.tny-card dd { margin: 0; text-align: right; font-weight: 700; }
+.tny-card-cta { display: block; width: 100%; min-height: 46px; border: 0; background: var(--st-red-btn); color: #fff; font: 400 20px/1 var(--st-display); letter-spacing: .03em; cursor: pointer; }
+.tny-card-cta.gold { background: var(--st-gold-grad); color: var(--st-on-gold); }
+.tny-card-cta.ended { background: #3b2b2b; color: #cbb; }
+@media (min-width: 992px) { .tny-table { display: table; } .tny-cards { display: none; } .tny-page { padding: 18px 24px 40px; } }
+
+.tny-legend { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 16px; padding: 0; margin: 12px 0; font-size: 12px; color: var(--ivory-dim); }
+.tny-st { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.tny-st-live { background: #1f7a4a; } .tny-st-reg { background: #2b4f7a; } .tny-st-in { background: var(--st-gold); } .tny-st-closed { background: #555; } .tny-st-ended { background: #3b2b2b; }
+
+.tny-detail { margin: 18px 0; padding: 14px; border-radius: 12px; background: var(--st-bg-deep); border: 1px solid #7c1b21; scroll-margin-top: 80px; }
+.tny-detail-head { display: grid; grid-template-columns: 84px 1fr; gap: 12px; align-items: center; }
+.tny-detail-art { border-radius: 8px; overflow: hidden; aspect-ratio: 1; }
+.tny-detail h2 { margin: 0 0 4px; font: 400 26px/1.1 var(--st-display); color: var(--st-gold); }
+.tny-detail-head p { margin: 4px 0; font-size: 13px; }
+.tny-status-text { margin-left: 6px; color: var(--st-gold); font-weight: 700; }
+.tny-pool b { color: var(--st-gold); }
+.tny-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+.tny-btn-register, .tny-btn-play { display: inline-flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 22px; border-radius: 999px; border: 0; font: 400 20px/1 var(--st-display); letter-spacing: .03em; cursor: pointer; text-decoration: none; }
+.tny-btn-register { background: var(--st-red-btn); color: #fff; box-shadow: inset 0 0 0 1px #d8524e; }
+.tny-btn-play { background: var(--st-gold-grad); color: var(--st-on-gold); }
+.tny-confirm { width: 100%; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 12px; border-radius: 10px; background: #3a1212; border: 1px solid #d09038; }
+.tny-confirm p { width: 100%; margin: 0; font-size: 14px; }
+.tny-cards3 { display: grid; gap: 12px; }
+@media (min-width: 992px) { .tny-cards3 { grid-template-columns: 1fr 1fr 1.3fr; } }
+.tny-c3 { background: rgba(138,23,29,.35); border-radius: 10px; padding: 12px; min-width: 0; }
+.tny-c3 h3 { margin: 0 0 6px; font: 700 14px/1.2 var(--st-narrow); text-transform: uppercase; letter-spacing: .05em; color: var(--st-heading-gold); }
+.tny-board table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tny-board th { text-align: left; color: var(--ivory-dim); font-weight: 600; padding: 5px 4px; border-bottom: 1px solid rgba(255,255,255,.12); }
+.tny-board td { padding: 6px 4px; border-bottom: 1px solid rgba(255,255,255,.06); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+.tny-board tr.me td { background: rgba(254,221,82,.15); font-weight: 800; }
+.tny-board tr.empty td { color: rgba(255,255,255,.35); }
+.tny-ladder { font-size: 12px; margin: 8px 0 4px; }
+.tny-howto { margin-top: 18px; }
+.tny-howto ul { padding-left: 18px; font-size: 14px; line-height: 1.5; }
+
+.tny-lobby-link { display: flex; align-items: center; gap: 12px; margin: 10px 0; padding: 12px 14px; border-radius: 10px; background: linear-gradient(90deg, #8a171d, #5b1c1b); border: 1px solid #d09038; color: #fff; text-decoration: none; }
+.tny-lobby-link b { display: block; font: 400 22px/1 var(--st-display); color: var(--st-gold); }
+.tny-lobby-link small { display: block; font-size: 12px; color: var(--ivory-dim); margin-top: 3px; }
+.tny-lobby-trophy { font-size: 28px; }
+.tny-lobby-go { margin-left: auto; font-size: 28px; color: var(--st-gold); }

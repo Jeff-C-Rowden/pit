@@ -8,6 +8,7 @@ import {
   spinAmerican, settleRoulette, recordSpin, recentSpins, validateBet, publicWheel, dozen, column,
   type RouletteBet,
 } from "@/lib/games/roulette";
+import { playTournamentRound, tournamentHud } from "@/lib/tournaments/play";
 
 async function _GET() {
   return json(publicWheel());
@@ -32,6 +33,17 @@ async function _POST(req: Request) {
       return bet;
     });
     const stake = bets.reduce((a, b) => a + b.amountCents, 0);
+    if (body.tournamentId) {
+      // Roulette Sprint: same wheel and settlement, tournament stack only (no wallet, no spin history).
+      const tid = String(body.tournamentId);
+      const out = playTournamentRound(getDb(), user.id, tid, "roulette", String(body.idempotencyKey || newId()), (check) => {
+        check(stake);
+        const pocket = spinAmerican();
+        const settled = settleRoulette(bets, pocket);
+        return { stake, ret: settled.payoutCents, summary: String(pocket), result: settled };
+      });
+      return json({ spin: { id: newId(), ...out.result, stakeCents: stake, netCents: out.result.payoutCents - stake }, tournament: tournamentHud(getDb(), user.id, tid) });
+    }
     const id = newId();
     const key = String(body.idempotencyKey || id);
     debitBet(user.id, stake, "roulette", id, `rl-bet-${id}-${key}`, { bets });

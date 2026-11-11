@@ -341,6 +341,11 @@ export default function Floor() {
               No cash value · 21+
             </span>
           </div>
+          <Link href="/tournaments" className="tny-lobby-link" data-testid="tny-lobby-link">
+            <span className="tny-lobby-trophy" aria-hidden>🏆</span>
+            <span><b>Tournaments</b><small>Free rolls and $1–$10 buy-ins · real entrants only · see the lobby</small></span>
+            <span className="tny-lobby-go" aria-hidden>›</span>
+          </Link>
           <StartHere />
           {jp && (
             <section className="st-jackpots" aria-label="Antler Ridge jackpots">

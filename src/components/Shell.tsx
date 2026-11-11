@@ -88,6 +88,7 @@ const RAIL: [string, string, keyof typeof ICONS][] = [
   ["/floor#slots", "Video Slots", "video"],
   ["/vault", "Progressives", "jackpot"],
   ["/bounty", "Bonus to Cash", "bonus"],
+  ["/tournaments", "Tournaments", "trophy"],
   ["/roulette", "Roulette", "roulette"],
   ["/blackjack", "Blackjack", "cards"],
   ["/craps", "Craps", "dice"],
@@ -138,7 +139,7 @@ function BottomNav({ path }: { path: string }) {
   return (
     <nav className="st-bottomnav" aria-label="Quick">
       <Link href="/floor" className={is("/floor") ? "active" : ""}>{ico(ICONS.home)}<span>Lobby</span></Link>
-      <Link href="/floor#slots" className="">{ico(ICONS.video)}<span>Slots</span></Link>
+      <Link href="/tournaments" className={is("/tournaments") ? "active" : ""}>{ico(ICONS.trophy)}<span>Tourneys</span></Link>
       <Link href="/wallet" className={`st-bottomnav-cage${is("/wallet") ? " active" : ""}`}><span className="st-bottomnav-orb"><ChipCoin size={30} /></span><span>Cage</span></Link>
       <Link href="/rules" className={is("/rules") ? "active" : ""}>{ico(ICONS.rules)}<span>Odds</span></Link>
       <Link href="/activity" className={is("/activity") ? "active" : ""}>{ico(ICONS.history)}<span>History</span></Link>

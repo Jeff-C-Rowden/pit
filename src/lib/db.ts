@@ -1,6 +1,7 @@
 import fs from "fs";
 import { migrateSession } from "./session";
 import { migrateLimits } from "./limits";
+import { migrateTournaments } from "./tournaments/schema";
 import path from "path";
 import Database from "better-sqlite3";
 
@@ -122,6 +123,7 @@ function finish(db: Database.Database, wal: boolean): Database.Database {
   migrateLimits(db);
   migrateSession(db);
   migrateBonus(db);
+  migrateTournaments(db);
   return instrument(db);
 }
 

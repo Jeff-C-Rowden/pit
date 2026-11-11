@@ -6,6 +6,7 @@ import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
 import { buckshotInfo, publicBuckshotSpin, spinBuckshot } from "@/lib/games/buckshot";
 import { creditPlayWin, debitPlayBet } from "@/lib/bonus";
+import { playTournamentRound, tournamentHud } from "@/lib/tournaments/play";
 
 async function _GET() {
   return json({ info: buckshotInfo() });
@@ -14,6 +15,16 @@ async function _GET() {
 async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
+    if (body.tournamentId) {
+      // Tournament round: same engine and strips; only the tournament stack moves. Bonus is never used.
+      const tid = String(body.tournamentId);
+      const out = playTournamentRound(getDb(), user.id, tid, "buckshot", String(body.idempotencyKey || newId()), (check) => {
+        const spin = spinBuckshot(body.coins, body.denomCents);
+        check(spin.betCents);
+        return { stake: spin.betCents, ret: spin.winCents, summary: spin.line.join(","), result: spin };
+      });
+      return json({ spin: publicBuckshotSpin(out.result), tournament: tournamentHud(getDb(), user.id, tid) });
+    }
     const spin = spinBuckshot(body.coins, body.denomCents);
     const key = String(body.idempotencyKey || newId());
     const funded = debitPlayBet(user.id, spin.betCents, "buckshot", spin.id, `buckshot-bet-${spin.id}-${key}`, { coins: spin.coins, denomCents: spin.denomCents });

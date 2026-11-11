@@ -7,6 +7,7 @@ import { ROULETTE_BET_MATH } from "@/lib/gameMath";
 import { previewBets } from "@/lib/games/roulettePreview";
 import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
+import TournamentStrip from "@/components/TournamentStrip";
 import { Chip, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { celebrationLevel, playChip, playPayout, playSpin } from "@/lib/feel";
 import { StandingRail } from "@/components/Seating";
@@ -111,8 +112,10 @@ function pickGhosts(): GhostChip[] {
   return out;
 }
 
-export default function RoulettePage() {
+export default function RoulettePage({ searchParams }: { searchParams?: { t?: string } }) {
   const { setUser } = useUser();
+  const tournamentId = searchParams?.t ?? null;
+  const [tourney, setTourney] = useState<any>(null);
   const paused = usePausedLabel();
   const [chip, setChip] = useState(100);
   const [bets, setBets] = useState<(ClothBet & { amountCents: number })[]>([]);
@@ -266,12 +269,13 @@ export default function RoulettePage() {
       const pattern = bets.map((b) => ({ ...b }));
       const d = await api("/api/games/roulette", {
         method: "POST",
-        body: JSON.stringify({ bets, idempotencyKey: crypto.randomUUID() }),
+        body: JSON.stringify({ bets, idempotencyKey: crypto.randomUUID(), ...(tournamentId ? { tournamentId } : {}) }),
       });
       // Only once the house has accepted the spin: bring the wheel into view (the dock collapses
       // while the ball is live). Scrolling before a refusal hid its message under the top bar.
       wheelRef.current?.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
       setLastStake(pattern);
+      if (d.tournament) setTourney(d.tournament);
       setGhosts(pickGhosts());
       setLivePocket(d.spin.pocket);
       setSkipped(false);
@@ -311,7 +315,7 @@ export default function RoulettePage() {
 
   return (
     <Shell>
-      {(u) => (
+      {(u) => { const bal = tournamentId ? (tourney?.stackCents ?? 0) : u.balanceCents; return (
         <div className={`roulette-page rl-ux${spinning ? " is-spinning" : ""}${instant || seat === "bird" ? " rl-instant" : ""}`} data-view={seat} data-felt={felt}>
           <div className="rl-chrome">
             <div className="rl-chrome-title">American Roulette · 0 / 00</div>
@@ -319,12 +323,13 @@ export default function RoulettePage() {
           </div>
 
           <div className="rl-status" role="status" aria-live="polite">
-            <div><span>Balance</span><strong>{money(u.balanceCents)}</strong></div>
+            <div><span>{tournamentId ? "Tourney stack" : "Balance"}</span><strong>{money(bal)}</strong></div>
             <div><span>Bet on table</span><strong>{money(stake)}</strong></div>
             <div><span>Last spin</span><strong className={lastWin == null ? "" : lastWin > 0 ? "up" : lastWin < 0 ? "down" : ""}>
               {lastWin == null ? "—" : `${lastWin > 0 ? "+" : ""}${money(lastWin)}`}</strong></div>
           </div>
 
+          {tournamentId && <TournamentStrip tournamentId={tournamentId} hud={tourney} onHud={setTourney} />}
           <LiveAnnounce text={spin && !spinning && !spin.replay ? `Ball landed on ${spin.pocket} ${colorName(spin.pocket)}. ${resultPhrase(staked, paid, money)}` : null} />
           <ResultsStrip game="roulette" refreshKey={history.length + ":" + (spin?.id || "")} />
           {history.length > 0 && !spin?.replay && (
@@ -426,7 +431,7 @@ export default function RoulettePage() {
             <RouletteBots active={spinning} flashes={spinning || ghosts.length ? botFlashes : []} />
           </div>
           <OddsPanel />
-          <StandingRail youName={u.displayName} youStack={u.balanceCents} coinIn={stake} />
+          <StandingRail youName={u.displayName} youStack={bal} coinIn={stake} />
 
           {toast && <div className="rl-toast" role="status">{toast}</div>}
 
@@ -440,7 +445,7 @@ export default function RoulettePage() {
               <>
                 <PauseStatus />
                 <div className="rl-dock-chips" role="group" aria-label="Chip value">
-                  <span className="rl-cash">Cash<b>{money(u.balanceCents)}</b></span>
+                  <span className="rl-cash">{tournamentId ? "Stack" : "Cash"}<b>{money(bal)}</b></span>
                   {CHIPS.map((c) => (
                     <Chip key={c} cents={c} size={44} selected={chip === c} onClick={() => { setChip(c); setRemoveMode(false); setCustomOpen(false); }} label={`Chip value ${money(c)}`} />
                   ))}
@@ -498,7 +503,7 @@ export default function RoulettePage() {
             )}
           </div>
         </div>
-      )}
+      ); }}
     </Shell>
   );
 }

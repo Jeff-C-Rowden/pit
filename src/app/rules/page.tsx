@@ -68,6 +68,17 @@ export default function Rules() {
           <li><b>Bonus to Cash machines</b> carry a green “Bonus to Cash” badge and have their own lobby filter. They pay back a little less (about 90% RTP, shown exactly on each machine) than the regular slots (94–96%).</li>
           <li><b>Limits.</b> Breaks, self-exclusion and session time limits stop bonus bets too. Loss and deposit limits count Cash only, since Bonus was never deposited.</li>
         </ul>
+        <h3 id="tournaments" className="rules-anchor">Tournaments</h3>
+        <ul className="muted rules-list">
+          <li><b>Separate stacks.</b> Each entrant gets the same tournament stack of tournament chips. Bets in a tournament never touch your Cash or Bonus, and leftover chips are worth nothing when it ends.</li>
+          <li><b>Buy-ins.</b> Free, $1, $2, $5 or $10, paid from Cash only. Bonus can&apos;t buy in. You can withdraw for a full refund until your first bet. Rebuys (paid events only) cost the buy-in, give a fresh starting stack, and are allowed when your stack has fallen to 10% of the start or less.</li>
+          <li><b>House fee and pool.</b> A flat 25% of every buy-in and rebuy is the house fee. Prize pool = (entries + rebuys) × buy-in × 75%. Free rolls have a pool funded by the house, capped at $50 of free-roll prizes a day across all free rolls.</li>
+          <li><b>Ranking modes.</b> <b>Balance</b>: the highest stack at the end wins. <b>Accumulated</b>: only winning rounds score, as net win × 100 ÷ bet (capped at 50,000 points a round), so a big bet doesn&apos;t outscore a lucky small one. Ties go to whoever reached the score first.</li>
+          <li><b>Qualifying.</b> Each event shows a minimum number of bets (at least the table minimum each). Only qualified players rank for prizes. The in-game strip shows “Remaining bets to qualify” and “Bets made”.</li>
+          <li><b>Prizes.</b> Paid places grow with the number of qualified players, up to the top 10; leftover cents go to 1st. Events marked “Cash prize” pay to Cash; “Bonus prize” events (most free rolls) pay to your Bonus balance.</li>
+          <li><b>Never cancelled.</b> There is no minimum field. A single qualified player takes the whole pool. If nobody qualifies, the top-ranked entrant takes it.</li>
+          <li><b>Honest field.</b> Entrant counts and leaderboards show only real players. There are no house players or bots. Breaks, self-exclusion and session time limits apply inside tournaments too. Free rolls: up to 3 entries a day.</li>
+        </ul>
         <p style={{ marginTop: 24 }}><Link href="/">Back to the door</Link></p>
       </div>
       <footer className="footer">Live real-money operation needs a gambling license and licensed payments. This build is a local sandbox.</footer>

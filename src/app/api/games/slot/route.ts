@@ -2,6 +2,7 @@ import { withDbSync } from "@/lib/dbSync";
 import { withUser, json } from "@/lib/http";
 import { getBalance } from "@/lib/ledger";
 import { creditPlayWin, debitPlayBet } from "@/lib/bonus";
+import { playTournamentRound, tournamentHud } from "@/lib/tournaments/play";
 import { toPublic } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
@@ -20,6 +21,15 @@ async function _POST(req: Request) {
   return withUser(req, async (user) => {
     const body = await req.json();
     const coinCents = Number(body.coinCents);
+    if (body.tournamentId) {
+      const tid = String(body.tournamentId);
+      const out = playTournamentRound(getDb(), user.id, tid, "slot", String(body.idempotencyKey || newId()), (check) => {
+        check(coinCents * PAYLINES.length);
+        const spin = spinSlot(coinCents);
+        return { stake: spin.betCents, ret: spin.winCents, result: spin };
+      });
+      return json({ spin: publicSpin(out.result), tournament: tournamentHud(getDb(), user.id, tid) });
+    }
     const spin = spinSlot(coinCents);
     const key = String(body.idempotencyKey || newId());
     const funded = debitPlayBet(user.id, spin.betCents, "slot", spin.id, `slot-bet-${spin.id}-${key}`);
