@@ -365,3 +365,35 @@
   }
   .pit-shell:has(.slot-page .action-dock), .pit-shell:has(.vault-page .action-dock) { padding-bottom: 72px; }
 }
+
+/* Phones: the cabinet deck is the Spin/Bet surface, so the fixed bottom bar keeps only
+   the coin picker, Custom $ and Repeat (no second big Spin, no hint line). It is
+   compact, and the page pads by its real height (--dock-h) so the deck always
+   scrolls clear of it. */
+@media (max-width: 720px) {
+  .slot-page .action-dock .btn.hero-act,
+  .vault-page .action-dock .btn.hero-act.vault-spin { display: none !important; }
+  .slot-page .action-dock .table-hint,
+  .vault-page .action-dock .table-hint,
+  .vault-page .action-dock .vault-bet-head { display: none; }
+  .slot-page .action-dock, .vault-page .action-dock { padding-top: 8px !important; }
+  .slot-page .action-dock .action-dock-row, .vault-page .action-dock .action-dock-row { gap: 6px; }
+  .slot-page .action-dock .quick-bet, .vault-page .action-dock .quick-bet { gap: 6px !important; width: 100%; }
+  .slot-page .action-dock .quick-bet .clay-chip-btn,
+  .vault-page .action-dock .quick-bet .clay-chip-btn { min-height: 44px !important; }
+  .slot-page .action-dock .quick-bet .clay-chip-btn .clay-face,
+  .vault-page .action-dock .quick-bet .clay-chip-btn .clay-face { width: 42px !important; height: 42px !important; }
+  .slot-page .action-dock .quick-bet-sub, .vault-page .action-dock .quick-bet-sub { display: flex; gap: 6px; width: 100%; max-width: 360px; margin: 0 auto; }
+  .slot-page .action-dock .quick-bet-sub .custom-wager,
+  .vault-page .action-dock .quick-bet-sub .custom-wager { min-height: 44px !important; flex: 1 1 0; }
+  .slot-page .action-dock .repeat-bet, .vault-page .action-dock .repeat-bet { min-height: 44px; flex: 0 0 auto; white-space: nowrap; }
+  .pit-shell:has(.slot-page .action-dock), .pit-shell:has(.vault-page .action-dock) { padding-bottom: calc(var(--dock-h, 150px) + 16px + env(safe-area-inset-bottom, 0px)); }
+  .slot-page, .vault-page { padding-bottom: 8px !important; }
+  /* the deck already carries the sandbox label; drop the duplicate footer strip */
+  .cab-base { display: none; }
+  .cab-deck { margin-bottom: -10px; border-radius: 0 0 8px 8px; }
+}
+
+/* Achievement toast drops in just below the sticky top bar instead of over it. */
+.ach-toast-wrap { top: calc(52px + env(safe-area-inset-top, 0px)); }
+@media (max-width: 720px) { .ach-toast-wrap { top: calc(72px + env(safe-area-inset-top, 0px)); } }
