@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "fs";
 import { resetDbForTests, isTestEmail } from "../src/lib/db";
 import { getBalance, getBonusBalance } from "../src/lib/ledger";
 import { createUser } from "../src/lib/auth";
-import { currentSession } from "../src/lib/session";
+import { currentSession, sessionActivity } from "../src/lib/session";
 import { applyPrizeCap, FREEROLL_DAILY_CAP_CENTS } from "../src/lib/tournaments/payout";
 import { instancesForDay } from "../src/lib/tournaments/schedule";
 import { GAME_INFO, TABLE_FORMATS } from "../src/lib/tournaments/templates";
@@ -137,6 +137,23 @@ describe("session time counts tournament play", () => {
     expect(currentSession(db, "u3").minutes).toBeGreaterThanOrEqual(49);
     db.prepare("UPDATE users SET session_limit_min = 30 WHERE id = 'u3'").run();
     expect(() => slot(db, "u3", t.id, 25, 0, "s3")).toThrow(/session time limit/);
+  });
+});
+
+describe("session bar bet count includes tournament bets", () => {
+  it("counts tournament rounds in this session as bets, with no wallet rows", () => {
+    const db = seedDb(); ensureSchedule(db, now(), 500);
+    const t = live(db, "fotd");
+    registerEntry(db, user("u3"), t.id, now());
+    expect(sessionActivity(db, "u3").tournamentBets).toBe(0);
+    slot(db, "u3", t.id, 25, 0, "b1"); slot(db, "u3", t.id, 25, 0, "b2");
+    const a = sessionActivity(db, "u3");
+    expect(a.rows).toEqual([]);
+    expect(a.tournamentBets).toBe(2);
+    // rounds from an earlier, ended session are not counted
+    db.prepare("UPDATE tournament_rounds SET created_at = ?").run(new Date(Date.now() - 3 * 3600_000).toISOString());
+    slot(db, "u3", t.id, 25, 0, "b3");
+    expect(sessionActivity(db, "u3").tournamentBets).toBe(1);
   });
 });
 

@@ -3578,3 +3578,28 @@ label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spa
 .vault-lobby-tier .mhb-copy { text-align: left; font-size: 9px; }
 @media (max-width: 420px) { .prog-tier .mhb-copy { font-size: 7px; letter-spacing: 0; } }
 @media (prefers-reduced-motion: reduce) { .mhb-fill { transition: none; } }
+/* polish-1: blackjack top of felt stacks without overlap — house-edge line, then the Dealer
+   label/"Showing", then the dealer's cards, then the printed rules, then the result banner. */
+.bj-table .dealer-booth { top: 76px; gap: 4px; }
+.bj-table .dealer-booth .muted { line-height: 1.2; }
+.bj-table .bj-felt-rules { top: 240px; }
+.bj-table .table-heart { top: 336px; }
+@media (max-width: 640px) {
+  .bj-table.felt-table.seated { min-height: 560px; }
+  .bj-table .dealer-booth { top: 58px; gap: 2px; }
+  .bj-table .dealer-booth .seat-name { font-size: 10px; line-height: 14px; }
+  .bj-table .dealer-booth .muted { font-size: 13px; line-height: 16px; }
+  .bj-table .dealer-booth .hand { min-height: 70px; gap: 6px; }
+  .bj-table .dealer-booth .hand .pcard { width: 48px; height: 70px; }
+  .bj-table .dealer-booth .hand .pcard .cr { font-size: 13px; }
+  .bj-table .dealer-booth .hand .pcard .cs { font-size: 17px; }
+  .bj-table .bj-felt-rules { top: 172px; width: min(72%, 300px); }
+  .bj-table .table-heart { top: 252px; }
+}
+@media (min-width: 641px) {
+  .bj-table .table-heart { min-width: 380px; }
+}
+@media (min-width: 641px) and (max-width: 820px) {
+  .bj-table.felt-table.seated { min-height: 640px; }
+  .bj-table .table-heart { top: 330px; }
+}

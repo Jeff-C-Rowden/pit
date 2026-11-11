@@ -143,13 +143,18 @@ export function selfExclude(db: Database.Database, userId: string, choice: strin
 
 export type ActivityRow = { at: string; type: string; game: string | null; amountCents: number; balanceAfterCents: number; stakeBackCents?: number; currency?: string };
 /** This session's bets, payouts and refunds, newest first, straight from the ledger. */
-export function sessionActivity(db: Database.Database, userId: string, now = new Date()): { session: Session; rows: ActivityRow[] } {
+export function sessionActivity(db: Database.Database, userId: string, now = new Date()): { session: Session; rows: ActivityRow[]; tournamentBets: number } {
   const session = currentSession(db, userId, now);
-  if (!session.active || !session.startedAt) return { session, rows: [] };
+  if (!session.active || !session.startedAt) return { session, rows: [], tournamentBets: 0 };
   const rows = db.prepare(`SELECT created_at AS at, type, game, amount_cents AS amountCents, balance_after_cents AS balanceAfterCents, meta, currency FROM ledger
     WHERE user_id = ? AND type IN ('bet','payout','refund') AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT 500`)
     .all(userId, session.startedAt, now.toISOString()) as (ActivityRow & { meta: string | null })[];
-  return { session, rows: rows.map(withBack) };
+  // Tournament bets (tourney chips, never wallet money) count as bets in the session bar too.
+  const tournamentBets = hasTournamentRounds(db)
+    ? (db.prepare(`SELECT COUNT(*) AS n FROM tournament_rounds r JOIN tournament_entries e ON e.id = r.entry_id
+        WHERE e.user_id = ? AND r.stake_cents > 0 AND r.created_at >= ? AND r.created_at <= ?`).get(userId, session.startedAt, now.toISOString()) as { n: number }).n
+    : 0;
+  return { session, rows: rows.map(withBack), tournamentBets };
 }
 
 function withBack({ meta, ...r }: ActivityRow & { meta: string | null }): ActivityRow {
