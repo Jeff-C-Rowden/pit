@@ -117,7 +117,9 @@ function pgUrl(): string | undefined {
 async function pg(): Promise<PgQuery> {
   if (!pgQuery) {
     const { neon } = await import("@neondatabase/serverless");
-    const sql = neon(pgUrl()!);
+    // no-store: Next.js caches fetch() (even POST) inside GET-only route handlers, which froze
+    // those routes on a stale snapshot (e.g. /api/wallet/ledger 401s for new accounts).
+    const sql = neon(pgUrl()!, { fetchOptions: { cache: "no-store" } });
     pgQuery = async (text, args = []) => (await sql.query(text, args as never[])) as unknown as Record<string, unknown>[];
   }
   if (!pgReady) {

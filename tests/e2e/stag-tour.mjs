@@ -75,7 +75,7 @@ for (const w of [390, 1366]) {
   await page("/roulette", "roulette", w);
   await page("/blackjack", "blackjack", w);
 }
-const led = await p.evaluate(async () => (await (await fetch("/api/wallet/ledger", { cache: "no-store" })).json()).recent?.filter((l) => l.game === "buckshot").length);
+const led = await p.evaluate(async () => { const r = await fetch("/api/wallet/ledger", { cache: "no-store" }); const j = await r.json(); return r.status + " " + JSON.stringify((j.recent || []).filter((l) => l.game === "buckshot").map((l) => `${l.type}:${l.amountCents}`)); });
 log.push(`buckshot ledger lines: ${led}`);
 log.push(`page errors: ${errors.length ? errors.join(" | ") : "none"}`);
 console.log(log.join("\n"));
