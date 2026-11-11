@@ -158,6 +158,7 @@ export default function MinePage() {
   const [fsShown, setFsShown] = useState(false);
   const [retrig, setRetrig] = useState<number>(0);
   const [story, setStory] = useState(false);
+  const [paid, setPaid] = useState(0);
   const [lastCoin, rememberCoin] = useLastBet("mine");
   const [feelLive, setFeelLive] = useState(false);
   const [turbo, setTurbo] = useState(false);
@@ -274,6 +275,7 @@ export default function MinePage() {
       startFeature(s.pick ? "pick" : "fs");
       return;
     }
+    setPaid((v) => v + (s?.winCents ?? 0));
     setPh("idle");
     setSettleTick((n) => n + 1);
   }, [playNextFree, startFeature, auto]);
@@ -289,6 +291,7 @@ export default function MinePage() {
   }
 
   function finishFeature() {
+    setPaid((v) => v + (spinRef.current?.winCents ?? 0));
     setPh("idle");
     setFsIdx(-1);
     fsIdxRef.current = -1;
@@ -407,7 +410,7 @@ export default function MinePage() {
                     onSpin={onPrimary}
                     onPayTable={() => document.getElementById("paytable")?.scrollIntoView({ behavior: "smooth", block: "start" })}
                     coinLabel={money(coin)}
-                    paidCents={0}
+                    paidCents={paid}
                     maxLabel="Max bet"
                     auto={auto}
                     note="Sandbox / test chips · no cash value · 21+"
