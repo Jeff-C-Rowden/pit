@@ -1,5 +1,6 @@
 "use client";
 
+import { SandboxChip } from "@/components/SandboxChip";
 import { useEffect, useMemo, useState } from "react";
 import {
   HIT_HISTORY_EMPTY,
@@ -45,7 +46,7 @@ export default function HitHistoryStrip({
     <section className="hh" aria-label="Antler Ridge hit history">
       <div className="hh-head">
         <h2 className="hh-title">Hit history</h2>
-        <span className="sandbox-chip hh-sandbox">{HIT_HISTORY_SANDBOX}</span>
+        <SandboxChip className="hh-sandbox" />
       </div>
       <div className="hh-tabs" role="tablist" aria-label="Progressive tier">
         {history.map((t) => {
@@ -81,6 +82,7 @@ export default function HitHistoryStrip({
               <li key={r.key} className="hh-row">
                 <span className="hh-amt">{r.amountLabel}</span>
                 <span className="hh-ago">{r.ago}</span>
+                <span className="sr-only">{HIT_HISTORY_SANDBOX}</span>
                 <span className="hh-who">{r.who}</span>
                 <span className="hh-vs">
                   {r.ceilingPercent != null && (

@@ -18,7 +18,8 @@ import {
 import { compactDollars } from "@/lib/mhbBar";
 
 export const POT_SHEET_BANNED_WORDS = /\b(due|hot|about to hit|overdue|ready to pop|any second|lucky)\b/i;
-export const POT_SHEET_SANDBOX = "Sandbox / test chips, no cash value";
+import { SANDBOX_CHIP_LABEL } from "./sandboxLabel";
+export const POT_SHEET_SANDBOX = SANDBOX_CHIP_LABEL;
 
 export type PotMeterLike = {
   id: string;

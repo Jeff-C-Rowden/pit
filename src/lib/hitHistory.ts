@@ -15,7 +15,8 @@ import { compactDollars } from "./mhbBar";
 
 export const HIT_HISTORY_PER_TIER = 10;
 export const HIT_HISTORY_EMPTY = "No hits yet";
-export const HIT_HISTORY_SANDBOX = "Sandbox / test chips";
+import { SANDBOX_CHIP_LABEL } from "./sandboxLabel";
+export const HIT_HISTORY_SANDBOX = SANDBOX_CHIP_LABEL;
 
 export type HitRecordLike = {
   tierId?: string | null;

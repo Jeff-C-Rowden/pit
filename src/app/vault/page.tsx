@@ -1,5 +1,6 @@
 "use client";
 
+import { SandboxChip } from "@/components/SandboxChip";
 import { VS_SYM_ART } from "@/components/VaultSpireMachine";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
@@ -304,7 +305,7 @@ export default function VaultPage() {
               <MathStrip game="vault" variant="hero" />
             </div>
             <div className="vault-badges">
-              <span className="sandbox-chip">Sandbox</span>
+              <SandboxChip />
               <span className="vault-qualify-badge" title="All sandbox bets feed the progressive">
                 All bets qualify · {money(contribPreview)} to pots
               </span>
@@ -335,6 +336,7 @@ export default function VaultPage() {
                       reseed={reseed}
                       onOpenInfo={(m) => setInfoSheet(m)}
                     />
+                    <div className="prog-strip-sandbox"><SandboxChip /></div>
                   </CabinetTopper>
                 }
                 belly={<CabinetBelly pays={pays} note={<>Pays left to right on 9 lines · × coin · 3% of each bet feeds the pots</>} />}
@@ -383,7 +385,7 @@ export default function VaultPage() {
           {jackpotModal && (
             <div className="vault-jp-modal" role="dialog" aria-modal="true" aria-label="Jackpot">
               <div className="vault-jp-card">
-                <div className="sandbox-chip">Demo jackpot</div>
+                <SandboxChip className="vault-jp-sandbox" />
                 <div className="vault-jp-headline">JACKPOT</div>
                 {jackpotModal.map((h) => (
                   <div key={h.tierId} className="vault-jp-tier">

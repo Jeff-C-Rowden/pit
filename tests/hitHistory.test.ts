@@ -51,7 +51,7 @@ describe("J3 hit history — pure logic", () => {
       }
     }
     expect(HIT_HISTORY_EMPTY).toBe("No hits yet");
-    expect(HIT_HISTORY_SANDBOX).toBe("Sandbox / test chips");
+    expect(HIT_HISTORY_SANDBOX).toBe("Sandbox chips · no cash value");
   });
 
   it("groups by tier, newest first, capped at 10, drops malformed/unknown rows", () => {

@@ -1,4 +1,5 @@
 "use client";
+import { SandboxChip } from "@/components/SandboxChip";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import FeltThumb from "@/components/FeltThumb";
@@ -109,7 +110,7 @@ function VaultLobbyMeters() {
   return (
     <div className="vault-lobby-prog" aria-label="Live Antler Ridge progressive">
       <div className="vault-lobby-prog-head">
-        <span className="sandbox-chip">Sandbox / test chips</span>
+        <SandboxChip />
         <span className="vault-lobby-live">LIVE</span>
       </div>
       <div className="vault-lobby-meters" aria-label="Live progressive meters">

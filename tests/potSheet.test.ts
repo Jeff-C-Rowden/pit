@@ -88,7 +88,7 @@ describe("J2 How this pot works sheet", () => {
     for (const n of ["Mini", "Minor", "Major", "Grand"]) {
       const s = buildPotSheet({ ...meter(n, tier(n).seedCents + 7), triggerCents: 2_222 } as never)!;
       expect(s.sandbox).toBe(POT_SHEET_SANDBOX);
-      expect(s.sandbox).toMatch(/Sandbox \/ test chips, no cash value/);
+      expect(s.sandbox).toMatch(/Sandbox chips · no cash value/);
       const txt = potSheetText(s);
       expect(txt).not.toMatch(POT_SHEET_BANNED_WORDS);
       expect(txt).not.toContain("$22.22");

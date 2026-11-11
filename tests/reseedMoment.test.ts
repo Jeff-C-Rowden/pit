@@ -115,7 +115,7 @@ describe("J4 reseed moment: wiring", () => {
     expect(strip).toContain('aria-live="polite"');
     expect(floor).toContain("vault-lobby-reseed");
     expect(floor).toContain("momentsFromNewHits");
-    expect(floor).toContain("Sandbox / test chips");
+    expect(floor).toContain("<SandboxChip");
   });
   it("own hits: meters held until reels settle, moment starts after the jackpot card", () => {
     expect(vault).toContain("pendingMetersRef.current = d.meters");

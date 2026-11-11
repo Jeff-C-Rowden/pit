@@ -3603,3 +3603,8 @@ label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spa
   .bj-table.felt-table.seated { min-height: 640px; }
   .bj-table .table-heart { top: 330px; }
 }
+
+/* Jackpot Desk J5: one sandbox chip on every jackpot surface */
+.sandbox-chip-j5 { white-space: nowrap; max-width: 100%; }
+.prog-strip-sandbox { display: flex; justify-content: center; margin-top: 6px; }
+.vault-jp-card .vault-jp-sandbox { margin: 0 auto 6px; }

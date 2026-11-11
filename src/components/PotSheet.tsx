@@ -1,5 +1,6 @@
 "use client";
 
+import { SandboxChip } from "@/components/SandboxChip";
 import { useEffect, useId, useRef } from "react";
 import { buildPotSheet, type PotMeterLike } from "@/lib/potSheet";
 
@@ -63,7 +64,7 @@ export default function PotSheet({ meter, onClose }: { meter: PotMeterLike; onCl
       >
         <div className="pot-sheet-head">
           <h3 id={titleId}>{sheet.title}</h3>
-          <span className="sandbox-chip pot-sheet-sandbox">{sheet.sandbox}</span>
+          <SandboxChip className="pot-sheet-sandbox" />
         </div>
         <dl className="pot-sheet-rows">
           {sheet.rows.map((r) => (
