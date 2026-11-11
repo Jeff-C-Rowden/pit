@@ -3,7 +3,7 @@ import { filterGames, pushRecent, parseRecent } from "@/lib/lobby";
 
 const games = [
   { href: "/blackjack", name: "Blackjack", meta: "7-spot · six-deck", line: "The pit staple." },
-  { href: "/vault", name: "Canopy Spire", meta: "5 reels · 4-tier progressive", line: "Jungle canopy progressive" },
+  { href: "/vault", name: "Antler Ridge", meta: "5 reels · 4-tier progressive", line: "Frontier progressive" },
   { href: "/roulette", name: "Roulette", meta: "American wheel · 0 and 00", line: "38 pockets." },
   { href: "/paigow", name: "Pai Gow Poker", meta: "6 seats", line: "Seven cards." },
 ];

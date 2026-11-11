@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import FeltThumb from "@/components/FeltThumb";
 import GameArt from "@/components/GameArt";
-import { DragonHero, Lantern } from "@/components/DragonArt";
+import { HeroArt } from "@/components/WesternArt";
 import { LOBBY_TABS, TAB_LABEL, filterByTab, parseTab, tabCounts, tileRibbon, type LobbyTab } from "@/lib/lobbyTabs";
 import { AchievementStrip } from "@/components/Achievements";
 import Shell from "@/components/Shell";
@@ -45,12 +45,13 @@ function relativeHitTime(iso: string): string {
 
 const GAMES = [
   { href: "/blackjack", level: "Easy to learn", pace: "Steady", name: "Blackjack", meta: "7-spot · six-deck · S17 · BJ 3:2", line: "The pit staple.", accent: "bj" },
-  { href: "/slot", level: "Easiest", pace: "Fast", name: "Gilded Track", meta: "5 reels · 9 lines · published 94–96% RTP", line: "A video slot with a real paytable.", accent: "slot" },
+  { href: "/buckshot", level: "Easiest", pace: "Fast", name: "Buckshot Bars", meta: "Classic 3 reels · 1 line · 94.44% RTP", line: "Cherries, bars and a horseshoe wild. Play 1 to 3 coins.", accent: "bb", isNew: true },
+  { href: "/slot", level: "Easiest", pace: "Fast", name: "Sundown Trail", meta: "5 reels · 9 lines · published 94–96% RTP", line: "A western video slot with a real paytable.", accent: "slot" },
   {
     href: "/vault", level: "Easiest", pace: "Fast",
-    name: "Canopy Spire",
+    name: "Antler Ridge",
     meta: "5 reels · 9 lines · 4-tier progressive",
-    line: "Jade dragon progressive — Mini · Minor · Major · Grand.",
+    line: "Frontier progressive — Mini · Minor · Major · Grand.",
     accent: "vault",
     progressive: true,
   },
@@ -98,7 +99,7 @@ function VaultLobbyMeters() {
   const sorted = [...meters].sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
 
   return (
-    <div className="vault-lobby-prog" aria-label="Live Canopy Spire progressive">
+    <div className="vault-lobby-prog" aria-label="Live Antler Ridge progressive">
       <div className="vault-lobby-prog-head">
         <span className="sandbox-chip">Sandbox / test chips</span>
         <span className="vault-lobby-live">LIVE</span>
@@ -185,9 +186,9 @@ function WeekCard({ w }: { w?: { weekStart: string; minutes: number; netCents: n
 }
 
 const SLIDES = [
-  { k: "Sandbox casino · 21+", h: "Fire up the floor", p: "Seven tables, honest odds and real casino rules. Sandbox chips only, never real money.", cta: "Play now", href: "#games" },
-  { k: "Canopy Spire", h: "Four live jackpots", p: "Mini, Minor, Major and Grand meters that grow only from real spins. Odds on the rules page.", cta: "Spin Canopy Spire", href: "/vault" },
-  { k: "The Cage", h: "Daily sandbox chips", p: "Claim $25 of test chips once a Chicago day. No cash value, nothing to withdraw.", cta: "Open the Cage", href: "/wallet" },
+  { k: "Sandbox casino · 21+", h: "Saddle up, partner", p: "Eight games, honest odds and real casino rules. Sandbox chips only, never real money.", cta: "Play now", href: "#games" },
+  { k: "New on the floor", h: "Buckshot Bars", p: "A classic three-reel machine with a horseshoe wild. Exact RTP published on the glass.", cta: "Spin Buckshot Bars", href: "/buckshot" },
+  { k: "The Cage", h: "Daily sandbox chips", p: "Claim free test chips once a Chicago day. No cash value, nothing to withdraw.", cta: "Open the Cage", href: "/wallet" },
 ];
 
 function HeroBanner({ name }: { name: string }) {
@@ -198,35 +199,98 @@ function HeroBanner({ name }: { name: string }) {
     return () => window.clearInterval(t);
   }, []);
   const s = SLIDES[i]!;
+  const go = (d: number) => setI((n) => (n + d + SLIDES.length) % SLIDES.length);
   return (
-    <section className="rd-hero" aria-roledescription="carousel" aria-label="Featured">
-      <svg className="rd-hero-lanterns rd-hero-lanterns-l" viewBox="0 0 80 90" aria-hidden="true"><Lantern x={40} y={50} s={0.95} className="sway-a" /></svg>
-      <svg className="rd-hero-lanterns rd-hero-lanterns-r" viewBox="0 0 80 90" aria-hidden="true"><Lantern x={40} y={50} s={0.95} className="sway-b" /></svg>
-      <div className="rd-hero-copy">
-        <p className="rd-hero-hello">Good evening, {name}</p>
-        <div className="rd-hero-slide" key={i} aria-live="polite">
-          <span className="rd-hero-kicker">{s.k}</span>
-          <h1 className="foil rd-hero-title">{s.h}</h1>
-          <p className="rd-hero-p">{s.p}</p>
+    <section className="st-hero" aria-roledescription="carousel" aria-label="Featured">
+      <div className="st-hero-art" key={`art${i}`}><HeroArt slide={i} /></div>
+      <div className="st-hero-copy">
+        <p className="st-hero-hello">Howdy, {name}</p>
+        <div className="st-hero-slide" key={i} aria-live="polite">
+          <span className="st-hero-kicker">{s.k}</span>
+          <h1 className="st-hero-title">{s.h}</h1>
+          <p className="st-hero-p">{s.p}</p>
           {s.href.startsWith("#") ? (
-            <a href={s.href} className="btn primary rd-glow">{s.cta}</a>
+            <a href={s.href} className="st-pill st-pill-gold st-hero-cta">{s.cta}</a>
           ) : (
-            <Link href={s.href} className="btn primary rd-glow">{s.cta}</Link>
+            <Link href={s.href} className="st-pill st-pill-gold st-hero-cta">{s.cta}</Link>
           )}
         </div>
-        <div className="rd-hero-dots" role="group" aria-label="Choose slide">
-          {SLIDES.map((sl, n) => (
-            <button key={sl.h} type="button" className={n === i ? "on" : ""} aria-label={sl.h} aria-pressed={n === i} onClick={() => setI(n)} />
-          ))}
-        </div>
       </div>
-      <DragonHero className="rd-hero-dragon" />
+      <button type="button" className="st-hero-arrow st-hero-prev" aria-label="Previous slide" onClick={() => go(-1)}>‹</button>
+      <button type="button" className="st-hero-arrow st-hero-next" aria-label="Next slide" onClick={() => go(1)}>›</button>
+      <div className="st-hero-dots" role="group" aria-label="Choose slide">
+        {SLIDES.map((sl, n) => (
+          <button key={sl.h} type="button" className={n === i ? "on" : ""} aria-label={sl.h} aria-pressed={n === i} onClick={() => setI(n)} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+const SHORTCUTS: { href: string; label: string; icon: React.ReactNode }[] = [
+  { href: "/wallet#daily", label: "Daily Chips", icon: <svg viewBox="0 0 40 40"><defs><radialGradient id="scg1" cx="38%" cy="30%" r="70%"><stop offset="0" stopColor="#fff1a8" /><stop offset=".55" stopColor="#fedd52" /><stop offset="1" stopColor="#b86f00" /></radialGradient></defs><circle cx="20" cy="22" r="15" fill="url(#scg1)" stroke="#6a3a08" strokeWidth="1.5" /><circle cx="20" cy="22" r="10.5" fill="none" stroke="#a8700f" strokeDasharray="3 2.5" /><path d="M15 17c-2.5 4-1 10 5 10.5 6-.5 7.5-6.5 5-10.5" fill="none" stroke="#7a2a12" strokeWidth="2.6" strokeLinecap="round" /></svg> },
+  { href: "/rules", label: "How to Play", icon: <svg viewBox="0 0 40 40"><rect x="9" y="5" width="22" height="30" rx="3" fill="#fffdf4" stroke="#6a3a08" strokeWidth="1.5" transform="rotate(-8 20 20)" /><rect x="11" y="7" width="22" height="30" rx="3" fill="#fffdf4" stroke="#6a3a08" strokeWidth="1.5" transform="rotate(8 20 20)" /><text x="22" y="28" textAnchor="middle" fontSize="15" fontWeight="900" fill="#c0201e" transform="rotate(8 20 20)">A</text></svg> },
+  { href: "/wallet#time", label: "Play Limits", icon: <svg viewBox="0 0 40 40"><circle cx="20" cy="21" r="14" fill="#fffdf4" stroke="#b86f00" strokeWidth="3" /><path d="M20 12v9l6 4" stroke="#7a2a12" strokeWidth="2.6" fill="none" strokeLinecap="round" /><rect x="16" y="3" width="8" height="4" rx="1" fill="#fedd52" stroke="#6a3a08" /></svg> },
+  { href: "/activity", label: "History", icon: <svg viewBox="0 0 40 40"><path d="M10 6h16l6 6v22H10z" fill="#f2e6c4" stroke="#6a3a08" strokeWidth="1.5" /><path d="M14 16h14M14 21h14M14 26h9" stroke="#7a2a12" strokeWidth="2" /><path d="M26 6v6h6" fill="#fedd52" stroke="#6a3a08" /></svg> },
+  { href: "/wallet", label: "The Cage", icon: <svg viewBox="0 0 40 40"><ellipse cx="20" cy="30" rx="13" ry="5" fill="#9c3835" stroke="#fff3d0" strokeDasharray="4 3" /><ellipse cx="20" cy="25" rx="13" ry="5" fill="#243460" stroke="#fff3d0" strokeDasharray="4 3" /><ellipse cx="20" cy="20" rx="13" ry="5" fill="#0f5a32" stroke="#fff3d0" strokeDasharray="4 3" /><ellipse cx="20" cy="15" rx="13" ry="5" fill="#fedd52" stroke="#6a3a08" /></svg> },
+];
+
+function ShortcutRow() {
+  return (
+    <nav className="st-shortcuts" aria-label="Shortcuts">
+      {SHORTCUTS.map((s) => (
+        <Link key={s.label} href={s.href} className="st-shortcut">
+          <span className="st-shortcut-ico" aria-hidden>{s.icon}</span>
+          <span>{s.label}</span>
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
+type Game = (typeof GAMES)[number] & { isNew?: boolean; progressive?: boolean; cash?: boolean; taken?: number; max?: number };
+
+function GameCard({ g, size = "grid" }: { g: Game; size?: "grid" | "row" | "tall" }) {
+  const ribbon = g.isNew ? "New" : tileRibbon(g);
+  return (
+    <Link href={g.href} className={`st-card st-card-${size}${g.accent ? ` accent-${g.accent}` : ""}${g.progressive ? " progressive-card" : ""}`} aria-label={`${g.name}. ${g.line}`}>
+      <span className="st-card-art">
+        <GameArt kind={g.accent} variant="tile" />
+        <span className={`st-ribbon st-ribbon-${ribbon.toLowerCase()}`}>{ribbon}</span>
+        {g.cash && <span className="st-card-seats">{g.taken}/{g.max} seated</span>}
+        <span className="st-card-play" aria-hidden>Play</span>
+      </span>
+      <span className="st-card-info">
+        <h2 className="gname">{g.name}</h2>
+        <span className="gmeta">{g.meta}</span>
+      </span>
+    </Link>
+  );
+}
+
+function GameRow({ title, games, id }: { title: string; games: Game[]; id?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const by = (d: number) => ref.current?.scrollBy({ left: d * (ref.current.clientWidth * 0.8), behavior: "smooth" });
+  if (!games.length) return null;
+  return (
+    <section className="st-row" aria-label={title} id={id}>
+      <div className="st-row-head">
+        <h2>{title}</h2>
+        <span className="st-row-arrows">
+          <button type="button" aria-label={`Scroll ${title} left`} onClick={() => by(-1)}>‹</button>
+          <button type="button" className="gold" aria-label={`Scroll ${title} right`} onClick={() => by(1)}>›</button>
+        </span>
+      </div>
+      <div className="st-row-track" ref={ref}>
+        {games.map((g) => <GameCard key={g.href} g={g} size="row" />)}
+      </div>
     </section>
   );
 }
 
 export default function Floor() {
   const [q, setQ] = useState("");
+  useEffect(() => { try { const v = new URLSearchParams(window.location.search).get("q"); if (v) setQ(v); } catch {} }, []);
   const pause = usePauseInfo();
   const excl = exclusionNote(pause);
   const [tab, setTab] = useState<LobbyTab>("all");
@@ -256,83 +320,78 @@ export default function Floor() {
               </aside>
             )}
           </div>
+          <ShortcutRow />
           <div className="floor-banner" role="status">
             <span className="sandbox-chip">Sandbox</span>
             <span className="floor-banner-text">
               Balance <strong>{money(u.balanceCents)}</strong>
               <span className="floor-banner-sep">·</span>
-              Add test funds in the <Link href="/wallet">Cage</Link>
+              Free test chips in the <Link href="/wallet">Cage</Link>
               <span className="floor-banner-sep">·</span>
-              21+
+              No cash value · 21+
             </span>
           </div>
+          <StartHere />
           {jp && (
-            <section className="rd-jackpots" aria-label="Canopy Spire jackpots">
-              <div className="rd-section-head"><h2>Canopy Spire jackpots</h2><Link href="/vault" className="rd-section-link">Play →</Link></div>
+            <section className="st-jackpots" aria-label="Antler Ridge jackpots">
+              <div className="st-row-head"><h2>Jackpot Desk</h2><Link href="/vault" className="st-section-link">Play Antler Ridge ›</Link></div>
               <VaultLobbyMeters />
             </section>
           )}
-          <StartHere />
-          <div className="rd-tabs-row" id="games">
-            <div className="rd-tabs" role="tablist" aria-label="Game categories">
-              {LOBBY_TABS.map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === t}
-                  className={`rd-tab${tab === t ? " on" : ""}`}
-                  onClick={() => { setTab(t); try { history.replaceState(null, "", t === "all" ? "#all" : `#${t}`); } catch {} }}
-                >
-                  {TAB_LABEL[t]} <span className="rd-tab-n">{counts[t]}</span>
-                </button>
-              ))}
+          <GameRow title="New on the Floor" games={GAMES.filter((g: Game) => g.isNew || g.progressive) as Game[]} />
+          <section className="st-band" aria-label="Slot row">
+            <div className="st-row-head"><h2>Slot Row</h2><Link href="/floor#slots" className="st-section-link" onClick={() => setTab("slots")}>All slots ›</Link></div>
+            <div className="st-band-track">
+              {filterByTab(GAMES, "slots").map((g) => <GameCard key={g.href} g={g as Game} size="tall" />)}
             </div>
-          </div>
-          <div className="floor-tools">
-            <RecentlyPlayed />
-            <label className="floor-search">
+          </section>
+          <GameRow title="Table Games" games={filterByTab(GAMES, "tables") as Game[]} />
+          <h2 className="st-featured-title" id="games">All Games</h2>
+          <div className="st-filterbar">
+            <label className="st-filter-select">
+              <span className="sr-only">Category</span>
+              <select value={tab} onChange={(e) => { const t = parseTab(e.target.value); setTab(t); try { history.replaceState(null, "", `#${t}`); } catch {} }} aria-label="Game category">
+                {LOBBY_TABS.map((t) => <option key={t} value={t}>{TAB_LABEL[t]} ({counts[t]})</option>)}
+              </select>
+            </label>
+            <label className="floor-search st-filter-search">
               <span className="sr-only">Search games</span>
               <input
                 type="search"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Search tables — try “wheel” or “progressive”"
+                placeholder="Search — try “wheel” or “jackpot”"
                 aria-label="Search games"
                 autoComplete="off"
                 enterKeyHint="search"
               />
             </label>
             <button type="button" role="switch" aria-checked={jp} className={`floor-jp-toggle${jp ? " on" : ""}`} onClick={toggleJp}>
-              <span className="floor-jp-knob" aria-hidden />Show jackpots
+              <span className="floor-jp-knob" aria-hidden />Jackpots
             </button>
           </div>
+          <div className="st-tabs" role="tablist" aria-label="Game categories">
+            {LOBBY_TABS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                role="tab"
+                aria-selected={tab === t}
+                className={`st-tab${tab === t ? " on" : ""}`}
+                onClick={() => { setTab(t); try { history.replaceState(null, "", t === "all" ? "#all" : `#${t}`); } catch {} }}
+              >
+                {TAB_LABEL[t]} <span className="st-tab-n">{counts[t]}</span>
+              </button>
+            ))}
+          </div>
+          <RecentlyPlayed />
           {!shown.length && (
             <p className="muted floor-empty" role="status">
-              No table matches “{q}”. <button type="button" className="linkish" onClick={() => { setQ(""); setTab("all"); }}>Show all games</button>
+              No game matches “{q}”. <button type="button" className="linkish" onClick={() => { setQ(""); setTab("all"); }}>Show all games</button>
             </p>
           )}
-          <div className="rd-grid" role="tabpanel" aria-label={TAB_LABEL[tab]}>
-            {shown.map((g: any) => (
-              <Link
-                key={g.href}
-                href={g.href}
-                className={`rd-tile${g.accent ? ` accent-${g.accent}` : ""}${g.progressive ? " progressive-card" : ""}`}
-                aria-label={`${g.name}. ${g.line}`}
-              >
-                <span className="rd-tile-frame">
-                  <GameArt kind={g.accent} variant="tile" />
-                  <span className={`rd-ribbon rd-ribbon-${tileRibbon(g).toLowerCase()}`}>{tileRibbon(g)}</span>
-                  {g.cash && <span className="rd-tile-seats">{g.taken}/{g.max} seated</span>}
-                  <span className="rd-tile-play" aria-hidden>Play</span>
-                  <span className="rd-tile-plate">
-                    <h2 className="gname">{g.name}</h2>
-                    <span className="gmeta">{g.meta}</span>
-                    <span className="rd-tile-tags">{g.level} · {g.pace} pace</span>
-                  </span>
-                </span>
-              </Link>
-            ))}
+          <div className="st-grid" role="tabpanel" aria-label={TAB_LABEL[tab]}>
+            {shown.map((g: any) => <GameCard key={g.href} g={g} />)}
           </div>
           <WeekCard w={pause?.week} />
           <AchievementStrip />

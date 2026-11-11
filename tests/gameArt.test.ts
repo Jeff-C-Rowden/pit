@@ -22,12 +22,13 @@ describe("Floor game art", () => {
     expect(render("rl")).toContain("<circle");
     expect(render("slot")).toContain("7");
     expect(render("vault")).toContain("▲");
+    expect(render("bb")).toContain("BAR");
   });
-  it("portrait lobby tiles reuse each table's art, no external images", () => {
+  it("landscape lobby tiles reuse each table's art, no external images", () => {
     const tiles = GAME_ART_KINDS.map((k) => renderToStaticMarkup(createElement(GameArt, { kind: k, variant: "tile" })));
     for (const h of tiles) {
       expect(h).toContain('data-variant="tile"');
-      expect(h).toContain('viewBox="0 0 240 300"');
+      expect(h).toContain('viewBox="0 0 240 180"');
       expect(h).not.toMatch(/<image|href=|https?:/);
     }
     expect(new Set(tiles).size).toBe(GAME_ART_KINDS.length);

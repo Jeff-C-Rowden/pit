@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
-import { DragonHero, Lantern } from "@/components/DragonArt";
+import { DesertScene, AntlerShoe } from "@/components/WesternArt";
 import { api } from "@/components/useUser";
 import { Suspense } from "react";
 
@@ -37,16 +37,15 @@ function Gate() {
   return (
     <div className="pit-shell gate-shell">
       <section className="home-hero" aria-label="Welcome to Pit">
-        <div className="rd-gate-scene" aria-hidden="true">
-          <svg className="rd-gate-lantern rd-gate-lantern-l" viewBox="0 0 80 90"><Lantern x={40} y={50} s={0.95} className="sway-a" /></svg>
-          <svg className="rd-gate-lantern rd-gate-lantern-r" viewBox="0 0 80 90"><Lantern x={40} y={50} s={0.95} className="sway-b" /></svg>
-          <DragonHero className="rd-gate-dragon" />
-          <div className="rd-gate-logo"><Logo size={58} /></div>
+        <div className="st-gate-scene" aria-hidden="true">
+          <DesertScene className="st-gate-desert" />
+          <div className="st-gate-logo"><Logo size={96} /></div>
+          <AntlerShoe size={54} className="st-gate-shoe" />
         </div>
-        <h1 className="home-title">Pit</h1>
-        <p className="home-sell">Seven tables, honest odds, real casino rules. Play free with sandbox chips.</p>
+        <h1 className="home-title">Are you 21 or over?</h1>
+        <p className="home-sell">Pit is a western-style sandbox casino: eight games, honest odds, real casino rules. Play free with sandbox chips.</p>
         <button type="button" className="btn primary home-enter" disabled={busy} onClick={confirm}>
-          {busy ? "Confirming…" : "I am 21 or older — enter"}
+          {busy ? "Confirming…" : "I’m 21+ · enter"}
         </button>
         <p className="home-age-line">21+ only · sandbox chips, no real money</p>
       </section>
@@ -73,8 +72,9 @@ function Gate() {
       <div className="grid-games gate-preview">
         {[
           ["Blackjack", "Six-deck · S17 · 3:2"],
-          ["Gilded Track", "Five-reel video slot"],
-          ["Canopy Spire", "Jungle 4-tier progressive"],
+          ["Buckshot Bars", "Classic 3-reel slot"],
+          ["Sundown Trail", "Five-reel video slot"],
+          ["Antler Ridge", "4-tier progressive"],
           ["Hold'em", "Heads-up vs the house"],
           ["Roulette", "American 0 / 00"],
           ["Craps", "Pass, odds, place, field"],

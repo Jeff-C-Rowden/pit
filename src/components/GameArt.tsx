@@ -1,9 +1,9 @@
 /** Original inline SVG banner art per Floor lobby table. No external images, no brands, decorative only. */
 import type { ReactNode } from "react";
 
-export const GAME_ART_KINDS = ["bj", "slot", "vault", "he", "rl", "cr", "pg"] as const;
+export const GAME_ART_KINDS = ["bb", "bj", "slot", "vault", "he", "rl", "cr", "pg"] as const;
 
-const GOLD = "#d8b25a", CREAM = "#f7f1e3", RED = "#b3261e", INK = "#1c1c1c";
+const GOLD = "#fedd52", CREAM = "#f7f1e3", RED = "#b3261e", INK = "#1c1c1c";
 
 const card = (x: number, y: number, r: number, t: string, s: string, red: boolean, k: string) => (
   <g key={k} transform={`translate(${x} ${y}) rotate(${r})`}>
@@ -36,14 +36,18 @@ function art(kind: string): { bg: [string, string]; body: ReactNode } {
       <path key="arc" d="M30 110 Q160 30 290 110" fill="none" stroke={GOLD} strokeOpacity=".5" />,
       card(128, 30, -10, "A", "♠", false, "a"), card(160, 26, 8, "K", "♥", true, "b"),
       stack(70, 92, 4, RED, "s1"), stack(250, 92, 3, "#1f4fa8", "s2")] };
-    case "slot": return { bg: ["#4a3410", "#1a1206"], body: [
-      reels(["7", "◆", "7"], "#2a1c08", "#120c04", GOLD, "r"),
-      <circle key="l1" cx="40" cy="30" r="3" fill={GOLD} />, <circle key="l2" cx="280" cy="30" r="3" fill={GOLD} />] };
-    case "vault": return { bg: ["#1d5a34", "#071a10"], body: [
-      <path key="leaf1" d="M0 0 Q40 40 10 80 Q30 30 0 0Z" fill="#2f8f4e" opacity=".7" />,
-      <path key="leaf2" d="M320 0 Q280 44 312 90 Q290 34 320 0Z" fill="#2f8f4e" opacity=".7" />,
-      <path key="spire" d="M160 6 L172 18 H148 Z" fill={GOLD} />,
-      reels(["❦", "▲", "❦"], "#0e2a18", "#06150c", "#9fe0a8", "r")] };
+    case "bb": return { bg: ["#0f3a14", "#05140a"], body: [
+      reels(["7", "BAR", "7"], "#0a2407", "#efeedb", "#c0201e", "r"),
+      <path key="pl" d="M60 56 l10 -6 v12z" fill="#3474c0" />] };
+    case "slot": return { bg: ["#7a2a1c", "#2a0e0a"], body: [
+      <circle key="sun" cx="160" cy="92" r="40" fill="#ffb02a" opacity=".55" />,
+      reels(["★", "7", "★"], "#4b1211", "#1a0806", GOLD, "r"),
+      <path key="m1" d="M0 120 L40 96 L70 120Z M250 120 L290 92 L320 120Z" fill="#4b1211" />] };
+    case "vault": return { bg: ["#1d4a2a", "#071a10"], body: [
+      <path key="antL" d="M120 14 C112 6 102 4 92 6 M108 9 C104 4 104 0 106 -4" stroke={GOLD} strokeWidth="3" fill="none" strokeLinecap="round" />,
+      <path key="antR" d="M200 14 C208 6 218 4 228 6 M212 9 C216 4 216 0 214 -4" stroke={GOLD} strokeWidth="3" fill="none" strokeLinecap="round" />,
+      <path key="spire" d="M160 4 L172 16 H148 Z" fill={GOLD} />,
+      reels(["▲", "◆", "▲"], "#0e2a18", "#06150c", "#fedd52", "r")] };
     case "he": return { bg: ["#1f5a7a", "#0b2435"], body: [
       <ellipse key="o" cx="160" cy="62" rx="120" ry="40" fill="none" stroke={GOLD} strokeOpacity=".55" strokeWidth="2" />,
       card(130, 34, -6, "Q", "♦", true, "a"), card(158, 34, 6, "Q", "♣", false, "b"),
@@ -83,35 +87,24 @@ function art(kind: string): { bg: [string, string]; body: ReactNode } {
 }
 
 const TILE_BG: Record<string, [string, string]> = {
-  bj: ["#c8141e", "#3a0306"], slot: ["#e0701a", "#4a0a06"], vault: ["#138a5c", "#06261a"],
-  he: ["#7a1fa0", "#1e0628"], rl: ["#d3121c", "#2a0204"], cr: ["#0f7a52", "#05261a"], pg: ["#2a3fb0", "#0a0e3a"],
+  bb: ["#2a7a3a", "#06200c"], bj: ["#9c3835", "#2a0a0a"], slot: ["#ef8a2a", "#4b1211"], vault: ["#2f7a4a", "#0a2414"],
+  he: ["#6a3a8a", "#1e0628"], rl: ["#c0392b", "#2a0606"], cr: ["#1f7a52", "#05261a"], pg: ["#2a4fb0", "#0a0e3a"],
 };
 
-/** Portrait lobby tile: sunburst, gold inner frame, then the table's own art. */
+/** Landscape 4:3 lobby tile: sunset wash, mesa skyline, then the game's own art. */
 function Tile({ kind }: { kind: string }) {
   const { body } = art(kind);
   const [a, b] = TILE_BG[kind] ?? TILE_BG.bj!;
   const id = `gt-${kind}`;
-  const rays = Array.from({ length: 16 }, (_, i) => {
-    const t = (i / 16) * Math.PI * 2, u = t + Math.PI / 28;
-    const p = (q: number) => `${(120 + Math.cos(q) * 260).toFixed(1)} ${(130 + Math.sin(q) * 260).toFixed(1)}`;
-    return <path key={i} d={`M120 130 L${p(t)} L${p(u)} Z`} fill="#ffe9a8" opacity=".07" />;
-  });
   return (
-    <svg className={`game-art game-tile-art game-art-${kind}`} data-art={kind} data-variant="tile" viewBox="0 0 240 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <svg className={`game-art game-tile-art game-art-${kind}`} data-art={kind} data-variant="tile" viewBox="0 0 240 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
       <defs>
-        <radialGradient id={id} cx="50%" cy="40%" r="75%"><stop offset="0" stopColor={a} /><stop offset="1" stopColor={b} /></radialGradient>
-        <linearGradient id={`${id}-g`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#fff3b0" /><stop offset=".5" stopColor="#f5c542" /><stop offset="1" stopColor="#a8650c" /></linearGradient>
+        <radialGradient id={id} cx="50%" cy="30%" r="85%"><stop offset="0" stopColor={a} /><stop offset="1" stopColor={b} /></radialGradient>
       </defs>
-      <rect width="240" height="300" fill={`url(#${id})`} />
-      {rays}
-      <circle cx="120" cy="130" r="70" fill="#fff1b8" opacity=".10" />
-      <g fill="none" stroke={`url(#${id}-g)`} strokeWidth="1.6" opacity=".55">
-        <path d="M18 250 c-8 -12 8 -20 14 -10 c4 -10 20 -8 18 4" />
-        <path d="M190 252 c-8 -12 8 -20 14 -10 c4 -10 20 -8 18 4" />
-        <path d="M14 30 h22 v-12 M226 30 h-22 v-12 M14 270 h22 v12 M226 270 h-22 v12" strokeWidth="2" />
-      </g>
-      <g transform="translate(-56 58) scale(1.1)">{body}</g>
+      <rect width="240" height="180" fill={`url(#${id})`} />
+      <path d="M0 150 L30 150 L40 130 L80 130 L90 150 L160 150 L168 136 L200 136 L208 150 L240 150 V180 H0 Z" fill="#000" opacity=".28" />
+      <path d="M0 164 Q120 150 240 164 V180 H0 Z" fill="#000" opacity=".35" />
+      <g transform="translate(-11 34) scale(.82)">{body}</g>
     </svg>
   );
 }
