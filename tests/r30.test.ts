@@ -6,8 +6,8 @@ import { runningNet } from "../src/components/Sparkline";
 
 function db(rows: [string, number, string][]) {
   const d = new Database(":memory:");
-  d.exec("CREATE TABLE ledger (user_id TEXT, type TEXT, amount_cents INTEGER, created_at TEXT)");
-  const ins = d.prepare("INSERT INTO ledger VALUES ('u', ?, ?, ?)");
+  d.exec("CREATE TABLE ledger (user_id TEXT, type TEXT, amount_cents INTEGER, created_at TEXT, currency TEXT NOT NULL DEFAULT 'cash')");
+  const ins = d.prepare("INSERT INTO ledger (user_id, type, amount_cents, created_at) VALUES ('u', ?, ?, ?)");
   for (const r of rows) ins.run(...r);
   return d;
 }

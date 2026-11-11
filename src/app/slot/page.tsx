@@ -13,6 +13,8 @@ import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
 import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
 import { bellyPays, ledText, stepCoin } from "@/lib/cabinet";
+import { WalletSplit } from "@/components/WalletSplit";
+import TournamentStrip from "@/components/TournamentStrip";
 
 type LineWin = { line: number; symbol: Symbol | null; count: number; pay: number; winCents: number };
 
@@ -35,7 +37,10 @@ function cellsFromLineWins(lineWins: LineWin[] | undefined): WinCell[] {
   return out;
 }
 
-export default function SlotPage() {
+export default function SlotPage({ searchParams }: { searchParams?: { t?: string } }) {
+  const tournamentId = searchParams?.t ?? null;
+  const [tourney, setTourney] = useState<any>(null);
+  const [funding, setFunding] = useState<any>(null);
   const { setUser } = useUser();
   const [info, setInfo] = useState<any>(null);
   const [spin, setSpin] = useState<any>(null);
@@ -124,8 +129,10 @@ export default function SlotPage() {
     try {
       const d = await api("/api/games/slot", {
         method: "POST",
-        body: JSON.stringify({ coinCents: c, idempotencyKey: crypto.randomUUID() }),
+        body: JSON.stringify({ coinCents: c, idempotencyKey: crypto.randomUUID(), ...(tournamentId ? { tournamentId } : {}) }),
       });
+      setFunding(d.funded ? { funded: d.funded, paid: d.paid } : null);
+      if (d.tournament) setTourney(d.tournament);
       rememberCoin(c); // only after the server accepted the bet
       winRef.current = d.spin.winCents || 0;
       setSpin(d.spin);
@@ -162,7 +169,7 @@ export default function SlotPage() {
 
   return (
     <Shell>
-      {(u) => { balRef.current = u.balanceCents; return (
+      {(u) => { const credit = tournamentId ? (tourney?.stackCents ?? 0) : u.balanceCents + (u.bonusCents ?? 0); balRef.current = credit; return (
         <div className="slot-page">
           <div className="slot-page-hero">
             <p className="lede">Western video slot</p>
@@ -170,6 +177,7 @@ export default function SlotPage() {
             <p className="muted">9 lines · 5 reels</p>
             <MathStrip game="slot" variant="hero" />
           </div>
+          {tournamentId && <TournamentStrip tournamentId={tournamentId} hud={tourney} onHud={setTourney} />}
           <FirstVisitTip game="slot" />
           {err && <p className="err">{err}</p>}
 
@@ -188,7 +196,8 @@ export default function SlotPage() {
               belly={<CabinetBelly pays={pays} note={<>Pays left to right on 9 lines · × coin · {info?.rtpPublished ? "RTP 95.53%" : "Sandbox"}</>} />}
               deck={
                 <CabinetDeck
-                  creditCents={u.balanceCents}
+                  creditCents={credit}
+                  creditLabel={tournamentId ? "Tourney credit" : undefined}
                   betCents={coinIn}
                   win={ledText(showOutcome && spin ? spin.winCents : 0)}
                   winLit={!!(showOutcome && spin && spin.winCents > 0)}
@@ -206,14 +215,15 @@ export default function SlotPage() {
                   coinLabel={money(coin)}
                   paidCents={paid}
                   maxLabel="Max bet"
-                  auto={auto}
-                  note="Sandbox / test chips · no cash value · 21+"
+                  auto={tournamentId ? undefined : auto}
+                  note={tournamentId ? "TOURNEY CREDIT · tournament chips · no cash value" : "Sandbox / test chips · no cash value · 21+"}
                 />
               }
               lever={<CabinetLever onPull={() => void go()} disabled={busy || spinning || auto.running} reduced={reduced} />}
             />
           </div>
 
+          {!tournamentId && <WalletSplit cash={u.balanceCents} bonus={u.bonusCents ?? 0} funding={showOutcome ? funding : null} bonusToCash={false} />}
           {showOutcome && spin && spin.winCents > 0 && spin.winCents <= coinIn && (
             <OutcomeBanner
               push
@@ -281,7 +291,7 @@ export default function SlotPage() {
               selected={coin}
               onSelect={setCoin}
               lastCoinCents={lastCoin}
-              balanceCents={u.balanceCents}
+              balanceCents={credit}
               busy={busy || spinning || auto.running}
               onRepeat={(c) => { setCoin(c); void go(c); }}
               minCents={SLOT_COIN_MIN}

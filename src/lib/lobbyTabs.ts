@@ -4,7 +4,7 @@ export type LobbyTab = (typeof LOBBY_TABS)[number];
 
 export const TAB_LABEL: Record<LobbyTab, string> = { all: "All", slots: "Slots", tables: "Tables" };
 
-const SLOT_PATHS = new Set(["/slot", "/vault", "/buckshot"]);
+const SLOT_PATHS = new Set(["/slot", "/vault", "/buckshot", "/bounty"]);
 
 export function categoryOf(href: string): Exclude<LobbyTab, "all"> {
   return SLOT_PATHS.has(href) ? "slots" : "tables";
@@ -26,7 +26,8 @@ export function tabCounts<T extends { href: string }>(games: T[]): Record<LobbyT
 }
 
 /** Corner ribbon text. Describes the game, never its "heat": no HOT, no due, no streak claims. */
-export function tileRibbon(g: { href: string; progressive?: boolean; cash?: boolean }): string {
+export function tileRibbon(g: { href: string; progressive?: boolean; cash?: boolean; bonusCash?: boolean }): string {
+  if (g.bonusCash) return "Bonus to Cash";
   if (g.progressive) return "Jackpot";
   if (categoryOf(g.href) === "slots") return "Slot";
   if (g.cash) return "Poker";

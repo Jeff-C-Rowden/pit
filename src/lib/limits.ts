@@ -55,7 +55,7 @@ export function periodWindow(period: Period, now: Date): { start: Date | null; r
 }
 
 export function depositedSince(db: Database.Database, userId: string, since: Date | null): number {
-  const r = db.prepare(`SELECT COALESCE(SUM(amount_cents),0) AS d FROM ledger WHERE user_id = ? AND type = 'deposit' AND created_at >= ?`)
+  const r = db.prepare(`SELECT COALESCE(SUM(amount_cents),0) AS d FROM ledger WHERE user_id = ? AND type = 'deposit' AND currency = 'cash' AND created_at >= ?`)
     .get(userId, since ? since.toISOString() : "") as { d: number };
   return r.d;
 }
@@ -63,7 +63,7 @@ export function netLossSince(db: Database.Database, userId: string, since: Date 
   const r = db.prepare(`SELECT
       COALESCE(SUM(CASE WHEN type = 'bet' THEN -amount_cents ELSE 0 END),0) AS w,
       COALESCE(SUM(CASE WHEN type IN ('payout','refund') THEN amount_cents ELSE 0 END),0) AS r
-    FROM ledger WHERE user_id = ? AND created_at >= ?`).get(userId, since ? since.toISOString() : "") as { w: number; r: number };
+    FROM ledger WHERE user_id = ? AND currency = 'cash' AND created_at >= ?`).get(userId, since ? since.toISOString() : "") as { w: number; r: number };
   return r.w - r.r;
 }
 

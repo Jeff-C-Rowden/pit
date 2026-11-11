@@ -58,6 +58,16 @@ export const BUCKSHOT_MATH = {
   winRate: 0.08800747863247864,
 } as const;
 
+/** Frozen Bounty Bars (Bonus to Cash) figures from exactBuckshotRtp(·, BB_BOUNTY_TABLE). */
+export const BOUNTY_MATH = {
+  rtp1: 0.903112,
+  rtp3: 0.905337,
+  sd1: 9.41947,
+  sd3: 9.61030,
+  hitRate: 0.1908386752136752,
+  winRate: 0.08800747863247864,
+} as const;
+
 export const TABLE_MATH = {
   blackjack: { edge: 0.00405, sdPerUnit: 1.15 },
   paigow: { edge: 0.0285, sdPerUnit: 0.79 },
@@ -94,6 +104,16 @@ const GAMES: Record<string, GameMath> = {
     volatility: "High",
     sdPerUnit: BUCKSHOT_MATH.sd3,
     line: slotLine("94.44–94.67%", "High", "", winsAbout(BUCKSHOT_MATH.winRate)),
+    tip: TIP,
+    filterBuckets: ["High"],
+  },
+  bounty: {
+    id: "bounty",
+    href: "/bounty",
+    rtpLine: "RTP 90.31–90.53%",
+    volatility: "High",
+    sdPerUnit: BOUNTY_MATH.sd3,
+    line: slotLine("90.31–90.53%", "High", "Bonus to Cash", winsAbout(BOUNTY_MATH.winRate)),
     tip: TIP,
     filterBuckets: ["High"],
   },

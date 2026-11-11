@@ -26,6 +26,9 @@ export default function Rules() {
         <h3 id="buckshot" className="rules-anchor">Buckshot Bars (classic 3-reel slot)</h3>
         <p className="muted">3 reels, 1 centre payline, play 1–3 coins at 25¢–$5 a coin. Each reel is a physical strip (24 / 24 / 26 stops, symbols alternating with blanks); every stop is equally likely and the window shows the real neighbours. The horseshoe is wild and doubles the pay for each one used; three horseshoes pay 800 / 1,600 / 2,500 coins. Exact theoretical RTP, enumerated over all 14,976 stop combinations: 94.44% at 1–2 coins, 94.67% at 3 coins. Reels stop on a fixed schedule with no near-miss staging.</p>
         <MathStrip game="buckshot" variant="panel" />
+        <h3 id="bounty" className="rules-anchor">Bounty Bars (Bonus to Cash machine)</h3>
+        <p className="muted">The Buckshot Bars reels and strips on a leaner pay table: 3 × 7 pays 75, triple bar 35, double bar 20, single bar 9 per coin; three horseshoes 800 / 1,600 / 2,500. Exact theoretical RTP 90.31% at 1–2 coins and 90.53% at 3 coins (all 14,976 stop combinations), a few points below the regular slots because bonus-funded winnings here pay out as cash. Bets draw from your Bonus balance first. Same uniform stops, no near-miss staging.</p>
+        <MathStrip game="bounty" variant="panel" />
         <h3 id="vault" className="rules-anchor">Antler Ridge (progressive slot)</h3>
         <p className="muted">Frontier-themed 5-reel video slot with four shared progressive meters (Mini / Minor / Major / Grand). Seeds $10 / $50 / $250 / $2,500. Must-hit-by ceilings on Mini / Minor / Major ($30 / $150 / $1,000); Grand is a mystery whose chance grows with your bet (about 1 in 35,000 spins at a $1 coin). Each spin contributes exactly 3.00% (300 bps: 100/70/50/80) of coin-in from the same bet debit. All sandbox bets qualify. Hits reseed; meters move only on real spins. Exact theoretical RTP 94.8–95.0% by coin size: base game 89.2% plus 5.6–5.8% from the jackpots. Demo chips only — not a licensed casino jackpot.</p>
         <MathStrip game="vault" variant="panel" />
@@ -55,6 +58,16 @@ export default function Rules() {
         <h3 id="paigow" className="rules-anchor">Pai Gow Poker</h3>
         <p className="muted">House banks. 53-card deck with joker (ace or to complete a straight/flush). High (5) must beat low (2). Both hands to win; copies to the banker; otherwise push. 5% commission on player wins. House Way available. House edge about 2.9% when both sides use the house way.</p>
         <MathStrip game="paigow" variant="panel" />
+        <h3 id="bonus" className="rules-anchor">Bonus money</h3>
+        <ul className="muted rules-list">
+          <li><b>Two balances.</b> Cash and Bonus are kept separately in the ledger and shown side by side in the top bar and the Cage. Both are sandbox test chips with no cash value.</li>
+          <li><b>Bonus · play only, not withdrawable.</b> Bonus can never be withdrawn, set aside or transferred. It comes from tournament prizes marked “Bonus prize” and, in this sandbox, a $5 test bonus once a day in the Cage.</li>
+          <li><b>Where it plays.</b> Bonus can be bet on the slots: Buckshot Bars, Sundown Trail and Bounty Bars. Table games, Antler Ridge (progressive) and tournaments take Cash only. Bonus can&apos;t buy into any tournament.</li>
+          <li><b>Which money goes first.</b> On regular slots a bet uses Cash first, then Bonus. On Bonus to Cash machines it uses Bonus first.</li>
+          <li><b>Where winnings go.</b> A win is split in the same proportion as the bet that made it. The cash-funded part pays to Cash. The bonus-funded part stays Bonus, except on <b>Bonus to Cash</b> machines, where it pays to Cash. The bonus stake itself is always used up.</li>
+          <li><b>Bonus to Cash machines</b> carry a green “Bonus to Cash” badge and have their own lobby filter. They pay back a little less (about 90% RTP, shown exactly on each machine) than the regular slots (94–96%).</li>
+          <li><b>Limits.</b> Breaks, self-exclusion and session time limits stop bonus bets too. Loss and deposit limits count Cash only, since Bonus was never deposited.</li>
+        </ul>
         <p style={{ marginTop: 24 }}><Link href="/">Back to the door</Link></p>
       </div>
       <footer className="footer">Live real-money operation needs a gambling license and licensed payments. This build is a local sandbox.</footer>

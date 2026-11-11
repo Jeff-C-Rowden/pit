@@ -12,7 +12,10 @@ export type LedgerType =
   | "bet"
   | "payout"
   | "refund"
-  | "commission";
+  | "commission"
+  | "promo";
+
+export type Currency = "cash" | "bonus";
 
 export class LedgerError extends Error {
   code: string;
@@ -27,7 +30,7 @@ export function netLossCents(userId: string, db = getDb()): number {
     `SELECT
        COALESCE(SUM(CASE WHEN type = 'bet' THEN -amount_cents ELSE 0 END), 0) AS wagered,
        COALESCE(SUM(CASE WHEN type IN ('payout','refund') THEN amount_cents ELSE 0 END), 0) AS returned
-     FROM ledger WHERE user_id = ?`
+     FROM ledger WHERE user_id = ? AND currency = 'cash'`
   ).get(userId) as { wagered: number; returned: number };
   // bet amounts are stored negative, so -amount_cents is positive wagered
   return row.wagered - row.returned;
@@ -35,9 +38,15 @@ export function netLossCents(userId: string, db = getDb()): number {
 
 export function depositedCents(userId: string, db = getDb()): number {
   const row = db.prepare(
-    `SELECT COALESCE(SUM(amount_cents), 0) AS d FROM ledger WHERE user_id = ? AND type = 'deposit'`
+    `SELECT COALESCE(SUM(amount_cents), 0) AS d FROM ledger WHERE user_id = ? AND type = 'deposit' AND currency = 'cash'`
   ).get(userId) as { d: number };
   return row.d;
+}
+
+export function getBonusBalance(userId: string, db = getDb()): number {
+  const u = db.prepare("SELECT bonus_cents FROM users WHERE id = ?").get(userId) as { bonus_cents: number } | undefined;
+  if (!u) throw new LedgerError("NO_USER", "user not found");
+  return u.bonus_cents;
 }
 
 export function getBalance(userId: string, db = getDb()): number {
@@ -54,7 +63,10 @@ export function applyLedger(opts: {
   ref?: string | null;
   idempotencyKey: string;
   meta?: unknown;
+  /** Which balance moves: the cash wallet (default) or the play-only bonus balance. */
+  currency?: Currency;
 }, db = getDb()): LedgerRow {
+  const currency: Currency = opts.currency ?? "cash";
   const existing = db.prepare("SELECT * FROM ledger WHERE idempotency_key = ?").get(opts.idempotencyKey) as LedgerRow | undefined;
   if (existing) return existing;
 
@@ -73,7 +85,9 @@ export function applyLedger(opts: {
 
     if (opts.type === "deposit" || opts.type === "bet") {
       const now = serverNow();
-      if (opts.type === "deposit") {
+      if (opts.type === "deposit" && currency === "bonus") {
+        // bonus grants are not deposits; no deposit limit applies
+      } else if (opts.type === "deposit") {
         const v = limitView(db, opts.userId, "deposit", now);
         if (v.cents != null && v.usedCents + amount > v.cents) {
           throw new LedgerError("DEPOSIT_LIMIT", "deposit would exceed your limit" + (v.resetsAt ? `; it resets ${chicagoTime(v.resetsAt)}` : ""));
@@ -89,16 +103,18 @@ export function applyLedger(opts: {
         const sb = inFlight ? null : sessionBlock(db, opts.userId, now);
         if (sb) throw new LedgerError("SESSION_LIMIT", `your session time limit is up; new bets open after a 30-minute break, at ${chicagoTime(sb.breakEndsAt)}`);
         const v = limitView(db, opts.userId, "loss", now);
-        if (v.cents != null && v.usedCents + -amount > v.cents) {
+        // Loss limits count cash only: bonus money is play-only and never was a deposit.
+        if (currency === "cash" && v.cents != null && v.usedCents + -amount > v.cents) {
           throw new LedgerError("LOSS_LIMIT", "this wager would exceed your loss limit" + (v.resetsAt ? `; it resets ${chicagoTime(v.resetsAt)}` : ""));
         }
       }
     }
 
-    const next = user.balance_cents + amount;
+    const before = currency === "bonus" ? (user as UserRow & { bonus_cents?: number }).bonus_cents ?? 0 : user.balance_cents;
+    const next = before + amount;
     if (next < 0) throw new LedgerError("INSUFFICIENT_FUNDS", "insufficient funds");
 
-    db.prepare("UPDATE users SET balance_cents = ? WHERE id = ?").run(next, opts.userId);
+    db.prepare(currency === "bonus" ? "UPDATE users SET bonus_cents = ? WHERE id = ?" : "UPDATE users SET balance_cents = ? WHERE id = ?").run(next, opts.userId);
     const row: LedgerRow = {
       id: newId(),
       user_id: opts.userId,
@@ -110,11 +126,12 @@ export function applyLedger(opts: {
       idempotency_key: opts.idempotencyKey,
       meta: opts.meta == null ? null : JSON.stringify(opts.meta),
       created_at: serverNow().toISOString(),
+      currency,
     };
     try {
       db.prepare(
-        `INSERT INTO ledger (id, user_id, type, amount_cents, balance_after_cents, game, ref, idempotency_key, meta, created_at)
-         VALUES (@id, @user_id, @type, @amount_cents, @balance_after_cents, @game, @ref, @idempotency_key, @meta, @created_at)`
+        `INSERT INTO ledger (id, user_id, type, amount_cents, balance_after_cents, game, ref, idempotency_key, meta, created_at, currency)
+         VALUES (@id, @user_id, @type, @amount_cents, @balance_after_cents, @game, @ref, @idempotency_key, @meta, @created_at, @currency)`
       ).run(row);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "";

@@ -58,6 +58,17 @@ export default function WalletPage() {
     finally { setBusyAmt(null); }
   }
 
+  const [bonusBusy, setBonusBusy] = useState(false);
+  async function addBonus() {
+    setErr(null); setMsg(null); setBonusBusy(true);
+    try {
+      const d = await api("/api/wallet/bonus", { method: "POST", body: "{}" });
+      if (d.user) setUser(d.user);
+      setMsg(d.already ? "Today's test bonus is already on your Bonus balance. The next one opens at midnight Chicago time." : `+${money(d.amountCents)} bonus posted. Bonus plays on slots only and can't be withdrawn.`);
+    } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
+    finally { setBonusBusy(false); }
+  }
+
   return (
     <Shell>
       {(u) => (
@@ -71,8 +82,15 @@ export default function WalletPage() {
           </div>
           <div className="cage-balance st-cage-balance" aria-live="polite">
             <span className="sandbox-chip">Sandbox</span>
-            <span className="cage-balance-amt">{money(u.balanceCents)}</span>
+            <span className="cage-balance-lab">Cash</span>
+            <span className="cage-balance-amt" data-testid="cage-cash">{money(u.balanceCents)}</span>
             <span className="cage-balance-sub muted">ledger · no card · no ACH</span>
+          </div>
+          <div className="cage-balance st-cage-balance cage-bonus" aria-live="polite">
+            <span className="sandbox-chip">Sandbox</span>
+            <span className="cage-balance-lab">Bonus</span>
+            <span className="cage-balance-amt cage-bonus-amt" data-testid="cage-bonus">{money(u.bonusCents ?? 0)}</span>
+            <span className="cage-balance-sub muted">Bonus · play only, not withdrawable · <a href="/rules#bonus">how bonus works</a></span>
           </div>
           <div className="st-cage-tabs" role="tablist" aria-label="Cage">
             <button type="button" role="tab" aria-selected={tab === "get"} className={`st-cage-tab${tab === "get" ? " on" : ""}`} onClick={() => setTab("get")}>Get chips</button>
@@ -98,6 +116,15 @@ export default function WalletPage() {
                   <div><dt>Cash value</dt><dd>None</dd></div>
                 </dl>
                 <button type="button" className="st-cage-cta" disabled={busyAmt != null} onClick={() => deposit(u, 10000)}>{busyAmt === 10000 ? "Posting…" : "Add $100"}</button>
+              </div>
+              <div className="st-cage-card st-cage-card-bonus">
+                <div className="st-plank"><span>Test Bonus</span></div>
+                <dl className="st-cage-rows">
+                  <div><dt>Amount</dt><dd>$5 bonus, once a day</dd></div>
+                  <div><dt>Plays on</dt><dd>Slots</dd></div>
+                  <div><dt>Withdrawable</dt><dd>Never</dd></div>
+                </dl>
+                <button type="button" className="st-cage-cta" disabled={bonusBusy} onClick={() => addBonus()}>{bonusBusy ? "Posting…" : "Add $5 bonus"}</button>
               </div>
               <div className="st-cage-card">
                 <div className="st-plank"><span>Set Aside</span></div>
@@ -228,9 +255,9 @@ export default function WalletPage() {
   );
 }
 
-type Line = { id: string; type: string; amountCents: number; balanceAfterCents: number; game: string | null; ref: string | null; at: string };
+type Line = { id: string; type: string; amountCents: number; balanceAfterCents: number; game: string | null; ref: string | null; at: string; currency?: string; meta?: string | null };
 
-const TYPE_LABEL: Record<string, string> = { bet: "Bet", payout: "Paid", refund: "Returned", deposit: "Added", withdrawal: "Withdrawn" };
+const TYPE_LABEL: Record<string, string> = { bet: "Bet", payout: "Paid", refund: "Returned", deposit: "Added", withdrawal: "Withdrawn", promo: "Bonus added" };
 
 /** Recent ledger lines. When the URL carries game & ref (from "View in Cage"), those lines are shown and highlighted. */
 function CageLedger() {
@@ -252,9 +279,9 @@ function CageLedger() {
   const ids = new Set(matched.map((l) => l.id));
   const row = (l: Line) => (
     <li key={l.id} className={`ledger-line${ids.has(l.id) ? " hit" : ""}`}>
-      <span className="ledger-what">{TYPE_LABEL[l.type] || l.type}{l.game ? ` · ${l.game}` : ""}</span>
+      <span className="ledger-what">{l.currency === "bonus" && <span className="ledger-cur-bonus">Bonus</span>}{TYPE_LABEL[l.type] || l.type}{l.game ? ` · ${l.game}` : ""}{l.meta ? ` · ${l.meta}` : ""}</span>
       <span className={`mono ${l.amountCents > 0 ? "up" : l.amountCents < 0 ? "down" : ""}`}>{l.amountCents > 0 ? "+" : l.amountCents < 0 ? "−" : ""}{money(Math.abs(l.amountCents))}</span>
-      <span className="ledger-bal muted mono">bal {money(l.balanceAfterCents)}</span>
+      <span className="ledger-bal muted mono">{l.currency === "bonus" ? "bonus" : "bal"} {money(l.balanceAfterCents)}</span>
       <span className="ledger-at muted">{toDate(l.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>
     </li>
   );

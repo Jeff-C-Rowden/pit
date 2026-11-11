@@ -48,6 +48,7 @@ function relativeHitTime(iso: string): string {
 const GAMES = [
   { href: "/blackjack", level: "Easy to learn", pace: "Steady", name: "Blackjack", meta: "7-spot · six-deck · S17 · BJ 3:2", line: "The pit staple.", accent: "bj" },
   { href: "/buckshot", level: "Easiest", pace: "Fast", name: "Buckshot Bars", meta: "Classic 3 reels · 1 line · 94.44% RTP", line: "Cherries, bars and a horseshoe wild. Play 1 to 3 coins.", accent: "bb", isNew: true },
+  { href: "/bounty", level: "Easiest", pace: "Fast", name: "Bounty Bars", meta: "Bonus to Cash · 3 reels · 1 line · 90.31% RTP", line: "Play your Bonus here: bonus-funded winnings pay out in cash.", accent: "bb", bonusCash: true },
   { href: "/slot", level: "Easiest", pace: "Fast", name: "Sundown Trail", meta: "5 reels · 9 lines · exact RTP 95.53%", line: "A western video slot with a real paytable.", accent: "slot" },
   {
     href: "/vault", level: "Easiest", pace: "Fast",
@@ -250,15 +251,15 @@ function ShortcutRow() {
   );
 }
 
-type Game = (typeof GAMES)[number] & { isNew?: boolean; progressive?: boolean; cash?: boolean; taken?: number; max?: number };
+type Game = (typeof GAMES)[number] & { isNew?: boolean; progressive?: boolean; cash?: boolean; taken?: number; max?: number; bonusCash?: boolean };
 
 function GameCard({ g, size = "grid" }: { g: Game; size?: "grid" | "row" | "tall" }) {
-  const ribbon = g.isNew ? "New" : tileRibbon(g);
+  const ribbon = g.bonusCash ? "Bonus to Cash" : g.isNew ? "New" : tileRibbon(g);
   return (
-    <Link href={g.href} className={`st-card st-card-${size}${g.accent ? ` accent-${g.accent}` : ""}${g.progressive ? " progressive-card" : ""}`} aria-label={`${g.name}. ${g.line}. ${volAria(g.href)}`}>
+    <Link href={g.href} className={`st-card st-card-${size}${g.accent ? ` accent-${g.accent}` : ""}${g.progressive ? " progressive-card" : ""}${g.bonusCash ? " b2c-card" : ""}`} aria-label={`${g.name}. ${g.line}. ${volAria(g.href)}`}>
       <span className="st-card-art">
         <GameArt kind={g.accent} variant="tile" />
-        <span className={`st-ribbon st-ribbon-${ribbon.toLowerCase()}`}>{ribbon}</span>
+        <span className={`st-ribbon st-ribbon-${ribbon.toLowerCase().replace(/ /g, "-")}`}>{ribbon}</span>
         {g.cash && <span className="st-card-seats">{g.taken}/{g.max} seated</span>}
         <span className="st-card-play" aria-hidden>Play</span>
       </span>
@@ -304,7 +305,10 @@ export default function Floor() {
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
   }, []);
-  const shown = filterByVolatility(filterByTab(filterGames(GAMES.map((g) => ({ ...g, math: volAria(g.href) })), q), tab), vol);
+  const [b2c, setB2c] = useState(false);
+  useEffect(() => { if (window.location.hash === "#bonus") setB2c(true); }, []);
+  const shown = filterByVolatility(filterByTab(filterGames(GAMES.map((g) => ({ ...g, math: volAria(g.href) })), q), tab), vol)
+    .filter((g: Game) => !b2c || g.bonusCash);
   const counts = tabCounts(GAMES);
   const [jp, setJp] = useState(true);
   useEffect(() => { try { setJp(localStorage.getItem("pit.showJackpots") !== "0"); } catch {} }, []);
@@ -329,6 +333,8 @@ export default function Floor() {
             <span className="sandbox-chip">Sandbox</span>
             <span className="floor-banner-text">
               Balance <strong>{money(u.balanceCents)}</strong>
+              <span className="floor-banner-sep">·</span>
+              Bonus <strong data-testid="floor-bonus">{money(u.bonusCents ?? 0)}</strong>
               <span className="floor-banner-sep">·</span>
               Free test chips in the <Link href="/wallet">Cage</Link>
               <span className="floor-banner-sep">·</span>
@@ -379,6 +385,9 @@ export default function Floor() {
                 enterKeyHint="search"
               />
             </label>
+            <button type="button" role="switch" aria-checked={b2c} className={`floor-jp-toggle floor-b2c-toggle${b2c ? " on" : ""}`} onClick={() => setB2c((v) => !v)} data-testid="b2c-filter">
+              <span className="floor-jp-knob" aria-hidden />Bonus to Cash
+            </button>
             <button type="button" role="switch" aria-checked={jp} className={`floor-jp-toggle${jp ? " on" : ""}`} onClick={toggleJp}>
               <span className="floor-jp-knob" aria-hidden />Jackpots
             </button>
@@ -400,7 +409,7 @@ export default function Floor() {
           <RecentlyPlayed />
           {!shown.length && (
             <p className="muted floor-empty" role="status">
-              No game matches “{q}”. <button type="button" className="linkish" onClick={() => { setQ(""); setTab("all"); setVol("all"); }}>Show all games</button>
+              No game matches “{q}”. <button type="button" className="linkish" onClick={() => { setQ(""); setTab("all"); setVol("all"); setB2c(false); }}>Show all games</button>
             </p>
           )}
           <div className="st-grid" role="tabpanel" aria-label={TAB_LABEL[tab]}>

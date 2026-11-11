@@ -1,6 +1,7 @@
 import { withDbSync } from "@/lib/dbSync";
 import { withUser, json } from "@/lib/http";
-import { debitBet, creditPayout, getBalance } from "@/lib/ledger";
+import { getBalance } from "@/lib/ledger";
+import { creditPlayWin, debitPlayBet } from "@/lib/bonus";
 import { toPublic } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
@@ -21,13 +22,11 @@ async function _POST(req: Request) {
     const coinCents = Number(body.coinCents);
     const spin = spinSlot(coinCents);
     const key = String(body.idempotencyKey || newId());
-    debitBet(user.id, spin.betCents, "slot", spin.id, `slot-bet-${spin.id}-${key}`);
-    if (spin.winCents > 0) {
-      creditPayout(user.id, spin.winCents, "slot", spin.id, `slot-pay-${spin.id}`);
-    }
+    const funded = debitPlayBet(user.id, spin.betCents, "slot", spin.id, `slot-bet-${spin.id}-${key}`);
+    const paid = spin.winCents > 0 ? creditPlayWin(user.id, spin.winCents, "slot", spin.id, `slot-pay-${spin.id}`, funded) : null;
     const u = getDb().prepare("SELECT * FROM users WHERE id = ?").get(user.id) as typeof user;
     void exactRtp;
-    return json({ user: toPublic(u), spin: publicSpin(spin), balanceCents: getBalance(user.id) });
+    return json({ user: toPublic(u), spin: publicSpin(spin), funded, paid, balanceCents: getBalance(user.id) });
   });
 }
 

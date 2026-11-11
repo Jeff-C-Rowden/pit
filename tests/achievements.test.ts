@@ -21,14 +21,14 @@ describe("exploration achievements", () => {
     expect(r.unlocked).toEqual([]);
     expect(r.next.tables).toEqual(["/roulette"]);
   });
-  it("every table needs all eight tables, in any order", () => {
+  it("every table needs all nine games (incl. Bounty Bars), in any order", () => {
     let p = emptyProgress();
     const order = [...GAME_PATHS].reverse();
     let last: string[] = [];
     for (const h of order) { const r = applyEvent(p, { kind: "seat", href: h }); p = r.next; last = r.unlocked; }
-    expect(GAME_PATHS).toHaveLength(8);
+    expect(GAME_PATHS).toHaveLength(9);
     expect(last).toEqual(["every-table"]);
-    expect(summary(p)).toMatchObject({ tablesSeen: 8, tablesTotal: 8, done: 2, total: 5 });
+    expect(summary(p)).toMatchObject({ tablesSeen: 9, tablesTotal: 9, done: 2, total: 5 });
   });
   it("rules, coach and limit unlock independently", () => {
     let p = emptyProgress();

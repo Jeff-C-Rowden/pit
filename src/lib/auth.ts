@@ -14,6 +14,8 @@ export type PublicUser = {
   ageConfirmed: boolean;
   isOperator: boolean;
   balanceCents: number;
+  /** Play-only bonus balance (sandbox). Never withdrawable. */
+  bonusCents: number;
   depositLimitCents: number | null;
   lossLimitCents: number | null;
 };
@@ -26,6 +28,7 @@ export function toPublic(u: UserRow): PublicUser {
     ageConfirmed: !!u.age_confirmed,
     isOperator: !!u.is_operator,
     balanceCents: u.balance_cents,
+    bonusCents: u.bonus_cents ?? 0,
     depositLimitCents: u.deposit_limit_cents,
     lossLimitCents: u.loss_limit_cents,
   };

@@ -137,6 +137,7 @@ export function CabinetDeck({
   note,
   fine = "Malfunction voids all spins · sandbox chips, no cash value",
   maxLabel = "Play max",
+  creditLabel,
 }: {
   creditCents: number;
   betCents: number;
@@ -157,17 +158,19 @@ export function CabinetDeck({
   maxArmed: boolean;
   onSpin: () => void;
   onPayTable?: () => void;
-  auto: AutoSpin;
+  /** Omitted in tournaments: Auto play is off there (server pacing, no multi-spin bursts). */
+  auto?: AutoSpin;
   note?: ReactNode;
   fine?: ReactNode;
   maxLabel?: string;
+  creditLabel?: string;
 }) {
-  const locked = busy || spinning || auto.running;
+  const locked = busy || spinning || !!auto?.running;
   return (
     <div className="cab-deck">
       <div className="cab-meters" aria-live="polite">
         <div className="cab-credits">
-          <CabinetLed label="Total credits" cents={creditCents} tone="blue" />
+          <CabinetLed label={creditLabel ?? "Total credits"} cents={creditCents} tone="blue" />
           <p className="cab-fine">{fine}</p>
         </div>
         {coinLabel && <div className="cab-coin-plate" aria-label={`Coin value ${coinLabel}`}>{coinLabel}</div>}
@@ -177,7 +180,7 @@ export function CabinetDeck({
       </div>
       <div className="cab-console" role="group" aria-label="Cabinet buttons">
         <CabinetKey className="cab-key-pay" onClick={onPayTable} disabled={!onPayTable}>Pay<br />table</CabinetKey>
-        <CabinetKey
+        {auto && <CabinetKey
           className={`cab-key-auto${auto.running ? " on" : ""}`}
           onClick={auto.running ? auto.cancel : auto.start}
           disabled={!auto.running && (busy || spinning)}
@@ -186,7 +189,7 @@ export function CabinetDeck({
           aria-label={auto.running ? `Stop Auto, ${auto.left} spins left` : `Auto: play ${CAB_AUTO_SPINS} spins at this bet`}
         >
           {auto.running ? <>Stop<br />{auto.left}</> : <>Auto<br />play</>}
-        </CabinetKey>
+        </CabinetKey>}
         <div className="cab-rocker" role="group" aria-label="Coin value">
           <button type="button" className="cab-rock cab-rock-dn" onClick={onBetDown} disabled={locked || !canBetDown} aria-label="Coin value down">−</button>
           <span className="cab-denom">{coinLabel ?? ""}</span>
@@ -206,7 +209,7 @@ export function CabinetDeck({
           {maxArmed ? <>Confirm<br />max</> : <>{maxLabel.split(" ")[0]}<br />{maxLabel.split(" ").slice(1).join(" ")}</>}
         </CabinetKey>
       </div>
-      {auto.note && <p className="cab-auto-note" role="status">{auto.note}</p>}
+      {auto?.note && <p className="cab-auto-note" role="status">{auto.note}</p>}
       {note && <p className="cab-deck-note">{note}</p>}
     </div>
   );

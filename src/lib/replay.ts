@@ -6,16 +6,28 @@ import { publicBlackjack } from "@/lib/games/blackjack";
 import { publicPaiGow } from "@/lib/games/paigow";
 import { publicHoldem } from "@/lib/games/holdem";
 
-export type LedgerLine = { id: string; type: string; amountCents: number; balanceAfterCents: number; game: string | null; ref: string | null; at: string };
+export type LedgerLine = { id: string; type: string; amountCents: number; balanceAfterCents: number; game: string | null; ref: string | null; at: string; currency?: string; meta?: string | null };
 
 export function ledgerLines(db: Database.Database, userId: string, opts: { game?: string; ref?: string; limit?: number } = {}): LedgerLine[] {
   const where = ["user_id = ?"]; const args: unknown[] = [userId];
   if (opts.game) { where.push("game = ?"); args.push(opts.game); }
   if (opts.ref) { where.push("ref = ?"); args.push(opts.ref); }
   const limit = Math.min(Math.max(1, opts.limit || 30), 100);
-  const rows = db.prepare(`SELECT id, type, amount_cents, balance_after_cents, game, ref, created_at FROM ledger WHERE ${where.join(" AND ")} ORDER BY created_at DESC, rowid DESC LIMIT ?`)
-    .all(...args, limit) as { id: string; type: string; amount_cents: number; balance_after_cents: number; game: string | null; ref: string | null; created_at: string }[];
-  return rows.map((r) => ({ id: r.id, type: r.type, amountCents: r.amount_cents, balanceAfterCents: r.balance_after_cents, game: r.game, ref: r.ref, at: r.created_at }));
+  const rows = db.prepare(`SELECT id, type, amount_cents, balance_after_cents, game, ref, created_at, currency, meta FROM ledger WHERE ${where.join(" AND ")} ORDER BY created_at DESC, rowid DESC LIMIT ?`)
+    .all(...args, limit) as { id: string; type: string; amount_cents: number; balance_after_cents: number; game: string | null; ref: string | null; created_at: string; currency: string; meta: string | null }[];
+  return rows.map((r) => ({ id: r.id, type: r.type, amountCents: r.amount_cents, balanceAfterCents: r.balance_after_cents, game: r.game, ref: r.ref, at: r.created_at, currency: r.currency, meta: ledgerNote(r.meta) }));
+}
+
+/** Short human note from a ledger row's meta (Bonus to Cash conversions, tournament lines). */
+function ledgerNote(meta: string | null): string | null {
+  if (!meta) return null;
+  try {
+    const m = JSON.parse(meta) as { bonusToCashCents?: number; kind?: string; tournamentName?: string; testBonus?: boolean };
+    if (m.bonusToCashCents) return "Bonus to Cash";
+    if (m.tournamentName) return `${m.kind === "prize" ? "Prize" : "Buy-in"} · ${m.tournamentName}`;
+    if (m.testBonus) return "Test bonus";
+  } catch { /* ignore */ }
+  return null;
 }
 
 function sums(db: Database.Database, userId: string, game: string, ref: string) {

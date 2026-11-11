@@ -84,6 +84,14 @@ CREATE TABLE IF NOT EXISTS progressive_hits (
 CREATE INDEX IF NOT EXISTS idx_progressive_hits_at ON progressive_hits(created_at DESC);
 `;
 
+/** Casino-wide bonus money: a separate play-only balance and a currency on every ledger row. */
+function migrateBonus(db: Database.Database) {
+  const u = new Set((db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map((c) => c.name));
+  if (!u.has("bonus_cents")) db.exec("ALTER TABLE users ADD COLUMN bonus_cents INTEGER NOT NULL DEFAULT 0");
+  const l = new Set((db.prepare("PRAGMA table_info(ledger)").all() as { name: string }[]).map((c) => c.name));
+  if (!l.has("currency")) db.exec("ALTER TABLE ledger ADD COLUMN currency TEXT NOT NULL DEFAULT 'cash'");
+}
+
 let singleton: Database.Database | null = null;
 let dirty = false;
 
@@ -112,7 +120,8 @@ function finish(db: Database.Database, wal: boolean): Database.Database {
   db.pragma("foreign_keys = ON");
   db.exec(SCHEMA);
   migrateLimits(db);
-    migrateSession(db);
+  migrateSession(db);
+  migrateBonus(db);
   return instrument(db);
 }
 
@@ -175,6 +184,7 @@ export type UserRow = {
   age_confirmed: number;
   is_operator: number;
   balance_cents: number;
+  bonus_cents?: number;
   deposit_limit_cents: number | null;
   loss_limit_cents: number | null;
   created_at: string;
@@ -191,6 +201,7 @@ export type LedgerRow = {
   idempotency_key: string;
   meta: string | null;
   created_at: string;
+  currency?: string;
 };
 
 export type GameStateRow = {

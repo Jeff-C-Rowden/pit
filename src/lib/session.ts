@@ -32,7 +32,7 @@ export type Session = { active: boolean; startedAt: string | null; lastAt: strin
 
 export function currentSession(db: Database.Database, userId: string, now = new Date()): Session {
   const since = new Date(now.getTime() - 24 * 3600_000).toISOString();
-  const rows = db.prepare(`SELECT type, amount_cents AS a, created_at AS t FROM ledger
+  const rows = db.prepare(`SELECT type, CASE WHEN currency = 'cash' THEN amount_cents ELSE 0 END AS a, created_at AS t FROM ledger
     WHERE user_id = ? AND type IN ('bet','payout','refund') AND created_at >= ? ORDER BY created_at DESC`).all(userId, since) as { type: string; a: number; t: string }[];
   if (!rows.length || now.getTime() - Date.parse(rows[0].t) >= BREAK_MS) {
     return { active: false, startedAt: null, lastAt: rows[0]?.t ?? null, minutes: 0, netCents: 0, breakEndsAt: null };
@@ -126,12 +126,12 @@ export function selfExclude(db: Database.Database, userId: string, choice: strin
   return takeBreak(db, userId, now, ms, "exclusion");
 }
 
-export type ActivityRow = { at: string; type: string; game: string | null; amountCents: number; balanceAfterCents: number; stakeBackCents?: number };
+export type ActivityRow = { at: string; type: string; game: string | null; amountCents: number; balanceAfterCents: number; stakeBackCents?: number; currency?: string };
 /** This session's bets, payouts and refunds, newest first, straight from the ledger. */
 export function sessionActivity(db: Database.Database, userId: string, now = new Date()): { session: Session; rows: ActivityRow[] } {
   const session = currentSession(db, userId, now);
   if (!session.active || !session.startedAt) return { session, rows: [] };
-  const rows = db.prepare(`SELECT created_at AS at, type, game, amount_cents AS amountCents, balance_after_cents AS balanceAfterCents, meta FROM ledger
+  const rows = db.prepare(`SELECT created_at AS at, type, game, amount_cents AS amountCents, balance_after_cents AS balanceAfterCents, meta, currency FROM ledger
     WHERE user_id = ? AND type IN ('bet','payout','refund') AND created_at >= ? AND created_at <= ? ORDER BY created_at DESC LIMIT 500`)
     .all(userId, session.startedAt, now.toISOString()) as (ActivityRow & { meta: string | null })[];
   return { session, rows: rows.map(withBack) };
@@ -171,6 +171,7 @@ export function historyRange(from: string | null, to: string | null): { start: D
 export function historyCsv(rows: ActivityRow[]): string {
   let bet = 0, won = 0, back = 0, refund = 0, paid = 0;
   for (const r of rows) {
+    if (r.currency === "bonus") continue; // totals are Cash; bonus lines are listed but not summed
     if (r.type === "bet") bet += -r.amountCents;
     else if (r.type === "payout") { paid += r.amountCents; const b = r.stakeBackCents ?? 0; back += b; won += r.amountCents - b; }
     else if (r.type === "refund") refund += r.amountCents;
@@ -183,7 +184,7 @@ export function historyCsv(rows: ActivityRow[]): string {
 }
 /** Every ledger row for this player in [start, end), newest first, same shape as sessionActivity. */
 export function historyActivity(db: Database.Database, userId: string, start: Date, end: Date): ActivityRow[] {
-  const rows = db.prepare(`SELECT created_at AS at, type, game, amount_cents AS amountCents, balance_after_cents AS balanceAfterCents, meta FROM ledger
+  const rows = db.prepare(`SELECT created_at AS at, type, game, amount_cents AS amountCents, balance_after_cents AS balanceAfterCents, meta, currency FROM ledger
     WHERE user_id = ? AND created_at >= ? AND created_at < ? ORDER BY created_at DESC, rowid DESC LIMIT 50000`)
     .all(userId, start.toISOString(), end.toISOString()) as (ActivityRow & { meta: string | null })[];
   return rows.map(withBack);
@@ -216,7 +217,7 @@ export type WeekSummary = { weekStart: string; minutes: number; netCents: number
  */
 export function weekSummary(db: Database.Database, userId: string, now = new Date()): WeekSummary {
   const start = chicagoWeekStart(now);
-  const rows = db.prepare(`SELECT type, amount_cents AS a, created_at AS t FROM ledger
+  const rows = db.prepare(`SELECT type, CASE WHEN currency = 'cash' THEN amount_cents ELSE 0 END AS a, created_at AS t FROM ledger
     WHERE user_id = ? AND type IN ('bet','payout','refund') AND created_at >= ? AND created_at <= ? ORDER BY created_at ASC`)
     .all(userId, start.toISOString(), now.toISOString()) as { type: string; a: number; t: string }[];
   let ms = 0, net = 0, big = 0, bets = 0, runStart = 0, prev = 0;

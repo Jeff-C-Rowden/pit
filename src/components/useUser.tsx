@@ -10,6 +10,7 @@ export type User = {
   ageConfirmed: boolean;
   isOperator: boolean;
   balanceCents: number;
+  bonusCents?: number;
   depositLimitCents: number | null;
   lossLimitCents: number | null;
 };
