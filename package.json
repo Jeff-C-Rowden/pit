@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@libsql/client": "^0.18.0",
+    "@neondatabase/serverless": "^1.2.0",
     "@vercel/blob": "^2.8.2",
     "@vercel/functions": "^3.10.6",
     "bcryptjs": "^2.4.3",

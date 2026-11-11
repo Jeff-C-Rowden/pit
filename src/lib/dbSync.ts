@@ -4,8 +4,11 @@
  * writes use compare-and-swap so two instances can't silently clobber each other: on
  * conflict we reload the newer snapshot and re-run the request once.
  *
- * Store priority: Turso (TURSO_DATABASE_URL + TURSO_AUTH_TOKEN) → Vercel Blob
- * (BLOB_READ_WRITE_TOKEN) → if the store fails, an ephemeral per-instance ledger.
+ * Store priority: Postgres (DATABASE_URL, Neon free plan via the Vercel Marketplace) →
+ * Turso (TURSO_DATABASE_URL + TURSO_AUTH_TOKEN) → Vercel Blob (BLOB_READ_WRITE_TOKEN).
+ * Postgres is the durable account store: if it errors we answer 503 (retry) instead of
+ * serving an ephemeral ledger, so a balance can never silently diverge between instances.
+ * Turso/Blob keep the older behavior of falling back to an ephemeral per-instance ledger.
  * With neither configured (local dev, tests) or with PIT_DB_PATH set, this is a passthrough.
  */
 import { get, put } from "@vercel/blob";
@@ -13,7 +16,7 @@ import { clearDirty, getDb, isDirty, loadDbFromImage, serializeDb } from "./db";
 
 type Loaded = { kind: "none" } | { kind: "same" } | { kind: "data"; buf: Buffer; version: string };
 interface SnapshotStore {
-  name: "turso" | "blob";
+  name: "postgres" | "turso" | "blob";
   load(known: string | null): Promise<Loaded>;
   /** returns the new version, or null on a CAS conflict */
   save(buf: Buffer, known: string | null): Promise<string | null>;
@@ -100,8 +103,59 @@ const tursoStore: SnapshotStore = {
   },
 };
 
+type PgQuery = (sql: string, args?: unknown[]) => Promise<Record<string, unknown>[]>;
+let pgQuery: PgQuery | null = null;
+let pgReady = false;
+
+/** test-only: inject a fake Postgres query function */
+export function __setPgQueryForTests(fn: PgQuery | null): void { pgQuery = fn; pgReady = false; }
+
+function pgUrl(): string | undefined {
+  return process.env.DATABASE_URL || process.env.POSTGRES_URL || undefined;
+}
+
+async function pg(): Promise<PgQuery> {
+  if (!pgQuery) {
+    const { neon } = await import("@neondatabase/serverless");
+    const sql = neon(pgUrl()!);
+    pgQuery = async (text, args = []) => (await sql.query(text, args as never[])) as unknown as Record<string, unknown>[];
+  }
+  if (!pgReady) {
+    await pgQuery("CREATE TABLE IF NOT EXISTS pit_snapshots (key TEXT PRIMARY KEY, version BIGINT NOT NULL, image TEXT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now())");
+    pgReady = true;
+  }
+  return pgQuery;
+}
+
+/** Whole-ledger snapshot in one row (base64 SQLite image) with version compare-and-swap. */
+const pgStore: SnapshotStore = {
+  name: "postgres",
+  async load(known) {
+    const q = await pg();
+    const v = await q("SELECT version FROM pit_snapshots WHERE key = $1", [KEY]);
+    if (!v.length) return { kind: "none" };
+    const ver = String(v[0].version);
+    if (known === ver) return { kind: "same" };
+    const r = await q("SELECT version, image FROM pit_snapshots WHERE key = $1", [KEY]);
+    if (!r.length) return { kind: "none" };
+    return { kind: "data", buf: Buffer.from(String(r[0].image), "base64"), version: String(r[0].version) };
+  },
+  async save(buf, known) {
+    const q = await pg();
+    const img = buf.toString("base64");
+    if (known === null) {
+      const r = await q("INSERT INTO pit_snapshots (key, version, image, updated_at) VALUES ($1, 1, $2, now()) ON CONFLICT (key) DO NOTHING RETURNING version", [KEY, img]);
+      return r.length ? "1" : null;
+    }
+    const next = Number(known) + 1;
+    const r = await q("UPDATE pit_snapshots SET version = $1, image = $2, updated_at = now() WHERE key = $3 AND version = $4 RETURNING version", [next, img, KEY, Number(known)]);
+    return r.length ? String(next) : null;
+  },
+};
+
 function pickStore(): SnapshotStore | null {
   if (process.env.PIT_DB_PATH) return null;
+  if (pgUrl()) return pgStore;
   if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) return tursoStore;
   if (process.env.BLOB_READ_WRITE_TOKEN) return blobStore;
   return null;
@@ -117,13 +171,20 @@ let chain: Promise<unknown> = Promise.resolve();
  */
 let degraded: string | null = null;
 
-export function ledgerMode(): "turso" | "blob" | "ephemeral" | "local" {
+export function ledgerMode(): "postgres" | "turso" | "blob" | "ephemeral" | "local" {
   const s = pickStore();
   if (!s) return "local";
   return degraded ? "ephemeral" : s.name;
 }
 
+class StoreDown extends Error {}
+
 function degrade(stage: string, e: unknown): void {
+  if (pickStore()?.name === "postgres") {
+    // durable store: never fork into a private ledger; fail this request so the client retries
+    console.error(`[pit] postgres ledger ${stage} failed: ${e instanceof Error ? e.message : String(e)}`);
+    throw new StoreDown(stage);
+  }
   if (degraded) return;
   const msg = e instanceof Error ? e.message : String(e);
   degraded = `${pickStore()?.name} ${stage}: ${msg}`;
@@ -178,7 +239,14 @@ export function withDbSync<A extends unknown[]>(handler: Handler<A>): Handler<A>
       }
       return new Response(JSON.stringify({ error: "busy, please retry" }), { status: 503 });
     };
-    const p = chain.then(run, run);
+    const guarded = async (): Promise<Response> => {
+      try { return await run(); } catch (e) {
+        if (!(e instanceof StoreDown)) throw e;
+        loaded = false; version = null;
+        return new Response(JSON.stringify({ error: "The sandbox ledger is briefly unavailable. Please try again." }), { status: 503, headers: { "content-type": "application/json" } });
+      }
+    };
+    const p = chain.then(guarded, guarded);
     chain = p.catch(() => undefined);
     return p;
   };

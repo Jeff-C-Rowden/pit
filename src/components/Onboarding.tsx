@@ -52,7 +52,7 @@ export default function Onboarding({ user }: { user: User }) {
           {step === 0 ? (
             <>
               <button type="button" className="btn primary" disabled={busy || claimed} onClick={claim}>
-                {busy ? "Adding…" : `Claim ${money(WELCOME_CHIPS_CENTS)} sandbox chips`}
+                {busy ? "Adding…" : `Claim ${money(WELCOME_CHIPS_CENTS)} welcome chips (one time)`}
               </button>
               <button type="button" className="btn" onClick={() => setStep(1)}>Skip chips</button>
             </>
