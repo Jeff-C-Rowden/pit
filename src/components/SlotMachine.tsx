@@ -3,7 +3,8 @@
 import { createContext, forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { PAYLINES, SYMBOLS, type Symbol } from "@/lib/games/slot";
 import { CabinetChrome, CabinetTopper } from "./SlotCabinet";
-import { slotBlurCycleMs, slotStopMs } from "@/lib/slotFeel";
+import { slotBlurCycleMs, slotLandPlan, slotReelOffset, shouldReelBounce, SLOT_BOUNCE_PX, SLOT_SETTLE_MS_NORMAL, SLOT_SETTLE_MS_TURBO } from "@/lib/slotFeel";
+import { playThunk, reducedMotion } from "@/lib/feel";
 import { SUNDOWN_ART } from "./WesternSymbols";
 
 const VISIBLE = 3;
@@ -89,7 +90,9 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
   const [blur, setBlur] = useState(false);
   const [transitionMs, setTransitionMs] = useState(0);
   const [landed, setLanded] = useState(true);
+  const [settling, setSettling] = useState(false);
   const [earlyTick, setEarlyTick] = useState(0);
+  const settleClearRef = useRef<number>(0);
   const stoppedForGen = useRef(-1);
   const wantEarly = useRef(false);
   const cycleRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -103,7 +106,7 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
     }
   };
 
-  const markLanded = (syms: Symbol[]) => {
+  const markLanded = (syms: Symbol[], slammed = false) => {
     if (stoppedForGen.current === spinGen) return;
     clearCycle();
     setBlur(false);
@@ -112,6 +115,14 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
     setTransitionMs(0);
     stoppedForGen.current = spinGen;
     setLanded(true);
+    const bounce = shouldReelBounce({ reducedMotion: reducedMotion(), slammed });
+    if (settleClearRef.current) window.clearTimeout(settleClearRef.current);
+    setSettling(bounce);
+    if (bounce) {
+      const ms = turbo ? SLOT_SETTLE_MS_TURBO : SLOT_SETTLE_MS_NORMAL;
+      settleClearRef.current = window.setTimeout(() => setSettling(false), ms);
+    }
+    playThunk();
     onStoppedRef.current(index);
   };
 
@@ -135,6 +146,8 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
     wantEarly.current = false;
     stoppedForGen.current = -1;
     setLanded(false);
+    setSettling(false);
+    if (settleClearRef.current) window.clearTimeout(settleClearRef.current);
     setBlur(true);
     setTransitionMs(0);
     setStrip(fillerStrip(FILLER_LEN));
@@ -165,7 +178,7 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
 
     if (wantEarly.current) {
       wantEarly.current = false;
-      markLanded(final);
+      markLanded(final, true);
       return;
     }
 
@@ -177,8 +190,9 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
     setBlur(true);
     setTransitionMs(0);
 
-    const target = -((next.length - VISIBLE) * SYM_H);
-    const duration = slotStopMs(index, turbo);
+    const plan = slotLandPlan({ reelIndex: index, turbo, reducedMotion: reducedMotion() });
+    const target = slotReelOffset(-((next.length - VISIBLE) * SYM_H), plan.bouncePx);
+    const duration = plan.stopMs;
 
     let raf2 = 0;
     const raf1 = requestAnimationFrame(() => {
@@ -211,7 +225,7 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
 
   return (
     <div
-      className={`reel${blur ? " is-spinning" : ""}${interactive ? " reel-tap-stop" : ""}`}
+      className={`reel${blur ? " is-spinning" : ""}${interactive ? " reel-tap-stop" : ""}${settling ? " is-settling" : ""}`}
       role={interactive ? "button" : undefined}
       tabIndex={interactive ? 0 : undefined}
       aria-label={
@@ -240,6 +254,8 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
             transitionMs > 0
               ? `transform ${transitionMs}ms cubic-bezier(0.12, 0.75, 0.18, 1)`
               : "none",
+          ["--reel-bounce" as string]: `${SLOT_BOUNCE_PX}px`,
+          ["--reel-settle-ms" as string]: `${turbo ? SLOT_SETTLE_MS_TURBO : SLOT_SETTLE_MS_NORMAL}ms`,
         }}
       >
         {strip.map((sym, i) => {

@@ -9,6 +9,8 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { BB_REELS, type BbSymbol } from "@/lib/games/buckshot";
 import { BUCKSHOT_ART } from "./WesternSymbols";
 import { CabinetChrome } from "./SlotCabinet";
+import { slotStaggerStops, SLOT_BOUNCE_PX, SLOT_SETTLE_MS_NORMAL, SLOT_SETTLE_MS_TURBO } from "@/lib/slotFeel";
+import { playThunk } from "@/lib/feel";
 import type { ReactNode } from "react";
 
 export type BuckshotHandle = { stopAll: () => void };
@@ -16,7 +18,7 @@ export type BuckshotHandle = { stopAll: () => void };
 /** Fixed stop schedule (ms after the result arrives) — same for every outcome. */
 export function buckshotStopSchedule(turbo: boolean, reduced: boolean): number[] {
   if (reduced) return [0, 0, 0];
-  return turbo ? [250, 450, 650] : [700, 1150, 1600];
+  return slotStaggerStops(turbo ? 250 : 700, 3);
 }
 
 function Cell({ sym, h }: { sym: BbSymbol; h: number }) {
@@ -61,16 +63,28 @@ const BuckshotMachine = forwardRef<BuckshotHandle, Props>(function BuckshotMachi
 ) {
   const h = useSymH();
   const [stopped, setStopped] = useState<boolean[]>([true, true, true]);
+  const [slammed, setSlammed] = useState(false);
   const timers = useRef<number[]>([]);
   const doneRef = useRef(false);
+  const thunked = useRef<boolean[]>([false, false, false]);
   const shown = useRef<BbSymbol[][]>(BB_REELS.map((s) => [s[s.length - 1]!, s[0]!, s[1]!]));
   if (win && stopped.every(Boolean) && !spinning) shown.current = win;
 
   const clear = () => { timers.current.forEach((t) => window.clearTimeout(t)); timers.current = []; };
+  const land = (r: number) => {
+    setStopped((s) => {
+      if (s[r]) return s;
+      return s.map((v, i) => (i === r ? true : v));
+    });
+    if (!thunked.current[r]) {
+      thunked.current[r] = true;
+      playThunk();
+    }
+  };
 
   // a new spin: every reel starts moving
   useEffect(() => {
-    if (spinning) { doneRef.current = false; setStopped([false, false, false]); }
+    if (spinning) { doneRef.current = false; setSlammed(false); thunked.current = [false, false, false]; setStopped([false, false, false]); }
   }, [spinning]);
 
   // result arrived: schedule the fixed left-to-right stops
@@ -78,7 +92,7 @@ const BuckshotMachine = forwardRef<BuckshotHandle, Props>(function BuckshotMachi
     if (!spinning || !win) return;
     clear();
     buckshotStopSchedule(turbo, reduced).forEach((ms, r) => {
-      timers.current.push(window.setTimeout(() => setStopped((s) => s.map((v, i) => (i === r ? true : v))), ms));
+      timers.current.push(window.setTimeout(() => land(r), ms));
     });
     return clear;
   }, [spinning, win, turbo, reduced]);
@@ -94,10 +108,10 @@ const BuckshotMachine = forwardRef<BuckshotHandle, Props>(function BuckshotMachi
   useEffect(() => clear, []);
 
   useImperativeHandle(ref, () => ({
-    stopAll: () => { if (win) { clear(); setStopped([true, true, true]); } },
+    stopAll: () => { if (win) { clear(); setSlammed(true); [0, 1, 2].forEach(land); } },
   }), [win]);
 
-  const stopOne = (r: number) => { if (spinning && win && !stopped[r]) setStopped((s) => s.map((v, i) => (i === r ? true : v))); };
+  const stopOne = (r: number) => { if (spinning && win && !stopped[r]) land(r); };
   const settled = !spinning && stopped.every(Boolean);
   const label = win ? `Payline: ${win.map((w) => BUCKSHOT_ART[w[1]!].label).join(", ")}` : "Buckshot Bars reels";
 
@@ -134,7 +148,14 @@ const BuckshotMachine = forwardRef<BuckshotHandle, Props>(function BuckshotMachi
               title={moving && win ? "Tap to stop" : undefined}
               disabled={!moving}
             >
-              <span className={`bb-strip${moving ? " spin" : " settle"}`} style={moving ? { ["--bb-n" as string]: strip.length } : undefined}>
+              <span
+                className={`bb-strip${moving ? " spin" : slammed ? "" : " settle"}`}
+                style={{
+                  ["--reel-bounce" as string]: `${SLOT_BOUNCE_PX}px`,
+                  ["--reel-settle-ms" as string]: `${turbo ? SLOT_SETTLE_MS_TURBO : SLOT_SETTLE_MS_NORMAL}ms`,
+                  ...(moving ? { ["--bb-n" as string]: strip.length } : {}),
+                }}
+              >
                 {cells.map((s, i) => <Cell key={i} sym={s} h={h} />)}
               </span>
             </button>

@@ -447,6 +447,18 @@ h1,h2,h3,.display {
   display: flex;
   flex-direction: column;
 }
+@media (prefers-reduced-motion: no-preference) {
+  .reel.is-settling .reel-strip {
+    animation: reel-settle var(--reel-settle-ms, 140ms) cubic-bezier(0.22, 0.62, 0.28, 1) both;
+  }
+}
+@keyframes reel-settle {
+  0% { transform: translate3d(0, calc(-1 * var(--reel-bounce, 5px)), 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reel.is-settling .reel-strip { animation: none; }
+}
 .slot-rail {
   margin-top: 10px;
   height: 12px;

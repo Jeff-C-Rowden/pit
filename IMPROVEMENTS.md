@@ -16,7 +16,9 @@ Rules for every item: no fake wins, no misrepresented odds or near-miss rigging,
 | 10 | Visuals | PWA manifest + install icon + splash so the demo feels app-like on phones. | SHIPPED 2026-11-09 — manifest + original P-chip icons |
 | 11 | Onboarding | Guest "try one spin" demo mode before signup with no ledger writes. | |
 
-## NEXT (top): Slot Scout S1→S3→S2→S4→S5, #11 guest demo spin, #6 remainder, research #5 hold-and-win / stacking multipliers / cascade bonus. (#7 follow-up if cheap: same quick row on Blackjack/Pai Gow docks.)
+## NEXT (top): Slot Scout S3→S2→S4→S5, #11 guest demo spin, #6 remainder, research #5 hold-and-win / stacking multipliers / cascade bonus. (#7 follow-up if cheap: same quick row on Blackjack/Pai Gow docks.)
+
+## Shipped 2026-11-11 (afternoon): Slot Scout S1 weighted reel stops. Reels on every slot cabinet (Sundown Trail, Antler Ridge, Buckshot Bars, Bounty Bars, Canary Creek Mine, Thunderhoof Prairie, Kettle of Clover) stop left-to-right ~120ms apart with a 5px overshoot + settle bounce and a soft thunk. Stop / tap-to-stop slams remaining reels with no bounce. Timing is presentation-only (server still decides the grid first; no near-miss slowdown). prefers-reduced-motion drops the bounce (5-reel cabinets keep turbo timings; 3-reel cabinets still snap). Total spin is shorter than the previous 4.8s last-reel stop, not longer. Shared plan in src/lib/slotFeel.ts; tests/slotFeel.test.ts.
 
 ## Shipped 2026-11-11 (noon): Jackpot Desk J5 one "Sandbox chips · no cash value" chip on every jackpot surface (lobby meters, Antler Ridge meter strip, jackpot win card, hit history, pot sheet). Tests: tests/sandboxChip.test.ts.
 
@@ -68,7 +70,7 @@ Merged the RTP audit onto the restyle (Sundown Trail / Antler Ridge / Buckshot B
 - Correction: no simulated peer drip, no fake "hit elsewhere" toasts; meters move only from real sandbox play (labeled demo animation only if needed).
 
 ## Slot Scout slot-feel ideas (2026-11-10) — feel only, outcomes server-decided first, no near-miss, no timers, original art
-- S1 Weighted reel stops: L→R ~120ms apart, 4–6px overshoot + settle + soft thunk; Spin while moving = stop all. No suspense slowdown; reduced motion drops bounce.
+- S1 SHIPPED 2026-11-11 (afternoon). Weighted reel stops: L→R ~120ms apart, 5px overshoot + settle + soft thunk; Stop / tap-to-stop slams remaining reels. No suspense slowdown; reduced motion drops bounce. Tests: tests/slotFeel.test.ts.
 - S2 Symbol paytable peek: long-press a symbol on stopped reels for 3/4/5-of-a-kind pays at current bet; info button = one plain screen with RTP + feature trigger.
 - S3 Multi-line win walkthrough: total first, then each paying line ~400ms, tap to skip; losing spins resolve quietly (no lights/sound/lingering).
 - S4 Session recap chip: tap Win meter for sheet of last 10 spins (bet/win/net) + session net; plain numbers.

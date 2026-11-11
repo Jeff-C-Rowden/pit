@@ -427,10 +427,10 @@
 .bb-strip.spin { top: 0; filter: blur(1.5px); }
 @media (prefers-reduced-motion: no-preference) {
   .bb-strip.spin { animation: bbSpin calc(var(--bb-n) * 28ms) linear infinite; }
-  .bb-strip.settle { animation: bbSettle .22s ease-out; }
+  .bb-strip.settle { animation: bbSettle var(--reel-settle-ms, 140ms) cubic-bezier(0.22, 0.62, 0.28, 1); }
 }
 @keyframes bbSpin { from { transform: translateY(calc(var(--bb-n) * var(--bb-h) * -1)); } to { transform: translateY(0); } }
-@keyframes bbSettle { 0% { transform: translateY(-10%); } 70% { transform: translateY(2%); } 100% { transform: none; } }
+@keyframes bbSettle { 0% { transform: translateY(calc(-1 * var(--reel-bounce, 5px))); } 100% { transform: none; } }
 .bb-cell { display: grid; place-items: center; padding: 8% 14%; box-sizing: border-box; }
 .bb-cell .sym-face, .bb-cell .sym-icon { width: 100%; height: 100%; display: grid; place-items: center; }
 .bb-cell .sym-svg { width: 100%; height: 100%; }

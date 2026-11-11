@@ -97,6 +97,18 @@ export function playSpin() {
   tone(c, 220, 0, 0.05, 0.025, "triangle");
 }
 
+/** Soft wooden thunk when a reel lands. Simultaneous slams collapse to one hit so a Stop tap is not a chord. */
+let lastThunkAt = 0;
+export function playThunk() {
+  const now = Date.now();
+  if (now - lastThunkAt < 40) return;
+  lastThunkAt = now;
+  const c = ac();
+  if (!c) return;
+  clack(c, 0, 0.07);
+  tone(c, 140, 0, 0.045, 0.03, "sine");
+}
+
 /** Feature trigger fanfare (free spins / Mine Cart). Gated like every other sound and buzz. */
 export function playFeature() {
   buzz([20, 40, 20, 40, 60]);
