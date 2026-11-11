@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Logo from "@/components/Logo";
+import { DragonHero, Lantern } from "@/components/DragonArt";
 import { api } from "@/components/useUser";
 import { Suspense } from "react";
 
@@ -36,20 +37,11 @@ function Gate() {
   return (
     <div className="pit-shell gate-shell">
       <section className="home-hero" aria-label="Welcome to Pit">
-        <div className="felt-scene" aria-hidden="true">
-          <svg viewBox="0 0 360 200" className="felt-svg">
-            <defs>
-              <radialGradient id="hf" cx="50%" cy="30%" r="80%"><stop offset="0" stopColor="#1f7a52" /><stop offset="1" stopColor="#0b3524" /></radialGradient>
-            </defs>
-            <rect x="0" y="0" width="360" height="200" rx="22" fill="url(#hf)" />
-            <path d="M30 170 Q180 70 330 170" fill="none" stroke="#d8b25a" strokeOpacity=".55" strokeWidth="2" />
-            <g transform="translate(150 54) rotate(-10)"><rect width="46" height="64" rx="6" fill="#f7f1e3" /><text x="8" y="22" fontSize="18" fill="#b3261e" fontWeight="700">A♥</text></g>
-            <g transform="translate(184 50) rotate(9)"><rect width="46" height="64" rx="6" fill="#f7f1e3" /><text x="8" y="22" fontSize="18" fill="#1c1c1c" fontWeight="700">K♠</text></g>
-            {[[70,150,"#b3261e"],[70,142,"#b3261e"],[70,134,"#b3261e"],[290,150,"#1f4fa8"],[290,142,"#1f4fa8"],[110,160,"#d8b25a"]].map(([x,y,c],k)=>(
-              <g key={k}><ellipse cx={x as number} cy={y as number} rx="22" ry="8" fill={c as string} stroke="#f7f1e3" strokeWidth="2" strokeDasharray="5 4" /></g>
-            ))}
-          </svg>
-          <div className="felt-logo"><Logo size={44} /></div>
+        <div className="rd-gate-scene" aria-hidden="true">
+          <svg className="rd-gate-lantern rd-gate-lantern-l" viewBox="0 0 80 90"><Lantern x={40} y={50} s={0.95} className="sway-a" /></svg>
+          <svg className="rd-gate-lantern rd-gate-lantern-r" viewBox="0 0 80 90"><Lantern x={40} y={50} s={0.95} className="sway-b" /></svg>
+          <DragonHero className="rd-gate-dragon" />
+          <div className="rd-gate-logo"><Logo size={58} /></div>
         </div>
         <h1 className="home-title">Pit</h1>
         <p className="home-sell">Seven tables, honest odds, real casino rules. Play free with sandbox chips.</p>

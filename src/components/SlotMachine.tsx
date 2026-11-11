@@ -3,6 +3,7 @@
 import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { SYMBOLS, type Symbol } from "@/lib/games/slot";
 import { slotBlurCycleMs, slotStopMs } from "@/lib/slotFeel";
+import { HOARD_ART } from "./DragonSymbols";
 
 const VISIBLE = 3;
 const FILLER_LEN = 28;
@@ -28,222 +29,9 @@ const SymHCtx = createContext(92);
 
 export type WinCell = { reel: number; row: number };
 
-function SvgCrown() {
-  const id = useId().replace(/:/g, "");
-  const g = `cg-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#fff6c0" />
-          <stop offset="45%" stopColor="#f0c040" />
-          <stop offset="100%" stopColor="#a86810" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M8 44 L12 22 L24 36 L32 14 L40 36 L52 22 L56 44 Z"
-        fill={`url(#${g})`}
-        stroke="#6a4010"
-        strokeWidth="1.5"
-      />
-      <rect x="10" y="44" width="44" height="8" rx="2" fill={`url(#${g})`} stroke="#6a4010" strokeWidth="1.2" />
-      <circle cx="12" cy="22" r="3.2" fill="#ff5a6a" />
-      <circle cx="32" cy="14" r="3.6" fill="#5ad0ff" />
-      <circle cx="52" cy="22" r="3.2" fill="#7dff9a" />
-    </svg>
-  );
-}
-
-function SvgGem() {
-  const id = useId().replace(/:/g, "");
-  const g = `gg-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#e8fbff" />
-          <stop offset="40%" stopColor="#4eb8ff" />
-          <stop offset="100%" stopColor="#1848a8" />
-        </linearGradient>
-      </defs>
-      <polygon points="32,6 52,22 42,54 22,54 12,22" fill={`url(#${g})`} stroke="#0e2a6a" strokeWidth="1.4" />
-      <polygon points="32,6 42,22 22,22" fill="rgba(255,255,255,.55)" />
-      <polygon points="22,22 32,54 12,22" fill="rgba(10,40,120,.35)" />
-      <line x1="32" y1="6" x2="32" y2="54" stroke="rgba(255,255,255,.35)" strokeWidth="1" />
-    </svg>
-  );
-}
-
-function SvgHorse() {
-  const id = useId().replace(/:/g, "");
-  const g = `hg-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#f8d0b0" />
-          <stop offset="50%" stopColor="#c05030" />
-          <stop offset="100%" stopColor="#501408" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M18 52 L22 34 L20 24 L28 16 L36 18 L42 12 L48 18 L46 28 L50 36 L44 42 L40 52 Z"
-        fill={`url(#${g})`}
-        stroke="#3a1008"
-        strokeWidth="1.4"
-      />
-      <circle cx="34" cy="24" r="2.2" fill="#1a0804" />
-      <path d="M42 12 L48 8 L50 14" fill="none" stroke="#f0a878" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function SvgChip() {
-  const id = useId().replace(/:/g, "");
-  const g = `ch-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#b8ffe0" />
-          <stop offset="45%" stopColor="#1f8a58" />
-          <stop offset="100%" stopColor="#0a3020" />
-        </linearGradient>
-      </defs>
-      <circle cx="32" cy="32" r="24" fill={`url(#${g})`} stroke="#e8fff4" strokeWidth="2.5" />
-      <circle cx="32" cy="32" r="14" fill="none" stroke="rgba(255,255,255,.75)" strokeWidth="2" strokeDasharray="5 4" />
-      <circle cx="32" cy="32" r="8" fill="#0e4028" stroke="#9fe7c5" strokeWidth="1.2" />
-      <text x="32" y="36" textAnchor="middle" fontSize="10" fontWeight="700" fill="#eafff6" fontFamily="system-ui">
-        $
-      </text>
-    </svg>
-  );
-}
-
-function SvgWild() {
-  const id = useId().replace(/:/g, "");
-  const g = `wg-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#fff8d0" />
-          <stop offset="50%" stopColor="#ffd040" />
-          <stop offset="100%" stopColor="#c87810" />
-        </linearGradient>
-      </defs>
-      <polygon
-        points="32,4 38,24 58,24 42,36 48,56 32,44 16,56 22,36 6,24 26,24"
-        fill={`url(#${g})`}
-        stroke="#6a4010"
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-      />
-      <circle cx="32" cy="32" r="6" fill="#fff6c8" opacity=".85" />
-    </svg>
-  );
-}
-
-function SvgLamp() {
-  const id = useId().replace(/:/g, "");
-  const g = `lg-${id}`;
-  const f = `lf-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#fff0b0" />
-          <stop offset="50%" stopColor="#e0a820" />
-          <stop offset="100%" stopColor="#7a5010" />
-        </linearGradient>
-        <radialGradient id={f} cx="50%" cy="30%" r="50%">
-          <stop offset="0%" stopColor="#fff8c0" stopOpacity=".9" />
-          <stop offset="100%" stopColor="#ffd040" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-      <ellipse cx="32" cy="18" rx="16" ry="10" fill={`url(#${f})`} />
-      <path
-        d="M20 28 Q18 18 32 16 Q46 18 44 28 Q48 36 40 42 L38 52 L26 52 L24 42 Q16 36 20 28 Z"
-        fill={`url(#${g})`}
-        stroke="#5a3810"
-        strokeWidth="1.3"
-      />
-      <ellipse cx="32" cy="52" rx="10" ry="3" fill="#c89830" stroke="#5a3810" strokeWidth="1" />
-    </svg>
-  );
-}
-
-function SvgAce() {
-  const id = useId().replace(/:/g, "");
-  const g = `ag-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#fff8ec" />
-          <stop offset="55%" stopColor="#d4c4a0" />
-          <stop offset="100%" stopColor="#6a5a40" />
-        </linearGradient>
-      </defs>
-      <rect x="12" y="8" width="40" height="48" rx="5" fill={`url(#${g})`} stroke="#3a3020" strokeWidth="1.5" />
-      <text
-        x="32"
-        y="40"
-        textAnchor="middle"
-        fontSize="28"
-        fontWeight="800"
-        fill="#1a1208"
-        fontFamily="Georgia, serif"
-      >
-        A
-      </text>
-      <circle cx="20" cy="18" r="3" fill="#8a1c22" />
-      <circle cx="44" cy="46" r="3" fill="#8a1c22" />
-    </svg>
-  );
-}
-
-function SvgBar() {
-  const id = useId().replace(/:/g, "");
-  const g = `bg-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#e8ecef" />
-          <stop offset="50%" stopColor="#8a929a" />
-          <stop offset="100%" stopColor="#2a3038" />
-        </linearGradient>
-      </defs>
-      <rect x="8" y="22" width="48" height="20" rx="3" fill={`url(#${g})`} stroke="#1a1e24" strokeWidth="1.4" />
-      <text
-        x="32"
-        y="37"
-        textAnchor="middle"
-        fontSize="14"
-        fontWeight="900"
-        letterSpacing="2"
-        fill="#f4f6f8"
-        fontFamily="system-ui, sans-serif"
-      >
-        BAR
-      </text>
-    </svg>
-  );
-}
-
 type ArtMeta = { label: string; tone: string; Svg: () => ReactNode };
 
-export const SYM_ART: Record<Symbol, ArtMeta> = {
-  WILD: { label: "WILD", tone: "wild", Svg: SvgWild },
-  CROWN: { label: "CROWN", tone: "crown", Svg: SvgCrown },
-  DIAMOND: { label: "GEM", tone: "diamond", Svg: SvgGem },
-  ACE: { label: "ACE", tone: "ace", Svg: SvgAce },
-  CHIP: { label: "CHIP", tone: "chip", Svg: SvgChip },
-  HORSE: { label: "TRACK", tone: "horse", Svg: SvgHorse },
-  LAMP: { label: "LAMP", tone: "lamp", Svg: SvgLamp },
-  BAR: { label: "BAR", tone: "bar", Svg: SvgBar },
-};
+export const SYM_ART: Record<Symbol, ArtMeta> = HOARD_ART;
 
 function randSym(): Symbol {
   return SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)]!;
@@ -269,7 +57,7 @@ function SymTile({
     <div
       className={`sym tone-${art.tone}${spinning ? " spinning" : ""}${win ? " win" : ""}`}
       style={{ height: SYM_H }}
-      aria-label={sym}
+      aria-label={art.label}
     >
       <span className="sym-face">
         <span className="sym-icon" aria-hidden>

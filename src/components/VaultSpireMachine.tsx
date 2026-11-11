@@ -15,6 +15,7 @@ import {
 } from "react";
 import { VS_SYMBOLS, type VsSymbol } from "@/lib/games/slotProgressive";
 import { slotBlurCycleMs, slotStopMs } from "@/lib/slotFeel";
+import { JADE_ART } from "./DragonSymbols";
 
 const VISIBLE = 3;
 const FILLER_LEN = 28;
@@ -39,216 +40,9 @@ const SymHCtx = createContext(92);
 
 export type WinCell = { reel: number; row: number };
 
-function SvgWild() {
-  const id = useId().replace(/:/g, "");
-  const g = `csw-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#fff4c8" />
-          <stop offset="50%" stopColor="#e0a820" />
-          <stop offset="100%" stopColor="#6a4010" />
-        </linearGradient>
-      </defs>
-      {/* Original tribal idol / mask — not licensed IP */}
-      <ellipse cx="32" cy="34" rx="18" ry="22" fill={`url(#${g})`} stroke="#3a2808" strokeWidth="1.5" />
-      <path d="M22 18 Q32 8 42 18" fill="none" stroke="#3a2808" strokeWidth="2" />
-      <circle cx="25" cy="30" r="3.5" fill="#1a1004" />
-      <circle cx="39" cy="30" r="3.5" fill="#1a1004" />
-      <path d="M26 42 Q32 48 38 42" fill="none" stroke="#1a1004" strokeWidth="2.2" strokeLinecap="round" />
-      <rect x="29" y="6" width="6" height="10" rx="1" fill={`url(#${g})`} stroke="#3a2808" strokeWidth="1" />
-    </svg>
-  );
-}
-
-function SvgMonkey() {
-  const id = useId().replace(/:/g, "");
-  const g = `csm-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#d4a070" />
-          <stop offset="55%" stopColor="#8a5830" />
-          <stop offset="100%" stopColor="#3a2010" />
-        </linearGradient>
-      </defs>
-      <circle cx="16" cy="28" r="8" fill={`url(#${g})`} stroke="#2a1808" strokeWidth="1.2" />
-      <circle cx="48" cy="28" r="8" fill={`url(#${g})`} stroke="#2a1808" strokeWidth="1.2" />
-      <ellipse cx="32" cy="34" rx="16" ry="18" fill={`url(#${g})`} stroke="#2a1808" strokeWidth="1.4" />
-      <ellipse cx="32" cy="38" rx="10" ry="9" fill="#f0d0a8" />
-      <circle cx="26" cy="30" r="2.8" fill="#1a1008" />
-      <circle cx="38" cy="30" r="2.8" fill="#1a1008" />
-      <ellipse cx="32" cy="40" rx="3" ry="2.2" fill="#5a3020" />
-      <path d="M28 46 Q32 49 36 46" fill="none" stroke="#5a3020" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function SvgParrot() {
-  const id = useId().replace(/:/g, "");
-  const g = `csp-${id}`;
-  const g2 = `csp2-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#7dff9a" />
-          <stop offset="50%" stopColor="#1a8848" />
-          <stop offset="100%" stopColor="#0a4028" />
-        </linearGradient>
-        <linearGradient id={g2} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#ffd060" />
-          <stop offset="100%" stopColor="#e05020" />
-        </linearGradient>
-      </defs>
-      <ellipse cx="30" cy="34" rx="14" ry="18" fill={`url(#${g})`} stroke="#083020" strokeWidth="1.3" />
-      <path d="M40 28 Q54 24 52 36 Q48 40 40 36 Z" fill={`url(#${g2})`} stroke="#6a2808" strokeWidth="1.1" />
-      <circle cx="26" cy="28" r="3" fill="#f8f0e0" />
-      <circle cx="26" cy="28" r="1.5" fill="#101008" />
-      <path d="M22 48 Q28 56 36 50" fill="none" stroke="#e05020" strokeWidth="3" strokeLinecap="round" />
-      <path d="M18 20 Q24 8 32 16" fill="none" stroke="#2a90d0" strokeWidth="3" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function SvgJaguar() {
-  const id = useId().replace(/:/g, "");
-  const g = `csj-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#f0c860" />
-          <stop offset="50%" stopColor="#c88820" />
-          <stop offset="100%" stopColor="#5a3810" />
-        </linearGradient>
-      </defs>
-      <ellipse cx="32" cy="34" rx="20" ry="16" fill={`url(#${g})`} stroke="#3a2408" strokeWidth="1.4" />
-      <circle cx="14" cy="22" r="6" fill={`url(#${g})`} stroke="#3a2408" strokeWidth="1.2" />
-      <circle cx="50" cy="22" r="6" fill={`url(#${g})`} stroke="#3a2408" strokeWidth="1.2" />
-      <circle cx="24" cy="32" r="3" fill="#1a1004" />
-      <circle cx="40" cy="32" r="3" fill="#1a1004" />
-      <ellipse cx="32" cy="40" rx="5" ry="3.5" fill="#2a1808" />
-      <circle cx="20" cy="40" r="2.2" fill="#2a1808" />
-      <circle cx="44" cy="40" r="2.2" fill="#2a1808" />
-      <circle cx="28" cy="24" r="1.6" fill="#2a1808" />
-      <circle cx="36" cy="26" r="1.6" fill="#2a1808" />
-      <circle cx="32" cy="48" r="1.8" fill="#2a1808" />
-    </svg>
-  );
-}
-
-function SvgToucan() {
-  const id = useId().replace(/:/g, "");
-  const g = `cst-${id}`;
-  const g2 = `cst2-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#404850" />
-          <stop offset="100%" stopColor="#101418" />
-        </linearGradient>
-        <linearGradient id={g2} x1="0" y1="0" x2="1" y2="0">
-          <stop offset="0%" stopColor="#ffe060" />
-          <stop offset="55%" stopColor="#f08020" />
-          <stop offset="100%" stopColor="#d02040" />
-        </linearGradient>
-      </defs>
-      <ellipse cx="28" cy="36" rx="12" ry="16" fill={`url(#${g})`} stroke="#080a0c" strokeWidth="1.3" />
-      <path d="M36 28 Q58 22 56 36 Q54 44 36 40 Z" fill={`url(#${g2})`} stroke="#6a2008" strokeWidth="1.2" />
-      <circle cx="24" cy="30" r="3.2" fill="#f8f4e8" />
-      <circle cx="24" cy="30" r="1.6" fill="#101008" />
-      <path d="M20 48 Q26 56 34 50" fill="none" stroke="#e8c040" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function SvgBanana() {
-  const id = useId().replace(/:/g, "");
-  const g = `csb-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#fff6a0" />
-          <stop offset="45%" stopColor="#f0c028" />
-          <stop offset="100%" stopColor="#8a6810" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M22 14 Q18 28 22 46 Q28 54 38 50 Q44 40 42 24 Q38 14 28 12 Q24 12 22 14 Z"
-        fill={`url(#${g})`}
-        stroke="#5a4010"
-        strokeWidth="1.4"
-      />
-      <path d="M28 16 Q30 30 32 46" fill="none" stroke="#c89820" strokeWidth="1.2" opacity=".7" />
-      <ellipse cx="26" cy="12" rx="3" ry="2" fill="#6a8830" stroke="#3a5020" strokeWidth="0.8" />
-    </svg>
-  );
-}
-
-function SvgCoconut() {
-  const id = useId().replace(/:/g, "");
-  const g = `csc-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#c8a078" />
-          <stop offset="50%" stopColor="#6a4830" />
-          <stop offset="100%" stopColor="#2a1810" />
-        </linearGradient>
-      </defs>
-      <circle cx="32" cy="34" r="20" fill={`url(#${g})`} stroke="#1a1008" strokeWidth="1.5" />
-      <circle cx="26" cy="30" r="2" fill="#1a1008" />
-      <circle cx="34" cy="28" r="2" fill="#1a1008" />
-      <circle cx="30" cy="38" r="2" fill="#1a1008" />
-      <path d="M18 22 Q32 16 46 24" fill="none" stroke="#d8b890" strokeWidth="1.2" opacity=".5" />
-    </svg>
-  );
-}
-
-function SvgVine() {
-  const id = useId().replace(/:/g, "");
-  const g = `csv-${id}`;
-  return (
-    <svg viewBox="0 0 64 64" className="sym-svg" aria-hidden>
-      <defs>
-        <linearGradient id={g} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#b8f080" />
-          <stop offset="50%" stopColor="#3a9840" />
-          <stop offset="100%" stopColor="#144820" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M18 50 Q22 28 32 22 Q42 16 48 10"
-        fill="none"
-        stroke={`url(#${g})`}
-        strokeWidth="3.5"
-        strokeLinecap="round"
-      />
-      <ellipse cx="28" cy="28" rx="8" ry="5" transform="rotate(-35 28 28)" fill={`url(#${g})`} stroke="#0a3018" strokeWidth="1" />
-      <ellipse cx="38" cy="18" rx="7" ry="4.5" transform="rotate(-20 38 18)" fill={`url(#${g})`} stroke="#0a3018" strokeWidth="1" />
-      <ellipse cx="22" cy="40" rx="7" ry="4" transform="rotate(-50 22 40)" fill={`url(#${g})`} stroke="#0a3018" strokeWidth="1" />
-    </svg>
-  );
-}
-
 type ArtMeta = { label: string; tone: string; Svg: () => ReactNode };
 
-export const VS_SYM_ART: Record<VsSymbol, ArtMeta> = {
-  WILD: { label: "WILD", tone: "wild", Svg: SvgWild },
-  MONKEY: { label: "MONKEY", tone: "monkey", Svg: SvgMonkey },
-  PARROT: { label: "PARROT", tone: "parrot", Svg: SvgParrot },
-  JAGUAR: { label: "JAGUAR", tone: "jaguar", Svg: SvgJaguar },
-  TOUCAN: { label: "TOUCAN", tone: "toucan", Svg: SvgToucan },
-  BANANA: { label: "BANANA", tone: "banana", Svg: SvgBanana },
-  COCONUT: { label: "COCONUT", tone: "coconut", Svg: SvgCoconut },
-  VINE: { label: "VINE", tone: "vine", Svg: SvgVine },
-};
+export const VS_SYM_ART: Record<VsSymbol, ArtMeta> = JADE_ART;
 
 function randSym(): VsSymbol {
   return VS_SYMBOLS[Math.floor(Math.random() * VS_SYMBOLS.length)]!;
@@ -274,7 +68,7 @@ function SymTile({
     <div
       className={`sym tone-${art.tone}${spinning ? " spinning" : ""}${win ? " win" : ""}`}
       style={{ height: SYM_H }}
-      aria-label={sym}
+      aria-label={art.label}
     >
       <span className="sym-face">
         <span className="sym-icon" aria-hidden>

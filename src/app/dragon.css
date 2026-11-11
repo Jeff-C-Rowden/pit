@@ -513,3 +513,64 @@ html, body { overflow-x: clip; }
   box-shadow: 0 0 0 2px #1a0103, 0 0 0 5px #f5c542, 0 0 0 7px #7a4a0a, 0 0 26px 6px rgba(255,150,60,.22), 0 40px 80px rgba(0,0,0,.55), inset 0 0 90px rgba(0,0,0,.42);
 }
 .mini-oval { background: radial-gradient(ellipse, #a0101a, #5a0409); border-color: #3a0306; box-shadow: 0 0 0 2px #e0a52a; }
+
+/* ---------- Reel symbols: red hoard set (Gilded Track) + jade set (Canopy Spire) ---------- */
+.sym .sym-face { border: 1.5px solid rgba(245,197,66,.75); }
+.sym-label { font-weight: 900; text-shadow: 0 1px 0 rgba(0,0,0,.45); }
+.sym.tone-rd-wild .sym-face, .pt-art.tone-rd-wild, .sym.tone-jd-wild .sym-face, .pt-art.tone-jd-wild { background: linear-gradient(145deg, #fff6c4, #f5c542 45%, #a8650c); color: #5a0409; text-shadow: none; }
+.sym.tone-rd-ingot .sym-face, .pt-art.tone-rd-ingot { background: radial-gradient(circle at 50% 35%, #e3202a, #8b0a12 60%, #3a0306); color: #fff3b0; }
+.sym.tone-rd-pearl .sym-face, .pt-art.tone-rd-pearl { background: radial-gradient(circle at 50% 35%, #7a1030, #3a0418 65%, #1a0108); color: #ffd6dc; }
+.sym.tone-rd-koi .sym-face, .pt-art.tone-rd-koi { background: radial-gradient(circle at 50% 35%, #2a3a5a, #121a2e 65%, #070a14); color: #ffd9b0; }
+.sym.tone-rd-coin .sym-face, .pt-art.tone-rd-coin { background: radial-gradient(circle at 50% 35%, #b3121b, #6a0710 60%, #2a0204); color: #fff3b0; }
+.sym.tone-rd-lantern .sym-face, .pt-art.tone-rd-lantern { background: radial-gradient(circle at 50% 35%, #3a1410, #1a0806 70%, #0a0302); color: #ffcf9a; }
+.sym.tone-rd-fan .sym-face, .pt-art.tone-rd-fan { background: radial-gradient(circle at 50% 35%, #fff4dc, #e8cfa0 60%, #a8865a); color: #6a0710; text-shadow: none; }
+.sym.tone-rd-knot .sym-face, .pt-art.tone-rd-knot { background: radial-gradient(circle at 50% 35%, #ffe7a0, #d9a43a 60%, #8a5a0c); color: #5a0409; text-shadow: none; }
+.sym.tone-jd-ingot .sym-face, .pt-art.tone-jd-ingot { background: radial-gradient(circle at 50% 35%, #1fae74, #0a5a3a 60%, #03261a); color: #fff3b0; }
+.sym.tone-jd-pearl .sym-face, .pt-art.tone-jd-pearl { background: radial-gradient(circle at 50% 35%, #c8141e, #6a0710 60%, #2a0204); color: #e8fff4; }
+.sym.tone-jd-lantern .sym-face, .pt-art.tone-jd-lantern { background: radial-gradient(circle at 50% 35%, #138a5c, #075a3a 60%, #02261a); color: #ffe7a0; }
+.sym.tone-jd-coin .sym-face, .pt-art.tone-jd-coin { background: radial-gradient(circle at 50% 35%, #8b0a12, #4a0408 65%, #1a0103); color: #fff3b0; }
+.sym.tone-jd-jade .sym-face, .pt-art.tone-jd-jade { background: radial-gradient(circle at 50% 35%, #fff8e8, #e6d6b0 60%, #a8946a); color: #0a5034; text-shadow: none; }
+.sym.tone-jd-bamboo .sym-face, .pt-art.tone-jd-bamboo { background: radial-gradient(circle at 50% 35%, #f6efd8, #d9c896 60%, #8a7848); color: #0a5034; text-shadow: none; }
+.sym.tone-jd-cloud .sym-face, .pt-art.tone-jd-cloud { background: radial-gradient(circle at 50% 35%, #6a0710, #3a0306 65%, #1a0103); color: #ffe7a0; }
+
+/* ---------- Roulette layout: lacquer outside bets, gold 0/00, readable red/black pockets ---------- */
+.rl-grid { background: #1a0103 !important; border: 2px solid #c8891a !important; box-shadow: 0 0 0 1px #5a3006, inset 0 0 18px rgba(0,0,0,.6); }
+.rl-cloth .rl-cell.red, .rl-ux .rl-cell.red { background: linear-gradient(180deg, #ff3a3a 0%, #d0141e 55%, #9a0c14 100%) !important; color: #fff; }
+.rl-cloth .rl-cell.black, .rl-ux .rl-cell.black { background: linear-gradient(180deg, #2e2e2e 0%, #121212 60%, #050505 100%) !important; color: #fff3d0; }
+.rl-cloth .rl-cell.red, .rl-cloth .rl-cell.black { box-shadow: inset 0 0 0 1px rgba(255,231,160,.45), inset 0 -8px 14px rgba(0,0,0,.22); }
+.rl-cloth .rl-cell.green, .rl-ux .rl-cell.green {
+  background: linear-gradient(180deg, #fff6c4 0%, #f5c542 45%, #b8750f 100%) !important;
+  color: #5a0409 !important; text-shadow: 0 1px 0 rgba(255,255,255,.5) !important;
+  font-family: var(--rd-display); font-weight: 900;
+  box-shadow: inset 0 0 0 1.5px #7a4a0a, inset 0 2px 0 rgba(255,255,255,.7);
+}
+.rl-cloth .rl-cell.outside, .rl-cloth .rl-cell:not(.red):not(.black):not(.green) {
+  background: linear-gradient(180deg, #5a0409 0%, #3a0306 60%, #2a0204 100%) !important;
+  color: #ffe7a0 !important; text-shadow: 0 1px 0 #1a0103;
+  box-shadow: inset 0 0 0 1px rgba(245,197,66,.55), inset 0 2px 0 rgba(255,210,120,.12);
+}
+.rl-cloth .rl-cell.hit { box-shadow: inset 0 0 0 3px #fff3b0, 0 0 18px rgba(255,190,60,.75) !important; }
+
+/* ---------- Age-gate home hero ---------- */
+.rd-gate-scene {
+  position: relative; width: 100%; max-width: 440px; aspect-ratio: 300 / 210; overflow: hidden; border-radius: 18px;
+  background:
+    radial-gradient(260px 180px at 55% 40%, rgba(255,150,60,.5), transparent 70%),
+    repeating-conic-gradient(from 0deg at 55% 40%, rgba(255,230,160,.08) 0 6deg, transparent 6deg 15deg),
+    linear-gradient(135deg, #c8141e 0%, #7d0710 55%, #3a0306 100%);
+  box-shadow: 0 0 0 3px #e0a52a, 0 0 0 5px #7a4a0a, 0 0 0 6px #fff3b0, 0 18px 40px rgba(0,0,0,.5), inset 0 0 40px rgba(0,0,0,.35);
+}
+.rd-gate-dragon { position: absolute; inset: 6% -4% -6% 0; width: 104%; height: 100%; filter: drop-shadow(0 8px 14px rgba(0,0,0,.45)); }
+.rd-gate-lantern { position: absolute; top: -6px; width: 54px; height: 62px; z-index: 2; }
+.rd-gate-lantern-l { left: 6%; }
+.rd-gate-lantern-r { right: 6%; }
+.rd-gate-lantern .sway-a { animation: rd-sway 4.5s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 0; }
+.rd-gate-lantern .sway-b { animation: rd-sway 5.2s ease-in-out -1.5s infinite; transform-box: fill-box; transform-origin: 50% 0; }
+.rd-gate-logo { position: absolute; left: 12px; bottom: 10px; z-index: 2; filter: drop-shadow(0 0 12px rgba(255,170,60,.6)); }
+.home-title { font-family: var(--rd-display); font-weight: 900; font-size: 54px; letter-spacing: .16em; text-transform: uppercase;
+  background: var(--rd-gold-grad); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 0 #5a0409) drop-shadow(0 0 12px rgba(255,170,60,.35)); }
+.home-sell { color: #ffe2c4; }
+.home-enter { animation: rd-glow 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .rd-gate-lantern .sway-a, .rd-gate-lantern .sway-b, .home-enter { animation: none !important; }
+}

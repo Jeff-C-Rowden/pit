@@ -267,7 +267,7 @@ export default function VaultPage() {
         <div className="vault-page">
           <div className="vault-topbar">
             <div className="vault-title-block">
-              <p className="lede">Jungle progressive video slot</p>
+              <p className="lede">Jade dragon progressive video slot</p>
               <h1>Canopy Spire</h1>
             </div>
             <div className="vault-badges">

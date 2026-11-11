@@ -50,7 +50,7 @@ const GAMES = [
     href: "/vault", level: "Easiest", pace: "Fast",
     name: "Canopy Spire",
     meta: "5 reels · 9 lines · 4-tier progressive",
-    line: "Jungle canopy progressive — Mini · Minor · Major · Grand.",
+    line: "Jade dragon progressive — Mini · Minor · Major · Grand.",
     accent: "vault",
     progressive: true,
   },
