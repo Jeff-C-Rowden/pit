@@ -23,9 +23,9 @@ import { SPEEDS, VIEWS, type Speed, type View } from "@/lib/games/wheel3d";
 
 const TURBO_KEY = "pit-rl-turbo";
 const OPTS_KEY = "pit-rl-table-v1";
-type Felt = "crimson" | "jade" | "slate";
+type Felt = "crimson" | "pine" | "slate";
 const FELTS: { id: Felt; label: string; sw: string }[] = [
-  { id: "crimson", label: "Crimson", sw: "#8a0a12" }, { id: "jade", label: "Jade", sw: "#0d5a3a" }, { id: "slate", label: "Slate", sw: "#3c5262" },
+  { id: "crimson", label: "Oxblood", sw: "#7a1a21" }, { id: "pine", label: "Pine", sw: "#0d5a3a" }, { id: "slate", label: "Slate", sw: "#3c5262" },
 ];
 const HINT_KEY = "pit-rl-hint-v1";
 const CHIPS = [25, 100, 500, 1000, 2500];

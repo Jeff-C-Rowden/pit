@@ -214,7 +214,7 @@ h1,h2,h3,.display {
 .pcard .cr { font-size: 18px; line-height: 1; }
 .pcard .cs { font-size: 22px; text-align: center; }
 
-/* —— Gilded Track cabinet —— */
+/* —— Sundown Trail cabinet —— */
 .slot-page {
   width: 100%;
   max-width: 920px;
@@ -1789,7 +1789,7 @@ button.clay-chip-btn.sel, .clay-chip-btn.sel {
 }
 
 
-/* —— Canopy Spire progressive cabinet (jungle) —— */
+/* —— Antler Ridge progressive cabinet (frontier) —— */
 .sym.tone-monkey .sym-face {
   background: linear-gradient(145deg, #e8c090, #8a5830 48%, #3a2010);
   color: #fff4e0;
@@ -2837,7 +2837,7 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
 .bj-arc-big { fill: rgba(232,213,163,.78); font-family: Palatino, "Palatino Linotype", Georgia, serif; font-size: 17px; letter-spacing: 3px; }
 .bj-felt-sub { margin-top: -6px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: rgba(232,213,163,.55); }
 .bj-table .felt-wordmark { opacity: .5; }
-/* r11-3: Canopy Spire dock fits 390px */
+/* r11-3: Antler Ridge dock fits 390px */
 @media (max-width: 640px) {
   .vault-page .action-dock .clay-chip-btn .clay-face { width: 40px !important; height: 40px !important; }
   .vault-page .action-dock .chip-row .custom-wager { flex: 1 1 104px !important; min-width: 104px; }
@@ -2881,7 +2881,7 @@ main h1 { text-shadow: 0 1px 0 rgba(0,0,0,.6), 0 0 24px rgba(201,162,39,.15); }
   .action-dock .table-hint { font-size: 11px; letter-spacing: .06em; text-wrap: balance; }
 }
 
-/* r12-gt: Gilded Track custom box fits "0.00" */
+/* r12-gt: Sundown Trail custom box fits "0.00" */
 @media (max-width: 640px) {
   .slot-page .action-dock .custom-wager-label { font-size: 8px; letter-spacing: .08em; margin-right: 2px; }
   .slot-page .action-dock .custom-wager { padding-left: 6px !important; padding-right: 4px !important; }

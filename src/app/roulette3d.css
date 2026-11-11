@@ -29,7 +29,7 @@
 .rw3d-ring.red { fill: #d0181f; }
 .rw3d-ring.black { fill: #0e0c0c; }
 .rw3d-ring.green { fill: #12a058; }
-.rw3d-num { fill: #fff8e8; font-weight: 800; font-family: var(--rd-display, Georgia, serif); text-anchor: middle; dominant-baseline: central; }
+.rw3d-num { fill: #fff8e8; font-weight: 800; font-family: var(--font-display, Impact, sans-serif); text-anchor: middle; dominant-baseline: central; }
 .rw3d-turret { position: absolute; left: 200px; top: 150px; width: 40px; height: 70px; transform-origin: 50% 100%; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
 .rw3d-turret svg { display: block; }
 .rw3d-ball {
@@ -46,7 +46,7 @@
 @keyframes rw3d-win { from { fill: #ffe27a; } to { fill: #fff6d0; } }
 .rw3d-call {
   position: absolute; left: 50%; top: 4px; transform: translateX(-50%); z-index: 5; pointer-events: none;
-  font-family: var(--rd-display, Georgia, serif); font-weight: 900; font-size: 15px; letter-spacing: .14em; text-transform: uppercase;
+  font-family: var(--font-display, Impact, sans-serif); font-weight: 900; font-size: 15px; letter-spacing: .14em; text-transform: uppercase;
   color: #fff3b0; text-shadow: 0 2px 0 #3a0306, 0 0 12px rgba(255,170,60,.55); white-space: nowrap;
   padding: 3px 14px; border-radius: 999px; background: rgba(26,1,3,.55); border: 1px solid rgba(245,197,66,.5);
   animation: rw3d-call-in .35s cubic-bezier(.2,.9,.3,1.2) both;
@@ -65,7 +65,7 @@
   box-shadow: inset 0 0 12px rgba(0,0,0,.9), 0 6px 14px rgba(0,0,0,.45);
   font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-weight: 800; font-size: 13px; max-height: 340px; overflow: hidden;
 }
-.rl-tote-h { font: 700 8px/1.2 var(--rd-display, Georgia, serif); letter-spacing: .12em; color: #e0a52a; text-align: center; text-transform: uppercase; margin-bottom: 2px; }
+.rl-tote-h { font: 700 8px/1.2 var(--font-display, Impact, sans-serif); letter-spacing: .12em; color: #e0a52a; text-align: center; text-transform: uppercase; margin-bottom: 2px; }
 .rl-tote-row { display: grid; grid-template-columns: 1fr 1fr; min-height: 18px; align-items: center; border-bottom: 1px solid rgba(224,165,42,.12); }
 .rl-tote-row .red { color: #ff4048; text-align: left; text-shadow: 0 0 6px rgba(255,40,50,.6); }
 .rl-tote-row .black { color: #f2ecdf; text-align: right; grid-column: 2; text-shadow: 0 0 5px rgba(255,255,255,.35); }
@@ -76,7 +76,7 @@
 .rl-opts { position: relative; }
 .rl-opts > summary {
   list-style: none; cursor: pointer; min-height: 40px; display: inline-flex; align-items: center; gap: 6px; padding: 0 14px;
-  border-radius: 8px; font: 800 12px/1 var(--rd-display, Georgia, serif); letter-spacing: .12em; text-transform: uppercase;
+  border-radius: 8px; font: 800 12px/1 var(--font-display, Impact, sans-serif); letter-spacing: .12em; text-transform: uppercase;
   color: #ffe7a0; background: linear-gradient(180deg, #b3121b, #5a0409); border: 1.5px solid #e0a52a;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 3px 8px rgba(0,0,0,.45);
 }
@@ -86,7 +86,7 @@
   background: linear-gradient(180deg, #3a0306, #1a0103); border: 1.5px solid #c8891a; box-shadow: 0 14px 30px rgba(0,0,0,.55);
 }
 .rl-opt-group { display: grid; gap: 6px; }
-.rl-opt-lab { font: 700 10px/1 var(--rd-display, Georgia, serif); letter-spacing: .16em; text-transform: uppercase; color: #e0a52a; }
+.rl-opt-lab { font: 700 10px/1 var(--font-display, Impact, sans-serif); letter-spacing: .16em; text-transform: uppercase; color: #e0a52a; }
 .rl-seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
 .rl-seg button {
   min-height: 40px; border-radius: 8px; border: 1px solid rgba(224,165,42,.5); background: #2a0204; color: #ffe7a0;
@@ -100,18 +100,18 @@
 @media (max-width: 700px) { .rl-betbar { margin-top: 26px; } }
 .rl-betbar .rl-lacq {
   min-height: 38px; padding: 0 14px; border-radius: 6px; cursor: pointer;
-  font: 800 12px/1 var(--rd-display, Georgia, serif); letter-spacing: .1em; text-transform: uppercase;
+  font: 800 12px/1 var(--font-display, Impact, sans-serif); letter-spacing: .1em; text-transform: uppercase;
   color: #fff3d0; background: linear-gradient(180deg, #d0202a 0%, #8a0a12 55%, #4a0408 100%); border: 1.5px solid #e0a52a;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 3px 0 #2a0204, 0 6px 12px rgba(0,0,0,.4);
 }
 .rl-betbar .rl-lacq:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 1px 0 rgba(255,255,255,.35), 0 1px 0 #2a0204; }
 .rl-betbar .rl-lacq:disabled { opacity: .45; cursor: default; }
-.rl-betbar .rl-total { margin-left: auto; font: 800 13px/1 var(--rd-display, Georgia, serif); letter-spacing: .12em; text-transform: uppercase; color: #ffe7a0; }
+.rl-betbar .rl-total { margin-left: auto; font: 800 13px/1 var(--font-display, Impact, sans-serif); letter-spacing: .12em; text-transform: uppercase; color: #ffe7a0; }
 .rl-betbar .rl-total b { color: #fff; font-size: 16px; margin-left: 6px; letter-spacing: 0; }
 
 /* ---------- Felt colours + 3D board ---------- */
 .roulette-page { --rl-felt-hi: #a0101a; --rl-felt: #6a0710; --rl-felt-lo: #2a0204; --rl-line: rgba(255,240,210,.85); }
-.roulette-page[data-felt="jade"] { --rl-felt-hi: #1f8a5c; --rl-felt: #0d5a3a; --rl-felt-lo: #03261a; }
+.roulette-page[data-felt="pine"] { --rl-felt-hi: #1f8a5c; --rl-felt: #0d5a3a; --rl-felt-lo: #03261a; }
 .roulette-page[data-felt="slate"] { --rl-felt-hi: #5d7486; --rl-felt: #3c5262; --rl-felt-lo: #1a2630; }
 
 .rl-felt-wrap { perspective: 1500px; perspective-origin: 50% 0%; }
@@ -140,7 +140,7 @@
 /* Oval number pips on felt, white printed lines */
 .rl-felt-wrap .rl-cloth .rl-cell.n, .rl-felt-wrap .rl-cloth .rl-cell.green, .rl-felt-wrap .rl-cloth .rl-cell.outside {
   background: transparent !important; box-shadow: inset 0 0 0 1px var(--rl-line) !important;
-  font-family: var(--rd-display, Georgia, serif); font-style: italic; color: #fff8e8 !important; text-shadow: 0 1px 2px rgba(0,0,0,.6) !important;
+  font-family: var(--font-display, Impact, sans-serif); font-style: italic; color: #fff8e8 !important; text-shadow: 0 1px 2px rgba(0,0,0,.6) !important;
 }
 /* Oval pip painted as layered background (highlight + body + rim shadow), no pseudo-element,
    so chips and the dolly always sit on top of it */
@@ -186,12 +186,12 @@
 @keyframes rl3d-dolly { from { transform: translateX(-50%) translateY(-40px); opacity: 0; } to { transform: translateX(-50%); opacity: 1; } }
 
 /* ---------- Bottom rail: cash, chip rack, big spin ---------- */
-.rl-dock .rl-cash { display: flex; flex-direction: column; font: 700 10px/1.1 var(--rd-display, Georgia, serif); letter-spacing: .12em; text-transform: uppercase; color: #e0a52a; min-width: 62px; }
+.rl-dock .rl-cash { display: flex; flex-direction: column; font: 700 10px/1.1 var(--font-display, Impact, sans-serif); letter-spacing: .12em; text-transform: uppercase; color: #e0a52a; min-width: 62px; }
 .rl-dock .rl-cash b { font-size: 15px; color: #fff3d0; letter-spacing: 0; }
 .rl-dock .rl-spin {
   background: linear-gradient(180deg, #ff4a4a 0%, #c8141e 45%, #7a0a10 100%) !important; color: #fff6dc !important;
   border: 2px solid #f5c542 !important; border-radius: 14px !important;
-  font-family: var(--rd-display, Georgia, serif) !important; font-size: 24px !important; letter-spacing: .12em !important;
+  font-family: var(--font-display, Impact, sans-serif) !important; font-size: 24px !important; letter-spacing: .12em !important;
   box-shadow: inset 0 2px 0 rgba(255,255,255,.4), 0 4px 0 #3a0306, 0 8px 18px rgba(0,0,0,.5) !important;
   text-shadow: 0 2px 0 #4a0408;
 }
