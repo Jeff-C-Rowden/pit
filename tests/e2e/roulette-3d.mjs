@@ -49,6 +49,9 @@ for (const w of [390, 1366]) {
 
   // Spin and capture
   const resP = p.waitForResponse((r) => r.url().endsWith("/api/games/roulette") && r.request().method() === "POST", { timeout: 30000 });
+  const star0 = await p.$(".rl-star");
+  await star0.evaluate((e) => e.scrollIntoView({ block: "start" })); await W(300);
+  const rec = process.env.VIDEO ? await p.screencast({ path: `${OUT}/rl3d-spin-${w}.webm` }) : null;
   await p.click(".rl-spin");
   const res = await (await resP).json();
   const server = res.spin.pocket;
@@ -93,6 +96,7 @@ for (const w of [390, 1366]) {
   const drawnPocket = ORDER[Math.floor(local / (360 / 38))];
   check(`${w}: ball drawn in server pocket`, drawnPocket === server, `${drawnPocket} vs ${server}`);
   await W(1800); // camera pulls back, chips settle
+  if (rec) await rec.stop();
   await felt.evaluate((e) => e.scrollIntoView({ block: "center" })); await W(900);
   await felt.screenshot({ path: `${OUT}/rl3d-result-felt-${w}.png` });
   await p.screenshot({ path: `${OUT}/rl3d-page-${w}.png`, fullPage: false });
