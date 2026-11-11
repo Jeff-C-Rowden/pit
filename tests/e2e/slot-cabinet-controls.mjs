@@ -53,7 +53,7 @@ for (const game of ["slot", "vault"]) {
   await W(500);
   check(`${game}: tapping the handle starts a spin`, !!(await p.$(".reel.is-spinning")));
   await settled(); await W(600);
-  check(`${game}: handle spin debited the bet once`, (await bal()) !== before, `${before} -> ${await bal()}`);
+  check(`${game}: handle spin settled on the server (balance moved)`, (await bal()) !== before, `${before} -> ${await bal()}`);
   // Handle drag
   await W(400);
   const arm = await p.$(".cab-lever-arm");
