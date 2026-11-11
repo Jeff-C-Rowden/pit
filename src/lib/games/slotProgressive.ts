@@ -10,7 +10,7 @@ import { randInt, newId } from "../rng";
  * - Contribution is taken from the same bet debit (not an extra charge).
  * - All sandbox bets qualify.
  * - Hits are meter/mystery driven (no symbol required for v1).
- * - Main-game line RTP (excl. progressive) targets ~93–95%.
+ * - Exact RTP (rtpMath.ts): base game 89.22% + progressive 5.61–5.83% = 94.83–95.04% total.
  */
 
 export const VS_SYMBOLS = [
@@ -43,9 +43,9 @@ export const VS_PAYTABLE: Record<VsSymbol, [number, number, number]> = {
   PARROT: [28, 100, 400],
   JAGUAR: [20, 80, 240],
   TOUCAN: [14, 48, 140],
-  BANANA: [10, 28, 80],
+  BANANA: [13, 32, 80],
   COCONUT: [8, 20, 48],
-  VINE: [5, 12, 28],
+  VINE: [6, 14, 32],
 };
 
 export const VS_REELS: VsSymbol[][] = [
@@ -73,15 +73,20 @@ export type TierDef = {
   /** Must-hit-by ceiling; null = no MHB (Grand uses mystery only). */
   ceilingCents: number | null;
   contributionBps: number;
-  /** Grand mystery: roughly 1 / mysteryOddsPerSpin chance on each qualifying spin. */
+  /** Grand mystery odds per spin at the $1 coin ($9 bet) reference; the real chance scales with the bet. */
   mysteryOddsPerSpin: number | null;
+  /**
+   * Grand mystery: each spin hits with probability betCents / mysteryCoinInPerHitCents, so every
+   * dollar wagered has the same chance and the seed costs the same share of coin-in at every bet size.
+   */
+  mysteryCoinInPerHitCents: number | null;
 };
 
 export const VS_TIERS: TierDef[] = [
-  { id: "vault-mini", name: "Mini", seedCents: 1_000, ceilingCents: 3_000, contributionBps: 100, mysteryOddsPerSpin: null },
-  { id: "vault-minor", name: "Minor", seedCents: 5_000, ceilingCents: 15_000, contributionBps: 70, mysteryOddsPerSpin: null },
-  { id: "vault-major", name: "Major", seedCents: 25_000, ceilingCents: 100_000, contributionBps: 50, mysteryOddsPerSpin: null },
-  { id: "vault-grand", name: "Grand", seedCents: 250_000, ceilingCents: null, contributionBps: 80, mysteryOddsPerSpin: 35_000 },
+  { id: "vault-mini", name: "Mini", seedCents: 1_000, ceilingCents: 3_000, contributionBps: 100, mysteryOddsPerSpin: null, mysteryCoinInPerHitCents: null },
+  { id: "vault-minor", name: "Minor", seedCents: 5_000, ceilingCents: 15_000, contributionBps: 70, mysteryOddsPerSpin: null, mysteryCoinInPerHitCents: null },
+  { id: "vault-major", name: "Major", seedCents: 25_000, ceilingCents: 100_000, contributionBps: 50, mysteryOddsPerSpin: null, mysteryCoinInPerHitCents: null },
+  { id: "vault-grand", name: "Grand", seedCents: 250_000, ceilingCents: null, contributionBps: 80, mysteryOddsPerSpin: 35_000, mysteryCoinInPerHitCents: 35_000 * 900 },
 ];
 
 export const VS_TOTAL_CONTRIBUTION_BPS = VS_TIERS.reduce((a, t) => a + t.contributionBps, 0); // 300
@@ -143,6 +148,29 @@ export function splitContribution(betCents: number): Record<TierId, number> {
   return out;
 }
 
+/**
+ * Unbiased per-tier split used by real spins: each tier gets floor(bet x bps) cents plus one more
+ * cent with probability equal to the dropped fraction, so every tier receives exactly its
+ * published bps of coin-in on average at every bet size (plain flooring shorted small bets).
+ */
+export function splitContributionUnbiased(betCents: number, pick: (n: number) => number = randInt): Record<TierId, number> {
+  const out = {} as Record<TierId, number>;
+  for (const t of VS_TIERS) {
+    const exact = betCents * t.contributionBps; // in 1/10,000 cent
+    const base = Math.floor(exact / 10_000);
+    const rem = exact - base * 10_000;
+    out[t.id] = base + (rem > 0 && pick(10_000) < rem ? 1 : 0);
+  }
+  return out;
+}
+
+/** Expected cents and fractional-cent probability for a tier at a bet size (matches splitContributionUnbiased). */
+export function tierContributionLaw(betCents: number, t: TierDef): { base: number; pPlusOne: number } {
+  const exact = betCents * t.contributionBps;
+  const base = Math.floor(exact / 10_000);
+  return { base, pPlusOne: (exact - base * 10_000) / 10_000 };
+}
+
 export function contributionCents(betCents: number): number {
   return Math.floor((betCents * VS_TOTAL_CONTRIBUTION_BPS) / 10_000);
 }
@@ -152,8 +180,8 @@ export function spinVaultSpire(coinCents: number) {
     throw new Error("coin size must be an integer between $0.25 and $50.00");
   }
   const betCents = coinCents * VS_LINE_COUNT;
-  const contribByTier = splitContribution(betCents);
-  const contrib = contributionCents(betCents);
+  const contribByTier = splitContributionUnbiased(betCents);
+  const contrib = Object.values(contribByTier).reduce((a, b) => a + b, 0);
   const stops = spinVsStops();
   const grid = windowFromStops(stops);
   const ev = evaluateVsGrid(grid, coinCents);
@@ -233,8 +261,8 @@ export const VAULT_SPIRE_INFO = {
   totalContributionBps: VS_TOTAL_CONTRIBUTION_BPS,
   allBetsQualify: true,
   rtpNote:
-    "Main-game line RTP (excluding progressive) targets ~93–95% from the 20-stop strips. " +
-    "Each spin contributes 3.00% of coin-in (300 bps) across Mini/Minor/Major/Grand meters from the same bet debit. " +
-    "All sandbox bets qualify. Mini/Minor/Major use hidden must-hit-by thresholds; Grand is a rare mystery (~1/35k spins). " +
-    "Demo chips only — not a licensed casino jackpot.",
+    "Exact theoretical RTP 94.8–95.0% depending on coin size: base game 89.2% plus 5.6–5.8% paid back by the four jackpots. " +
+    "Each spin puts exactly 3.00% of the bet (100/70/50/80 bps) into the Mini/Minor/Major/Grand meters from the same bet debit. " +
+    "Mini/Minor/Major must hit by $30 / $150 / $1,000; the Grand is a mystery whose chance grows with your bet (about 1 in 35,000 spins at a $1 coin). " +
+    "Meters move only on real spins. Demo chips only — not a licensed casino jackpot.",
 };

@@ -57,7 +57,7 @@ async function _POST(req: Request) {
       );
 
       const prog = applyProgressiveSpin(
-        { contributionByTier: spin.contributionByTier, userId: user.id },
+        { contributionByTier: spin.contributionByTier, userId: user.id, betCents: spin.betCents },
         db,
       );
       const winCents = spin.lineWinCents + prog.progressiveAwardCents;

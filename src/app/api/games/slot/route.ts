@@ -11,7 +11,7 @@ async function _GET() {
     info: SLOT_INFO,
     paytable: PAYTABLE,
     lines: PAYLINES.length,
-    rtpPublished: "94-96% theoretical RTP, enumerated over the 20-stop strips and checked in tests",
+    rtpPublished: "Exact theoretical RTP 95.53%, enumerated over the 20-stop strips and checked in tests",
   });
 }
 

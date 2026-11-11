@@ -114,35 +114,11 @@ export function ensureAllTiers(db: Database.Database = getDb()): ProgressiveRow[
 }
 
 /**
- * Ambient peer drip so meters climb while idle.
- * Caps just below trigger for MHB tiers (hits resolve only on contributing spins).
- * ~1–3¢ every ~2s across the family, weighted by bps.
+ * Current meters. Meters move only on real qualifying spins: there is no house-funded
+ * "peer drip" (it added unearned money to the pots and inflated RTP with no coin-in).
  */
-export function applyPeerDrip(db: Database.Database = getDb()): ProgressiveRow[] {
-  const rows = ensureAllTiers(db);
-  const now = Date.now();
-  const oldest = Math.min(...rows.map((r) => Date.parse(r.updated_at) || now));
-  const elapsedMs = Math.max(0, now - oldest);
-  const ticks = Math.min(30, Math.floor(elapsedMs / 2000)); // max 30 ticks per call
-  if (ticks <= 0) return rows;
-
-  const nowIso = new Date().toISOString();
-  const totalBps = VS_TIERS.reduce((a, t) => a + t.contributionBps, 0);
-  for (const t of VS_TIERS) {
-    const row = rows.find((r) => r.id === t.id)!;
-    const share = Math.max(1, Math.round((ticks * 2 * t.contributionBps) / totalBps));
-    let next = row.amount_cents + share;
-    if (row.trigger_cents != null) {
-      next = Math.min(next, row.trigger_cents - 1);
-    }
-    if (next < row.amount_cents) next = row.amount_cents;
-    db.prepare(`UPDATE progressive_meters SET amount_cents = ?, updated_at = ? WHERE id = ?`).run(next, nowIso, t.id);
-  }
-  return VS_TIERS.map((t) => db.prepare("SELECT * FROM progressive_meters WHERE id = ?").get(t.id) as ProgressiveRow);
-}
-
 export function getAllProgressives(db: Database.Database = getDb()): ProgressiveRow[] {
-  return applyPeerDrip(db);
+  return ensureAllTiers(db);
 }
 
 export type TierHit = {
@@ -165,7 +141,7 @@ export type ProgressiveSpinResult = {
  * and append a genuine progressive_hits row (never invented).
  */
 export function applyProgressiveSpin(
-  opts: { contributionByTier: Record<TierId, number>; userId?: string | null },
+  opts: { contributionByTier: Record<TierId, number>; userId?: string | null; betCents?: number },
   db: Database.Database = getDb(),
 ): ProgressiveSpinResult {
   ensureAllTiers(db);
@@ -180,8 +156,11 @@ export function applyProgressiveSpin(
     let hit = false;
     if (t.ceilingCents != null && row.trigger_cents != null && afterContrib >= row.trigger_cents) {
       hit = true;
+    } else if (t.mysteryCoinInPerHitCents != null && opts.betCents != null && opts.betCents > 0) {
+      // Mystery roll after contribution: chance proportional to the bet (betCents / coin-in per hit).
+      if (randInt(t.mysteryCoinInPerHitCents) < opts.betCents) hit = true;
     } else if (t.mysteryOddsPerSpin != null && t.mysteryOddsPerSpin > 0) {
-      // Mystery roll after contribution (qualifying spin).
+      // Legacy callers without a bet size: flat per-spin odds.
       if (randInt(t.mysteryOddsPerSpin) === 0) hit = true;
     }
 

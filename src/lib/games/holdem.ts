@@ -148,6 +148,9 @@ export function startHoldem(buttonIsPlayer: boolean): { state: HoldemState; play
   s.pot = s.playerBet + s.houseBet;
   const playerBlind = s.playerBet;
   if (s.toAct === "house") houseAct(s);
+  // The house can fold its small blind before the player acts; settle that hand now
+  // (otherwise it stayed open with nobody to act and the player's blind was stuck).
+  if (s.houseFolded || s.playerFolded) closeIfFolded(s);
   return { state: s, playerBlind };
 }
 
@@ -267,7 +270,7 @@ function applyAction(s: HoldemState, who: "player" | "house", a: PlayerAction): 
     addCommitted(need);
     s.pot += need;
     s.log.push(`${name} call ${need}.`);
-    afterVoluntary(s, who, false);
+    afterVoluntary(s, who, false, true);
     return isP ? extra : 0;
   }
   // bet / raise
@@ -301,7 +304,7 @@ function applyAction(s: HoldemState, who: "player" | "house", a: PlayerAction): 
   return isP ? extra : 0;
 }
 
-function afterVoluntary(s: HoldemState, who: "player" | "house", wasAggro: boolean) {
+function afterVoluntary(s: HoldemState, who: "player" | "house", wasAggro: boolean, wasCall = false) {
   const other = who === "player" ? "house" : "player";
   if (wasAggro) {
     s.toAct = other;
@@ -325,8 +328,9 @@ function afterVoluntary(s: HoldemState, who: "player" | "house", wasAggro: boole
     return;
   }
   if (bothMatched(s)) {
-    // first actor checked, second must act unless second also checked
-    if (who === firstActor(s)) {
+    // First actor checked: the second still acts. A call that matches a bet always closes
+    // the street (previously the first actor's call reopened action, letting the house re-raise forever).
+    if (who === firstActor(s) && !wasCall) {
       s.toAct = other;
     } else {
       nextStreet(s);

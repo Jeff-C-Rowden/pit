@@ -23,14 +23,14 @@ describe("how-to-play coach cards (backlog #5)", () => {
   it("odds figures match what /rules publishes", () => {
     expect(rules).toContain("5.26%");
     expect(TABLE_TIPS.roulette!.odds).toContain("5.26%");
-    expect(rules).toContain("94–96%");
-    expect(TABLE_TIPS.slot!.odds).toContain("94–96%");
+    expect(rules).toContain("95.53%");
+    expect(TABLE_TIPS.slot!.odds).toContain("95.53%");
     expect(rules).toContain("0.5%");
     expect(TABLE_TIPS.blackjack!.odds).toContain("0.5%");
     expect(rules).toContain("1.41%");
     expect(TABLE_TIPS.craps!.odds).toContain("1.41%");
-    expect(rules).toContain("93–95%");
-    expect(TABLE_TIPS.vault!.odds).toContain("93–95%");
+    expect(rules).toContain("89.2%");
+    expect(TABLE_TIPS.vault!.odds).toContain("89.2%");
     expect(rules).toMatch(/No rake/);
   });
   it("card keeps sandbox labeling and a reopen button", () => {

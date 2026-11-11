@@ -439,6 +439,36 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
 
   const comeOut = s.point == null;
 
+  // Numbered come / don't come bets resolve on their own number or a 7 on EVERY roll,
+  // whatever the main point is. Come odds are off on a come-out roll (returned on 7,
+  // returned without a win when the number repeats); lay odds on don't come stay working.
+  {
+    const keepC: ComeBet[] = [];
+    for (const c of s.come) {
+      if (c.point == null) { keepC.push(c); continue; }
+      if (t === 7) {
+        if (comeOut && c.odds) { pay += c.odds; back += c.odds; notes.push("come odds off, returned"); }
+        notes.push(`come ${c.point} loses`);
+      } else if (t === c.point) {
+        pay += c.amount * 2 + (c.odds ? (comeOut ? c.odds : oddsPay(c.point, c.odds, false)) : 0);
+        back += c.amount + (c.odds || 0);
+        notes.push(`come ${c.point} wins`);
+      } else keepC.push(c);
+    }
+    s.come = keepC;
+    const keepD: ComeBet[] = [];
+    for (const c of s.dontCome) {
+      if (c.point == null) { keepD.push(c); continue; }
+      if (t === 7) {
+        pay += c.amount * 2 + (c.odds ? oddsPay(c.point, c.odds, true) : 0); back += c.amount + (c.odds || 0);
+        notes.push(`don't come ${c.point} wins`);
+      } else if (t === c.point) {
+        notes.push(`don't come ${c.point} loses`);
+      } else keepD.push(c);
+    }
+    s.dontCome = keepD;
+  }
+
   if (comeOut) {
     if (t === 7 || t === 11) {
       if (s.pass) { pay += s.pass; notes.push("pass wins 1:1 (bet stays)"); }
@@ -474,21 +504,13 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
         if (s.place[String(n)]) notes.push(`place ${n} loses`);
         s.place[String(n)] = 0;
       }
-      // come numbered lose, don't come numbered win
+      // Numbered come / don't come already settled above; only the come box is left.
       for (const c of s.come) {
-        if (c.point != null) notes.push("come point loses");
-        else {
-          pay += c.amount * 2; back += c.amount;
-          notes.push("come wins 7 (taken down)");
-        }
+        pay += c.amount * 2; back += c.amount;
+        notes.push("come wins 7 (taken down)");
       }
       s.come = [];
-      for (const c of s.dontCome) {
-        if (c.point != null) {
-          pay += c.amount * 2 + (c.odds ? oddsPay(c.point, c.odds, true) : 0); back += c.amount + (c.odds || 0);
-          notes.push("don't come number wins");
-        } else notes.push("don't come loses 7");
-      }
+      for (let i = 0; i < s.dontCome.length; i++) notes.push("don't come loses 7");
       s.dontCome = [];
       s.point = null;
     } else if (t === s.point) {
@@ -498,21 +520,6 @@ export function resolveRoll(s: CrapsState, dice: [number, number]): { payoutCent
         notes.push("pass wins 1:1 (bet stays)");
       }
       if (s.dontPass) { s.dontPass = 0; s.dontPassOdds = 0; notes.push("don't pass loses"); }
-      // come bets on this number win
-      const remainC: ComeBet[] = [];
-      for (const c of s.come) {
-        if (c.point === t) {
-          pay += c.amount * 2 + (c.odds ? oddsPay(c.point, c.odds, false) : 0); back += c.amount + (c.odds || 0);
-          notes.push("come point wins");
-        } else remainC.push(c);
-      }
-      s.come = remainC;
-      const remainD: ComeBet[] = [];
-      for (const c of s.dontCome) {
-        if (c.point === t) notes.push("don't come number loses");
-        else remainD.push(c);
-      }
-      s.dontCome = remainD;
       s.point = null;
       s.passOdds = 0;
       s.dontPassOdds = 0;

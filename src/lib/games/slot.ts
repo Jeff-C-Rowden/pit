@@ -29,7 +29,7 @@ export const PAYTABLE: Record<Symbol, [number, number, number]> = {
 };
 
 /**
- * 20-stop strips, tuned so exact line RTP is ~95.1% at 9 credits.
+ * 20-stop strips; exact line RTP is 95.53% at 9 credits (rtpMath.ts, locked in tests/rtpAudit.test.ts).
  * WILD is scarce; BAR/LAMP fill the rest.
  */
 export const REELS: Symbol[][] = [
@@ -143,5 +143,5 @@ export const SLOT_INFO = {
   rows: 3,
   lines: LINE_COUNT,
   paytable: PAYTABLE,
-  rtpNote: "Published theoretical RTP is computed from the 20-stop strips (target 94–96%).",
+  rtpNote: "Exact theoretical RTP 95.53%, enumerated over all 3.2 million stop combinations of the 20-stop strips.",
 };

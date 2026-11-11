@@ -14,7 +14,7 @@ describe("western reel symbols are art only", () => {
   });
   it("leave the paytables untouched", () => {
     expect(PAYTABLE).toEqual({ WILD: [60, 240, 1200], CROWN: [30, 120, 600], DIAMOND: [24, 96, 300], ACE: [18, 60, 180], CHIP: [12, 30, 96], HORSE: [10, 24, 60], LAMP: [6, 18, 48], BAR: [6, 12, 30] });
-    expect(VS_PAYTABLE).toEqual({ WILD: [50, 200, 800], MONKEY: [40, 160, 500], PARROT: [28, 100, 400], JAGUAR: [20, 80, 240], TOUCAN: [14, 48, 140], BANANA: [10, 28, 80], COCONUT: [8, 20, 48], VINE: [5, 12, 28] });
+    expect(VS_PAYTABLE).toEqual({ WILD: [50, 200, 800], MONKEY: [40, 160, 500], PARROT: [28, 100, 400], JAGUAR: [20, 80, 240], TOUCAN: [14, 48, 140], BANANA: [13, 32, 80], COCONUT: [8, 20, 48], VINE: [6, 14, 32] }); // RTP audit retune (RTP_AUDIT.md)
   });
   it("render original inline SVG with unique labels, wild still says WILD", () => {
     for (const set of [SUNDOWN_ART, RIDGE_ART, BUCKSHOT_ART]) {

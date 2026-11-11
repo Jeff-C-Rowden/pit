@@ -39,7 +39,11 @@ describe("antler ridge progressive model", () => {
     expect(s.grid).toHaveLength(5);
     expect(s.grid.every((col) => col.length === 3)).toBe(true);
     expect(s.betCents).toBe(900);
-    expect(s.contributionCents).toBe(contributionCents(900));
+    // Unbiased rounding: each tier gets floor(bet x bps) or one cent more, never less.
+    const sum = Object.values(s.contributionByTier).reduce((a, b) => a + b, 0);
+    expect(s.contributionCents).toBe(sum);
+    expect(sum).toBeGreaterThanOrEqual(contributionCents(900) - 1);
+    expect(sum).toBeLessThanOrEqual(contributionCents(900) + 3);
   });
 
   it("evaluate pays 5 WILD on center line", () => {
