@@ -8,7 +8,7 @@ import {
   spinVaultSpire,
   publicVsSpin,
   VAULT_SPIRE_INFO,
-  VS_PAYTABLE,
+  VS_DISPLAY_PAYTABLE,
   VS_PAYLINES,
 } from "@/lib/games/slotProgressive";
 import {
@@ -23,7 +23,7 @@ async function _GET() {
   const meters = getAllProgressives();
   return json({
     info: VAULT_SPIRE_INFO,
-    paytable: VS_PAYTABLE,
+    paytable: VS_DISPLAY_PAYTABLE,
     lines: VS_PAYLINES.length,
     meters: publicMeters(meters),
     recentHits: getRecentProgressiveHits(),

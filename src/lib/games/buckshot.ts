@@ -95,14 +95,22 @@ export function publicBuckshotSpin(s: ReturnType<typeof spinBuckshot>) {
 }
 
 /** Exact RTP for a given coin count: total pay over every stop combination / (combos × coins). */
-export function exactBuckshotRtp(coins: number): { rtp: number; hitRate: number; combos: number; totalPay: number } {
+export function exactBuckshotRtp(coins: number): { rtp: number; hitRate: number; winRate: number; sdPerUnit: number; combos: number; totalPay: number } {
   const [a, b, c] = BB_REELS as [BbSymbol[], BbSymbol[], BbSymbol[]];
-  let totalPay = 0, hits = 0, combos = 0;
+  let totalPay = 0, sum2 = 0, hits = 0, wins = 0, combos = 0;
   for (const x of a) for (const y of b) for (const z of c) {
     const p = evaluateBuckshot([x, y, z], coins).pay;
-    totalPay += p; combos++; if (p > 0) hits++;
+    totalPay += p; sum2 += p * p; combos++; if (p > 0) hits++; if (p > coins) wins++;
   }
-  return { rtp: totalPay / (combos * coins), hitRate: hits / combos, combos, totalPay };
+  const mean = totalPay / (combos * coins);
+  return {
+    rtp: mean,
+    hitRate: hits / combos,
+    winRate: wins / combos,
+    sdPerUnit: Math.sqrt(sum2 / combos / (coins * coins) - mean * mean),
+    combos,
+    totalPay,
+  };
 }
 
 const pct = (x: number) => `${(x * 100).toFixed(2)}%`;

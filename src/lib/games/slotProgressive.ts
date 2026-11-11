@@ -48,6 +48,20 @@ export const VS_PAYTABLE: Record<VsSymbol, [number, number, number]> = {
   VINE: [6, 14, 32],
 };
 
+/**
+ * Pay rows that can actually land. WILD sits only on reels 1, 3 and 5, so a
+ * 3/4/5-WILD line can never occur; the 50/200/800 row is hidden from the glass.
+ */
+export const VS_DISPLAY_PAYTABLE: Record<Exclude<VsSymbol, "WILD">, [number, number, number]> = {
+  MONKEY: VS_PAYTABLE.MONKEY,
+  PARROT: VS_PAYTABLE.PARROT,
+  JAGUAR: VS_PAYTABLE.JAGUAR,
+  TOUCAN: VS_PAYTABLE.TOUCAN,
+  BANANA: VS_PAYTABLE.BANANA,
+  COCONUT: VS_PAYTABLE.COCONUT,
+  VINE: VS_PAYTABLE.VINE,
+};
+
 export const VS_REELS: VsSymbol[][] = [
   ["VINE","COCONUT","TOUCAN","VINE","BANANA","PARROT","VINE","COCONUT","JAGUAR","VINE","BANANA","TOUCAN","VINE","COCONUT","PARROT","VINE","TOUCAN","BANANA","VINE","WILD"],
   ["COCONUT","VINE","BANANA","TOUCAN","VINE","COCONUT","PARROT","VINE","BANANA","JAGUAR","VINE","COCONUT","TOUCAN","VINE","BANANA","PARROT","VINE","TOUCAN","COCONUT","MONKEY"],
@@ -248,7 +262,7 @@ export const VAULT_SPIRE_INFO = {
   reels: 5,
   rows: 3,
   lines: VS_LINE_COUNT,
-  paytable: VS_PAYTABLE,
+  paytable: VS_DISPLAY_PAYTABLE,
   progressiveFamily: VS_PROGRESSIVE_FAMILY,
   tiers: VS_TIERS.map((t) => ({
     id: t.id,
@@ -264,5 +278,5 @@ export const VAULT_SPIRE_INFO = {
     "Exact theoretical RTP 94.8–95.0% depending on coin size: base game 89.2% plus 5.6–5.8% paid back by the four jackpots. " +
     "Each spin puts exactly 3.00% of the bet (100/70/50/80 bps) into the Mini/Minor/Major/Grand meters from the same bet debit. " +
     "Mini/Minor/Major must hit by $30 / $150 / $1,000; the Grand is a mystery whose chance grows with your bet (about 1 in 35,000 spins at a $1 coin). " +
-    "Meters move only on real spins. Demo chips only — not a licensed casino jackpot.",
+    "WILD substitutes for any symbol but has no 3/4/5-WILD pay of its own (it cannot land three in a row). Meters move only on real spins. Demo chips only — not a licensed casino jackpot.",
 };

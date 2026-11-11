@@ -73,12 +73,12 @@ export function evalFive(cards: Card[]): Ranked {
   // assign jokers to maximize category
   if (flush && sh) return { cat: 8, kick: [sh], name: sh === 14 ? "royal flush" : "straight flush" };
   const groups = [...m.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0]);
-  // apply jokers to highest count
-  if (jokers && !flush) {
-    if (groups.length) groups[0]![1] += jokers;
+  // Joker is an ace, or a filler for a straight or flush already considered above.
+  // It is not fully wild (joker + a pair of kings is ace-high two kings, not trips).
+  if (jokers) {
+    const ace = groups.find((g) => g[0] === ACE);
+    if (ace) ace[1] += jokers;
     else groups.push([ACE, jokers]);
-  } else if (jokers && flush) {
-    // already handled straight flush; jokers as aces in flush kickers
   }
   groups.sort((a, b) => b[1] - a[1] || b[0] - a[0]);
   const top = groups[0]?.[1] || 0;

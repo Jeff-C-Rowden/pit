@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import BuckshotMachine, { type BuckshotHandle } from "@/components/BuckshotMachine";
 import { OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { BB_DENOMS, BB_MAX_COINS, type BbSymbol } from "@/lib/games/buckshot";
 import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
@@ -127,7 +128,8 @@ export default function BuckshotPage() {
           <div className="slot-page-hero">
             <p className="lede">Classic 3-reel slot</p>
             <h1>Buckshot Bars</h1>
-            <p className="muted">1 payline · play 1–3 coins · exact RTP 94.44% (1–2 coins) / 94.67% (3 coins)</p>
+            <p className="muted">1 payline · play 1–3 coins</p>
+            <MathStrip game="buckshot" variant="hero" />
           </div>
           <FirstVisitTip game="buckshot" />
           {err && <p className="err">{err}</p>}
@@ -222,6 +224,7 @@ export default function BuckshotPage() {
                 </tbody>
               </table>
               <p className="muted">{info.wildNote}</p>
+              <MathStrip game="buckshot" variant="panel" />
               <p className="muted">{info.rtpPublished}</p>
               <p className="muted">Every reel stop is equally likely and the window shows the real strip around the payline. Reels stop left to right on a fixed schedule; tap a reel or press Stop reels to stop early. Sandbox / test chips only.</p>
             </div>

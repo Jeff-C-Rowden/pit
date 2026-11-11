@@ -41,3 +41,21 @@ describe("pai gow", () => {
     void setHands;
   });
 });
+
+describe("joker is ace or straight/flush filler only", () => {
+  it("does not turn a pair of kings into three kings", () => {
+    const hand = evalFive([C(13, "s"), C(13, "h"), C(12, "d"), C(9, "c"), C(1, "s", true)]);
+    expect(hand.name).toBe("pair");
+    expect(hand.kick[0]).toBe(13);
+  });
+  it("still makes five aces with four aces", () => {
+    const five = evalFive([C(1, "s"), C(1, "h"), C(1, "d"), C(1, "c"), C(1, "s", true)]);
+    expect(five.name).toBe("five aces");
+  });
+  it("completes a straight and a flush", () => {
+    const st = evalFive([C(2, "s"), C(3, "h"), C(4, "d"), C(5, "c"), C(1, "s", true)]);
+    expect(st.name).toBe("straight");
+    const fl = evalFive([C(13, "h"), C(11, "h"), C(8, "h"), C(3, "h"), C(1, "s", true)]);
+    expect(fl.name).toBe("flush");
+  });
+});

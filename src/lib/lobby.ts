@@ -1,5 +1,5 @@
 // Lobby helpers: popup-free search and "recently played" (client-side only, no ledger writes).
-export type LobbyGame = { href: string; name: string; meta: string; line: string };
+export type LobbyGame = { href: string; name: string; meta: string; line: string; math?: string };
 
 export const RECENT_KEY = "pit.recentGames.v1";
 export const RECENT_MAX = 3;
@@ -12,7 +12,7 @@ export function filterGames<T extends LobbyGame>(games: T[], query: string): T[]
   const words = norm(query).split(" ").filter(Boolean);
   if (!words.length) return games;
   return games.filter((g) => {
-    const hay = norm(`${g.name} ${g.meta} ${g.line} ${g.href.replace("/", "")}`);
+    const hay = norm(`${g.name} ${g.meta} ${g.line} ${g.math ?? ""} ${g.href.replace("/", "")}`);
     return words.every((w) => hay.includes(w));
   });
 }

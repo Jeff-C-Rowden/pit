@@ -6,7 +6,7 @@ import { REELS, evaluateGrid, LINE_COUNT, PAYTABLE } from "../src/lib/games/slot
 import { VS_REELS, evaluateVsGrid, VS_LINE_COUNT, VS_TIERS, splitContribution, VS_MIN_COIN_CENTS } from "../src/lib/games/slotProgressive";
 import { WHEEL, settleRoulette, RED, BLACK, dozen, column, type RouletteBet, validateBet } from "../src/lib/games/roulette";
 import { newCrapsTable, applyBet, resolveRoll, type CrapsState, type PlaceAction } from "../src/lib/games/craps";
-import { BB_REELS, evaluateBuckshot } from "./snapshots/games/buckshot";
+import { BB_REELS, evaluateBuckshot } from "../src/lib/games/buckshot";
 
 type Stats = { rtp: number; sd: number; hit: number; maxPay: number };
 
@@ -29,10 +29,10 @@ export function enumerate5(reels: string[][], evalGrid: (g: any) => number, line
   return { rtp: mean, sd: Math.sqrt(varr), hit: hits / combos, maxPay: maxPay / lines };
 }
 
-export function gildedExact(reels = REELS as unknown as string[][]) {
+export function sundownExact(reels = REELS as unknown as string[][]) {
   return enumerate5(reels, (g) => evaluateGrid(g as any, 1).winCents, LINE_COUNT);
 }
-export function canopyLineExact(reels = VS_REELS as unknown as string[][]) {
+export function antlerLineExact(reels = VS_REELS as unknown as string[][]) {
   return enumerate5(reels, (g) => evaluateVsGrid(g as any, 1).lineWinCents, VS_LINE_COUNT);
 }
 
@@ -225,8 +225,8 @@ export function buckshotExact(coins: number, reels = BB_REELS as unknown as stri
 if (process.argv[1]?.endsWith("exact.mjs") || process.argv[1]?.endsWith("exact-after.mjs")) {
   const pct = (x: number) => (100 * x).toFixed(4) + "%";
   const out: any = {};
-  out.gilded = gildedExact(); console.log("Gilded Track", out.gilded);
-  out.canopyLine = canopyLineExact(); console.log("Canopy Spire line", out.canopyLine);
+  out.sundown = sundownExact(); console.log("Sundown Trail", out.sundown);
+  out.antlerLine = antlerLineExact(); console.log("Antler Ridge line", out.antlerLine);
   out.progressive = [25, 50, 100, 500, 5000].map(progressiveExact);
   for (const p of out.progressive) console.log("prog coin", p.coinCents, "return", pct(p.progressiveReturn), "contrib", pct(p.contribution), "seed", pct(p.seedFunding), p.tiers.map((t: any) => `${t.tier}:${pct(t.returnPct)} (k=${t.contribCents}, 1/${t.spinsPerHit.toFixed(0)})`).join(" "));
   out.roulette = rouletteExact(); console.log("roulette", JSON.stringify(out.roulette));

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   newCrapsTable, applyBet, resolveRoll, rememberChip, undoLastChip,
   takeRoundSnapshot, repeatShortfall, layoutActions, repeatPlan, lockCurrentLayout,
+  exactAddAmount, friendlyPayoutUnitCents, oddsPayoutUnitCents, placePayoutUnitCents,
 } from "../src/lib/games/craps";
 
 describe("craps", () => {
@@ -180,5 +181,36 @@ describe("craps", () => {
     const plan = repeatPlan(t);
     expect(plan.some((x) => x.type === "come" && x.amount === 1000)).toBe(true);
     expect(t.place["6"]).toBe(600);
+  });
+});
+
+describe("odds and place bets pay in whole cents", () => {
+  it("rejects amounts that would be rounded down", () => {
+    const t = newCrapsTable();
+    t.point = 6; t.pass = 1000;
+    expect(() => applyBet(t, { type: "place", number: 6, amount: 100 })).toThrow(/multiple of 6/);
+    expect(() => applyBet(t, { type: "passOdds", amount: 1 })).toThrow(/multiple of 5/);
+    const five = newCrapsTable(); five.point = 5; five.pass = 1000;
+    expect(() => applyBet(five, { type: "passOdds", amount: 25 })).toThrow(/multiple of 2/);
+    const lay = newCrapsTable(); lay.point = 8; lay.dontPass = 1000;
+    expect(() => applyBet(lay, { type: "dontPassOdds", amount: 100 })).toThrow(/multiple of 6/);
+  });
+  it("accepts exact amounts, including $1.50 on place 6/8", () => {
+    const t = newCrapsTable();
+    t.point = 8; t.pass = 1000;
+    applyBet(t, { type: "place", number: 6, amount: 150 });
+    applyBet(t, { type: "place", number: 8, amount: 600 });
+    applyBet(t, { type: "passOdds", amount: 1000 });
+    expect(t.place["6"]).toBe(150);
+    expect(t.place["8"]).toBe(600);
+    expect(t.passOdds).toBe(1000);
+  });
+  it("snaps a $1 chip on place 6 up to $1.50", () => {
+    expect(placePayoutUnitCents(6)).toBe(6);
+    expect(friendlyPayoutUnitCents(6)).toBe(150);
+    expect(exactAddAmount(150, 0, 100)).toBe(150);
+    expect(exactAddAmount(150, 0, 500)).toBe(600);
+    expect(oddsPayoutUnitCents(5, false)).toBe(2);
+    expect(oddsPayoutUnitCents(8, true)).toBe(6);
   });
 });

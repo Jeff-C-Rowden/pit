@@ -10,6 +10,8 @@ import Shell from "@/components/Shell";
 import Onboarding from "@/components/Onboarding";
 import { api, money } from "@/components/useUser";
 import { filterGames, readRecent } from "@/lib/lobby";
+import { filterByVolatility, type VolFilter } from "@/lib/gameMath";
+import { MathStrip, volAria } from "@/components/VolatilityMeter";
 import { usePauseInfo } from "@/components/PauseStatus";
 import { ExclusionEndedNote } from "@/components/ExclusionReminder";
 import { exclusionNote } from "@/lib/pauseText";
@@ -46,7 +48,7 @@ function relativeHitTime(iso: string): string {
 const GAMES = [
   { href: "/blackjack", level: "Easy to learn", pace: "Steady", name: "Blackjack", meta: "7-spot · six-deck · S17 · BJ 3:2", line: "The pit staple.", accent: "bj" },
   { href: "/buckshot", level: "Easiest", pace: "Fast", name: "Buckshot Bars", meta: "Classic 3 reels · 1 line · 94.44% RTP", line: "Cherries, bars and a horseshoe wild. Play 1 to 3 coins.", accent: "bb", isNew: true },
-  { href: "/slot", level: "Easiest", pace: "Fast", name: "Sundown Trail", meta: "5 reels · 9 lines · published 94–96% RTP", line: "A western video slot with a real paytable.", accent: "slot" },
+  { href: "/slot", level: "Easiest", pace: "Fast", name: "Sundown Trail", meta: "5 reels · 9 lines · exact RTP 95.53%", line: "A western video slot with a real paytable.", accent: "slot" },
   {
     href: "/vault", level: "Easiest", pace: "Fast",
     name: "Antler Ridge",
@@ -253,7 +255,7 @@ type Game = (typeof GAMES)[number] & { isNew?: boolean; progressive?: boolean; c
 function GameCard({ g, size = "grid" }: { g: Game; size?: "grid" | "row" | "tall" }) {
   const ribbon = g.isNew ? "New" : tileRibbon(g);
   return (
-    <Link href={g.href} className={`st-card st-card-${size}${g.accent ? ` accent-${g.accent}` : ""}${g.progressive ? " progressive-card" : ""}`} aria-label={`${g.name}. ${g.line}`}>
+    <Link href={g.href} className={`st-card st-card-${size}${g.accent ? ` accent-${g.accent}` : ""}${g.progressive ? " progressive-card" : ""}`} aria-label={`${g.name}. ${g.line}. ${volAria(g.href)}`}>
       <span className="st-card-art">
         <GameArt kind={g.accent} variant="tile" />
         <span className={`st-ribbon st-ribbon-${ribbon.toLowerCase()}`}>{ribbon}</span>
@@ -263,6 +265,7 @@ function GameCard({ g, size = "grid" }: { g: Game; size?: "grid" | "row" | "tall
       <span className="st-card-info">
         <h2 className="gname">{g.name}</h2>
         <span className="gmeta">{g.meta}</span>
+        <MathStrip game={g.href} variant="lobby" />
       </span>
     </Link>
   );
@@ -290,6 +293,7 @@ function GameRow({ title, games, id }: { title: string; games: Game[]; id?: stri
 
 export default function Floor() {
   const [q, setQ] = useState("");
+  const [vol, setVol] = useState<VolFilter>("all");
   useEffect(() => { try { const v = new URLSearchParams(window.location.search).get("q"); if (v) setQ(v); } catch {} }, []);
   const pause = usePauseInfo();
   const excl = exclusionNote(pause);
@@ -300,7 +304,7 @@ export default function Floor() {
     window.addEventListener("hashchange", sync);
     return () => window.removeEventListener("hashchange", sync);
   }, []);
-  const shown = filterByTab(filterGames(GAMES, q), tab);
+  const shown = filterByVolatility(filterByTab(filterGames(GAMES.map((g) => ({ ...g, math: volAria(g.href) })), q), tab), vol);
   const counts = tabCounts(GAMES);
   const [jp, setJp] = useState(true);
   useEffect(() => { try { setJp(localStorage.getItem("pit.showJackpots") !== "0"); } catch {} }, []);
@@ -354,6 +358,15 @@ export default function Floor() {
                 {LOBBY_TABS.map((t) => <option key={t} value={t}>{TAB_LABEL[t]} ({counts[t]})</option>)}
               </select>
             </label>
+            <label className="st-filter-select">
+              <span className="sr-only">Volatility</span>
+              <select value={vol} onChange={(e) => setVol(e.target.value as VolFilter)} aria-label="Filter by volatility">
+                <option value="all">All volatilities</option>
+                <option value="Low">Low volatility</option>
+                <option value="Medium">Medium volatility</option>
+                <option value="High">High volatility</option>
+              </select>
+            </label>
             <label className="floor-search st-filter-search">
               <span className="sr-only">Search games</span>
               <input
@@ -387,7 +400,7 @@ export default function Floor() {
           <RecentlyPlayed />
           {!shown.length && (
             <p className="muted floor-empty" role="status">
-              No game matches “{q}”. <button type="button" className="linkish" onClick={() => { setQ(""); setTab("all"); }}>Show all games</button>
+              No game matches “{q}”. <button type="button" className="linkish" onClick={() => { setQ(""); setTab("all"); setVol("all"); }}>Show all games</button>
             </p>
           )}
           <div className="st-grid" role="tabpanel" aria-label={TAB_LABEL[tab]}>

@@ -82,7 +82,7 @@ export default function ProgressiveMeterStrip({
   className = "",
 }: {
   meters: MeterPublic[];
-  /** Softer animation during active spins / peer drip */
+  /** Softer animation during active spins */
   quiet?: boolean;
   hitTierIds?: string[];
   /** J4: live reseed moments (real hits only) */

@@ -4,7 +4,7 @@
  * craps value-iterates the real resolveRoll over all 36 dice outcomes. Tolerance ±0.3 pts.
  */
 import { describe, it, expect } from "vitest";
-import { gildedTrackExact, canopyLineExact, canopyTotalExact, canopyProgressiveExact } from "../src/lib/games/rtpMath";
+import { sundownTrailExact, antlerRidgeLineExact, antlerRidgeTotalExact, antlerRidgeProgressiveExact } from "../src/lib/games/rtpMath";
 import { splitContributionUnbiased, VS_TIERS } from "../src/lib/games/slotProgressive";
 import { WHEEL, settleRoulette, validateBet, dozen, column, type RouletteBet } from "../src/lib/games/roulette";
 import { newCrapsTable, applyBet, resolveRoll, type CrapsState } from "../src/lib/games/craps";
@@ -14,28 +14,28 @@ import { CAB_COIN_STEPS } from "../src/lib/cabinet";
 const TOL = 0.003;
 
 describe("slot RTP locks (exact enumeration)", () => {
-  it("Gilded Track is 95.53% (inside the published 94-96%)", () => {
-    const r = gildedTrackExact();
+  it("Sundown Trail is 95.53% (inside the published 94-96%)", () => {
+    const r = sundownTrailExact();
     expect(Math.abs(r.rtp - 0.9553)).toBeLessThanOrEqual(TOL);
     expect(r.rtp).toBeGreaterThanOrEqual(0.94);
     expect(r.rtp).toBeLessThanOrEqual(0.96);
   });
 
-  const line = canopyLineExact().rtp;
-  it("Canopy Spire base game is 89.22% (line pays only)", () => {
-    expect(Math.abs(line - 0.8922)).toBeLessThanOrEqual(TOL);
+  const line = antlerRidgeLineExact();
+  it("Antler Ridge base game is 89.22% (line pays only)", () => {
+    expect(Math.abs(line.rtp - 0.8922)).toBeLessThanOrEqual(TOL);
   });
 
-  it("Canopy Spire total RTP is 95.0% ± 0.3 at every cabinet coin step", () => {
+  it("Antler Ridge total RTP is 95.0% ± 0.3 at every cabinet coin step", () => {
     for (const coin of CAB_COIN_STEPS) {
-      const t = canopyTotalExact(coin, line);
+      const t = antlerRidgeTotalExact(coin, line);
       expect(Math.abs(t.totalRtp - 0.95), `coin ${coin}: ${t.totalRtp}`).toBeLessThanOrEqual(TOL);
       expect(Math.abs(t.contribution - 0.03)).toBeLessThan(1e-9); // exactly the published 3.00%
     }
   });
 
   it("Grand seed funding no longer depends on bet size (chance scales with the bet)", () => {
-    const g = (c: number) => canopyProgressiveExact(c).tiers.find((t) => t.tier === "Grand")!.returnPct;
+    const g = (c: number) => antlerRidgeProgressiveExact(c).tiers.find((t) => t.tier === "Grand")!.returnPct;
     expect(Math.abs(g(25) - g(5000))).toBeLessThan(1e-9);
   });
 

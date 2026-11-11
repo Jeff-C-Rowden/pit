@@ -41,3 +41,63 @@ export function coveredBy(b: { kind: string; numbers?: string[]; which?: number 
     default: return b.numbers ?? [];
   }
 }
+
+
+/** Canonical key for a set of felt numbers (order-independent). */
+export function insideKey(numbers: readonly string[]): string {
+  return [...numbers].map(String).sort((a, b) => {
+    const rank = (x: string) => (x === "0" ? -2 : x === "00" ? -1 : Number(x));
+    return rank(a) - rank(b);
+  }).join("-");
+}
+
+function add(set: Set<string>, nums: (string | number)[]) {
+  set.add(insideKey(nums.map(String)));
+}
+
+/** Every legal split, street, corner and six-line on an American layout, including 0/00 neighbors. */
+export function legalInsideKeys(): Record<"split" | "street" | "corner" | "six", Set<string>> {
+  const split = new Set<string>();
+  const street = new Set<string>();
+  const corner = new Set<string>();
+  const six = new Set<string>();
+  const rows = FELT_ROWS;
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 12; c++) {
+      const n = rows[r]![c]!;
+      if (c < 11) add(split, [n, rows[r]![c + 1]!]); // along the number line (3-6, 1-4, …)
+      if (r < 2) add(split, [n, rows[r + 1]![c]!]); // up/down a column (3-2, 2-1, …)
+    }
+  }
+  // Zero splits offered on a standard American felt (0–00 is not a split here).
+  add(split, ["0", "1"]);
+  add(split, ["0", "2"]);
+  add(split, ["00", "2"]);
+  add(split, ["00", "3"]);
+
+  for (let c = 0; c < 12; c++) {
+    const streetNums = [rows[2]![c]!, rows[1]![c]!, rows[0]![c]!];
+    add(street, streetNums);
+    if (c < 11) {
+      const next = [rows[2]![c + 1]!, rows[1]![c + 1]!, rows[0]![c + 1]!];
+      add(six, [...streetNums, ...next]);
+      add(corner, [rows[2]![c]!, rows[1]![c]!, rows[2]![c + 1]!, rows[1]![c + 1]!]);
+      add(corner, [rows[1]![c]!, rows[0]![c]!, rows[1]![c + 1]!, rows[0]![c + 1]!]);
+    }
+  }
+  // Zero streets (the two-number first-column baskets, not the five-number bet).
+  add(street, ["0", "1", "2"]);
+  add(street, ["00", "2", "3"]);
+
+  return { split, street, corner, six };
+}
+
+const LEGAL_INSIDE = legalInsideKeys();
+
+/** True when the numbers are a real adjacent inside bet on the American felt. */
+export function isAdjacentInside(kind: "split" | "street" | "corner" | "six", numbers: readonly string[]): boolean {
+  if (new Set(numbers).size !== numbers.length) return false;
+  const expect = kind === "split" ? 2 : kind === "street" ? 3 : kind === "corner" ? 4 : 6;
+  if (numbers.length !== expect) return false;
+  return LEGAL_INSIDE[kind].has(insideKey(numbers));
+}

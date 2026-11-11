@@ -88,7 +88,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
       <ResultsStrip game="paigow" refreshKey={`${game?.id}-${game?.phase}`} />
       {err && <p className="err">{err}</p>}
       <div className="marquee-felt felt-table seated felt-rect bj-table pg-table">
-<TableNameplate name="Pai Gow Poker" sub="High · Low" />
+<TableNameplate name="Pai Gow Poker" sub="High · Low" game="paigow" />
         <DealerBooth>
           <div className="muted">Dealer high / low</div>
           {!(game?.dealerHigh || game?.dealerCards || []).length && (

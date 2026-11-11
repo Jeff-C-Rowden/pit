@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import SlotMachine, { type SlotMachineHandle, type WinCell } from "@/components/SlotMachine";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { PAYLINES, type Symbol } from "@/lib/games/slot";
 import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
@@ -166,7 +167,8 @@ export default function SlotPage() {
           <div className="slot-page-hero">
             <p className="lede">Western video slot</p>
             <h1>Sundown Trail</h1>
-            <p className="muted">9 lines · 5 reels · published RTP 94–96%</p>
+            <p className="muted">9 lines · 5 reels</p>
+            <MathStrip game="slot" variant="hero" />
           </div>
           <FirstVisitTip game="slot" />
           {err && <p className="err">{err}</p>}
@@ -183,7 +185,7 @@ export default function SlotPage() {
               turbo={turboOn}
               winLines={winLines}
               topper={<CabinetTopper title="Sundown Trail" kicker="9 lines · 5 reels" info={<>Lines played: 9 · Coin {money(coin)} · Spins pay left to right</>} />}
-              belly={<CabinetBelly pays={pays} note={<>Pays left to right on 9 lines · × coin · {info?.rtpPublished ? "published RTP 94–96%" : "Sandbox"}</>} />}
+              belly={<CabinetBelly pays={pays} note={<>Pays left to right on 9 lines · × coin · {info?.rtpPublished ? "RTP 95.53%" : "Sandbox"}</>} />}
               deck={
                 <CabinetDeck
                   creditCents={u.balanceCents}
@@ -260,6 +262,7 @@ export default function SlotPage() {
                   ))}
                 </tbody>
               </table>
+              <MathStrip game="slot" variant="panel" />
               <p className="muted">{info.rtpPublished}</p>
             </div>
           )}

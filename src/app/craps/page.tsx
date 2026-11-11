@@ -9,6 +9,7 @@ import { api, money, useUser } from "@/components/useUser";
 import { usePausedLabel } from "@/components/PauseStatus";
 import LiveAnnounce from "@/components/LiveAnnounce";
 import { paidPhrase } from "@/lib/paidPhrase";
+import { exactAddAmount, friendlyPayoutUnitCents, oddsPayoutUnitCents, placePayoutUnitCents } from "@/lib/games/craps";
 
 const LAST_KEY = "pit-cr-last";
 
@@ -97,6 +98,20 @@ export default function CrapsPage() {
   }
   useEffect(() => { load().catch((e) => setErr(e.message)); }, []);
 
+  function sizedChip(b: Record<string, unknown>): number {
+    if (b.type === "place") {
+      const n = Number(b.number);
+      const existing = Number(table?.place?.[String(n)] || 0);
+      return exactAddAmount(friendlyPayoutUnitCents(placePayoutUnitCents(n)), existing, chip);
+    }
+    if (b.type === "passOdds" && table?.point) {
+      return exactAddAmount(friendlyPayoutUnitCents(oddsPayoutUnitCents(table.point, false)), Number(table.passOdds || 0), chip);
+    }
+    if (b.type === "dontPassOdds" && table?.point) {
+      return exactAddAmount(friendlyPayoutUnitCents(oddsPayoutUnitCents(table.point, true)), Number(table.dontPassOdds || 0), chip);
+    }
+    return chip;
+  }
   async function bet(b: Record<string, unknown>) {
     setErr(null);
     setRepeatNote(null);
@@ -104,7 +119,7 @@ export default function CrapsPage() {
     try {
       const d = await api("/api/games/craps", {
         method: "POST",
-        body: JSON.stringify({ action: "bet", bet: { ...b, amount: chip }, idempotencyKey: crypto.randomUUID() }),
+        body: JSON.stringify({ action: "bet", bet: { ...b, amount: sizedChip(b) }, idempotencyKey: crypto.randomUUID() }),
       });
       setTable(d.table);
       if (d.user) setUser(d.user);
@@ -253,7 +268,7 @@ export default function CrapsPage() {
             <OutcomeBanner push title="PUSH" subtitle={repeatNote} />
           )}
           <div className="marquee-felt felt-table felt-rect craps-felt">
-<TableNameplate name="Craps" sub="Pass line pays 1 to 1" />
+<TableNameplate name="Craps" sub="Pass line pays 1 to 1" game="craps" />
             <div className="cr-place-grid">
               {[4,5,6,8,9,10].map((n) => (
                 <button type="button" key={n} className={z(!!table?.place?.[String(n)])} aria-pressed={(table?.place?.[String(n)] || 0) > 0} aria-label={`${`Place ${n}`}, ${(table?.place?.[String(n)] || 0) > 0 ? money(table?.place?.[String(n)] || 0) + " on" : "no bet"}. Tap to add ${money(chip)}`} onClick={() => bet({ type: "place", number: n })}>

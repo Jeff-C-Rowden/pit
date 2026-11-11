@@ -25,8 +25,8 @@ describe("how-to-play coach cards (backlog #5)", () => {
     expect(TABLE_TIPS.roulette!.odds).toContain("5.26%");
     expect(rules).toContain("95.53%");
     expect(TABLE_TIPS.slot!.odds).toContain("95.53%");
-    expect(rules).toContain("0.5%");
-    expect(TABLE_TIPS.blackjack!.odds).toContain("0.5%");
+    expect(rules).toContain("0.4%");
+    expect(TABLE_TIPS.blackjack!.odds).toContain("0.4%");
     expect(rules).toContain("1.41%");
     expect(TABLE_TIPS.craps!.odds).toContain("1.41%");
     expect(rules).toContain("89.2%");

@@ -306,6 +306,33 @@ a { color: var(--st-link); }
 }
 .st-card:hover .st-card-play, .st-card:focus-visible .st-card-play { opacity: 1; }
 
+/* ---------- Volatility meter (original, maroon well / gold fill) ---------- */
+.vol-meter {
+  display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; margin-right: 6px;
+  padding: 1px 3px 1px 2px; border-radius: 2px; background: #2a1010; box-shadow: inset 0 0 0 1px #5b1c1b;
+  vertical-align: middle; flex: 0 0 auto;
+}
+.vol-bar { width: 3px; border-radius: 1px 1px 0 0; background: #4a2424; }
+.vol-bar:nth-child(1) { height: 5px; }
+.vol-bar:nth-child(2) { height: 8px; }
+.vol-bar:nth-child(3) { height: 12px; }
+.vol-bar.on { background: linear-gradient(#ffe28a, #c9a227); }
+.math-strip {
+  display: flex; align-items: flex-start; gap: 0; margin: 4px 0 0; font: 600 11.5px/1.35 var(--st-body);
+  color: #f0d9a8; letter-spacing: 0;
+}
+.math-strip-lobby { margin-top: 4px; font-size: 11px; line-height: 1.3; color: #efd7a0; }
+.math-strip-hero, .math-strip-panel { margin: 6px 0 0; font-size: 13px; color: #f3e0b0; }
+.math-strip-panel { padding: 6px 8px; border-radius: 4px; background: rgba(32, 12, 13, .45); border: 1px solid #5b1c1b; }
+.bet-vol-table { width: 100%; border-collapse: collapse; margin: 10px 0 14px; font-size: 13.5px; }
+.bet-vol-table th, .bet-vol-table td { text-align: left; padding: 4px 8px 4px 0; border-bottom: 1px solid #5b1c1b; }
+.bet-vol-table th { color: #f0d9a8; font-weight: 700; }
+.bet-vol-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+/* Keep the lobby math line visible on narrow phones (gmeta hides below 380px). */
+@media (max-width: 380px) {
+  .st-card .math-strip-lobby { display: flex; }
+}
+
 /* ---------- Jackpot desk ---------- */
 .st-jackpots .vault-lobby-prog { padding: 12px; border-radius: 6px; background: var(--st-bg-deep); border: 1px solid #5b1c1b; }
 .st-jackpots .vault-lobby-meters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }

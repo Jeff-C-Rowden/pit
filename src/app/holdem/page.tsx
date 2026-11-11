@@ -121,7 +121,7 @@ function HoldemFelt({ u, game, err, busy, act, flyPot, live, bb, toCall, minRais
       <ResultsStrip game="holdem" refreshKey={`${game?.id}-${live}`} />
       {err && <p className="err" style={{ textAlign: "center" }}>{err}</p>}
       <div className="marquee-felt felt-table seated holdem-table">
-<TableNameplate name="Texas Hold'em" sub="No limit · $1 / $2" />
+<TableNameplate name="Texas Hold'em" sub="No limit · $1 / $2" game="holdem" />
         {flyPot != null && won && (
           <div className="pot-fly">
             <ChipStack cents={flyPot} size={32} showTotal={false} winning quiet />

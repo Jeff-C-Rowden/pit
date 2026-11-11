@@ -129,7 +129,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
       <LiveAnnounce text={game?.phase === "settled" && result !== "hand closed" ? `Hand over: ${result}. ${(game.payoutCents || 0) > 0 ? `Paid ${money(game.payoutCents)}.` : "No payout."}` : null} />
       <ResultsStrip game="blackjack" refreshKey={`${game?.id}-${game?.phase}`} />
       <div className="marquee-felt felt-table seated bj-table">
-<TableNameplate name="Blackjack" sub="Pays 3 to 2" />
+<TableNameplate name="Blackjack" sub="Pays 3 to 2" game="blackjack" />
         <DealerBooth>
           {game?.dealer?.value ? <div className="muted">Showing {game.dealer.value.total}</div> : null}
           <div className="hand">

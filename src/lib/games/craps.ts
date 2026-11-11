@@ -40,6 +40,53 @@ export type CrapsState = {
 
 const PLACE_NUMS = [4, 5, 6, 8, 9, 10];
 
+/**
+ * Smallest stake (cents) that pays this odds/place bet in whole cents, so flooring
+ * never adds a hidden edge. Pass/come odds: 5/9 need even cents (3:2), 6/8 multiples
+ * of 5¢ (6:5). Lay odds: 4/10 even (1:2), 5/9 multiples of 3¢ (2:3), 6/8 of 6¢ (5:6).
+ * Place 4/10 and 5/9: multiples of 5¢; place 6/8: multiples of 6¢.
+ */
+export function oddsPayoutUnitCents(point: number, isLay: boolean): number {
+  if (!isLay) {
+    if (point === 5 || point === 9) return 2;
+    if (point === 6 || point === 8) return 5;
+    return 1;
+  }
+  if (point === 4 || point === 10) return 2;
+  if (point === 5 || point === 9) return 3;
+  if (point === 6 || point === 8) return 6;
+  return 1;
+}
+
+export function placePayoutUnitCents(n: number): number {
+  if (n === 4 || n === 10 || n === 5 || n === 9) return 5;
+  if (n === 6 || n === 8) return 6;
+  return 1;
+}
+
+/** A chip-friendly multiple of the payout unit ($1.50 for /3 and /6, $1 otherwise). */
+export function friendlyPayoutUnitCents(unit: number): number {
+  if (unit <= 1 || unit === 2 || unit === 5) return 100;
+  if (unit === 3 || unit === 6) return 150;
+  return unit;
+}
+
+/** Amount to add so existing+added is a multiple of unit and at least existing+chip. */
+export function exactAddAmount(unit: number, existing: number, chip: number): number {
+  if (chip <= 0) return chip;
+  if (unit <= 1) return chip;
+  const target = existing + chip;
+  const total = Math.ceil(target / unit) * unit;
+  return total - existing;
+}
+
+function assertExactPayout(unit: number, total: number, label: string) {
+  if (unit > 1 && total % unit !== 0) {
+    const example = unit === 2 ? "$0.50" : unit === 5 ? "$1.00" : unit === 3 || unit === 6 ? "$1.50" : `${unit}¢`;
+    throw new Error(`${label} must be a multiple of ${unit}¢ so they pay in whole cents (try ${example})`);
+  }
+}
+
 export function newCrapsTable(): CrapsState {
   return {
     id: newId(),
@@ -94,26 +141,31 @@ export function applyBet(s: CrapsState, a: PlaceAction): number {
       return amt;
     case "passOdds":
       if (s.point == null || s.pass <= 0) throw new Error("no pass bet to take odds");
+      assertExactPayout(oddsPayoutUnitCents(s.point, false), s.passOdds + amt, "Pass odds");
       s.passOdds += amt;
       return amt;
     case "dontPassOdds":
       if (s.point == null || s.dontPass <= 0) throw new Error("no don't pass to lay odds");
+      assertExactPayout(oddsPayoutUnitCents(s.point, true), s.dontPassOdds + amt, "Don't pass odds");
       s.dontPassOdds += amt;
       return amt;
     case "comeOdds": {
       const c = s.come.find((x) => x.id === a.id);
       if (!c || c.point == null) throw new Error("come odds only on numbered come");
+      assertExactPayout(oddsPayoutUnitCents(c.point, false), c.odds + amt, "Come odds");
       c.odds += amt;
       return amt;
     }
     case "dontComeOdds": {
       const c = s.dontCome.find((x) => x.id === a.id);
       if (!c || c.point == null) throw new Error("don't come odds only on numbered bet");
+      assertExactPayout(oddsPayoutUnitCents(c.point, true), c.odds + amt, "Don't come odds");
       c.odds += amt;
       return amt;
     }
     case "place":
       if (!PLACE_NUMS.includes(a.number)) throw new Error("invalid place number");
+      assertExactPayout(placePayoutUnitCents(a.number), (s.place[String(a.number)] || 0) + amt, `Place ${a.number}`);
       s.place[String(a.number)] = (s.place[String(a.number)] || 0) + amt;
       return amt;
     case "hard":

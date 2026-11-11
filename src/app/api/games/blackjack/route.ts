@@ -25,7 +25,7 @@ async function _GET(req: Request) {
         insurance: "2:1 when dealer shows ace",
         split: "once",
         double: "any two-card hand",
-        houseEdge: "~0.5% with basic strategy (S17, 3:2, DAS, 6-deck)",
+        houseEdge: "about 0.4% with basic strategy (S17, 3:2, DAS, 6-deck)",
       },
     });
   });

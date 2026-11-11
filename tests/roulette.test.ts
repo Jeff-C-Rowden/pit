@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { settleRoulette, WHEEL } from "../src/lib/games/roulette";
+import { settleRoulette, WHEEL, validateBet } from "../src/lib/games/roulette";
+import { isAdjacentInside } from "../src/lib/games/rouletteFelt";
 
 describe("american roulette", () => {
   it("has 38 pockets including 0 and 00", () => {
@@ -81,3 +82,28 @@ describe("american felt layout", () => {
     const r = settleRoulette([{ kind: "corner", numbers: ["1","2","4","5"], amountCents: 100 }], "3");
     expect(r.payoutCents).toBe(0);
   });
+
+describe("inside bets must cover real adjacent numbers", () => {
+  it("accepts the usual felt bets, including 0/00 neighbours", () => {
+    for (const b of [
+      { kind: "split" as const, numbers: ["17", "20"] },
+      { kind: "split" as const, numbers: ["1", "2"] },
+      { kind: "split" as const, numbers: ["0", "1"] },
+      { kind: "split" as const, numbers: ["00", "3"] },
+      { kind: "street" as const, numbers: ["1", "2", "3"] },
+      { kind: "corner" as const, numbers: ["1", "2", "4", "5"] },
+      { kind: "six" as const, numbers: ["1", "2", "3", "4", "5", "6"] },
+    ]) {
+      expect(isAdjacentInside(b.kind, b.numbers)).toBe(true);
+      expect(() => validateBet({ ...b, amountCents: 100 })).not.toThrow();
+    }
+  });
+  it("rejects duplicates, non-adjacent numbers and 0-00 as a split", () => {
+    expect(() => validateBet({ kind: "split", numbers: ["1", "1"], amountCents: 100 })).toThrow(/invalid split/);
+    expect(() => validateBet({ kind: "split", numbers: ["1", "5"], amountCents: 100 })).toThrow(/invalid split/);
+    expect(() => validateBet({ kind: "split", numbers: ["0", "00"], amountCents: 100 })).toThrow(/invalid split/);
+    expect(() => validateBet({ kind: "street", numbers: ["1", "2", "4"], amountCents: 100 })).toThrow(/invalid street/);
+    expect(() => validateBet({ kind: "corner", numbers: ["1", "2", "3", "4"], amountCents: 100 })).toThrow(/invalid corner/);
+    expect(() => validateBet({ kind: "six", numbers: ["1", "2", "3", "4", "5", "8"], amountCents: 100 })).toThrow(/invalid six/);
+  });
+});

@@ -2,11 +2,13 @@
 
 Jeff's ask: "all the machines need a payout percentage approximately like a real casino."
 
-**Scope.** Every Pit game on `origin/main` at `780429e`. Buckshot Bars is not on origin yet. It is
-audited from a snapshot of the uncommitted WIP file in the main checkout
-(`audit/snapshots/games/buckshot.ts`).
+**Scope.** Every Pit game. Rebased onto origin/main after the Red Stag restyle (Gilded Track →
+Sundown Trail, Canopy Spire → Antler Ridge, Buckshot Bars committed). `audit/exact.ts` now reads
+the committed `src/lib/games/buckshot.ts` strips (14,976 combinations): 94.444% at 1–2 coins,
+94.667% at 3 coins, confirming the earlier snapshot. Historical tables below still use the names
+from the original audit day; the shipped games are Sundown Trail, Antler Ridge and Buckshot Bars.
 
-**Branch.** `rtp-audit`, in the worktree `/workspace/pit-rtp-audit`. Not merged and not deployed.
+**Branch.** `rtp-audit`, in the worktree `/workspace/pit-rtp-audit`.
 
 ## How the numbers were made
 
@@ -139,28 +141,26 @@ for this audit:
      spins.
    - The craps edge list is spelled out.
 
-### Proposed, not prototyped
+### Shipped on merge (after the restyle)
 
-9. **Pai Gow.**
-   - Make the joker semi-wild to match /rules: ace, or straight or flush filler only (`evalFive`,
-     `counts`).
-   - Show the edge: "about 2.9%", or ≈ 2.7% after the joker fix.
-10. **Hold'em.** Heads-up NLHE against a banked bot has no house edge. The bot is beatable by a
-    simple heuristic, and stacks are unbounded. Pick one:
-    - (a) Turn it into a fixed-paytable banked game, Ultimate Texas Hold'em or Casino Hold'em style,
-      at ≈ 2.2% edge.
-    - (b) Keep it as a skill game with a published 5% rake capped at $3, plus a table stack cap such
-      as 100 BB.
-11. **Blackjack display.** "About 0.4%" instead of "roughly 0.5%". The current figure is
-    conservative, not wrong.
-12. **Canopy Spire WILD row.** WILD sits only on reels 1, 3 and 5, so a 3+ WILD line can never
-    occur. The 50/200/800 WILD row on the belly glass can never pay, which is misleading. Hide that
-    row, or put one WILD on reel 2 and retune.
-13. **Craps small chips.** Enforce chip multiples for odds and place bets (5/9 odds even, 6/8 place
-    multiples of 6¢, lay multiples of the payout ratio), or say "pays are rounded down to the cent".
-14. **Roulette validation.** Inside bets (`split`, `street`, `corner`, `six`) accept any numbers,
-    including duplicates and non-adjacent ones. This can only *lower* the player's return (for
-    example ["1","1"] as a split), but the server should enforce adjacency.
+9. **Pai Gow.** The joker is now an ace, or a straight/flush filler, matching /rules (`evalFive`).
+   Joker + a pair of kings is ace-high two kings, not trips. House-way vs house-way Monte Carlo
+   (2M hands) gives an edge of **2.85% ± 0.11** (95% CI); the UI says "about 2.9%". Our simplified
+   house way is a little worse than the Foxwoods 2.72% norm. Hold'em rake/format was left for Jeff.
+10. **Hold'em.** The two settlement bugs stay fixed. Rake and format are unchanged (Jeff decides).
+11. **Blackjack display.** "About 0.4%" everywhere it used to say "roughly 0.5%" / "~0.5%".
+12. **Antler Ridge WILD row.** Hidden from the belly glass and paytable (`VS_DISPLAY_PAYTABLE`).
+    WILD still substitutes; it simply has no 3/4/5-WILD pay of its own because it cannot land three
+    in a row. Math and RTP are unchanged (~95% including jackpots).
+13. **Craps small chips.** Odds and place bets are only accepted in amounts that pay in whole cents.
+    The felt snaps a $1 chip on place 6/8 (and awkward lay odds) up to $1.50.
+14. **Roulette validation.** `split` / `street` / `corner` / `six` must be real adjacent numbers on
+    the American felt (including 0-1, 0-2, 00-2, 00-3). Duplicates and 0-00 splits are rejected.
+15. **Volatility labels.** Every lobby tile and in-game info panel shows a computed line
+    (SD per $1: Low < 3, Medium 3–8, High > 8) plus a small original 3-bar gold-on-maroon meter.
+    Antler Ridge is "Medium · jackpots included". Roulette and craps list volatility per bet on
+    /rules and the in-game odds table. The lobby can be filtered by volatility. Nothing says a
+    win is due.
 
 ## Hit frequency, volatility and lobby display
 
@@ -210,8 +210,8 @@ Updated existing tests:
 
 - `coachMarks` now checks the new exact display strings.
 - `progressive` now checks the unbiased contribution range instead of the floor.
-- `dragonSymbols` now checks the new Canopy paytable. The restyle deletes this file, so on merge
-  resolve by keeping the deletion.
+- `westernSymbols` now checks the retuned Antler Ridge paytable. The restyle deleted
+  `dragonSymbols.test.ts`; that deletion was kept.
 
 ## Merge notes
 
@@ -220,5 +220,5 @@ Updated existing tests:
   app files touched. No UI components were changed.
 - `src/app/vault/page.tsx` still has a "Peer drip poll" comment. The poll is harmless without the
   drip, but it can be slowed down or removed in the restyle.
-- Buckshot Bars needs no change. If its WIP strips change before merge, rerun
-  `audit/exact.ts` (5 s).
+- Buckshot Bars needed no math change. Re-ran `audit/exact.ts` against the committed strips:
+  94.444% (1–2 coins) / 94.667% (3 coins) over 14,976 combinations.

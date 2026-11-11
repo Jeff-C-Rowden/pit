@@ -8,6 +8,7 @@ import HitHistoryStrip from "@/components/HitHistory";
 import ProgressiveMeterStrip, { type MeterPublic, useReseedMoments } from "@/components/ProgressiveMeter";
 import { momentsFromNewHits, momentsFromSpinHits } from "@/lib/reseedMoment";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { VS_PAYLINES, VS_TOTAL_CONTRIBUTION_BPS, type VsSymbol } from "@/lib/games/slotProgressive";
 import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
@@ -161,7 +162,7 @@ export default function VaultPage() {
       .catch((e) => setErr(e.message));
   }, [takeHits]);
 
-  // Peer drip poll — calm 2.5s ticks while idle
+  // Meter poll — calm 2.5s ticks while idle (meters move only on real spins)
   useEffect(() => {
     if (spinning || busy || jackpotModal) return;
     const t = window.setInterval(refreshMeters, 2500);
@@ -299,6 +300,7 @@ export default function VaultPage() {
             <div className="vault-title-block">
               <p className="lede">Frontier progressive video slot</p>
               <h1>Antler Ridge</h1>
+              <MathStrip game="vault" variant="hero" />
             </div>
             <div className="vault-badges">
               <span className="sandbox-chip">Sandbox</span>
@@ -437,6 +439,7 @@ export default function VaultPage() {
                 {infoSheet === "game" ? (
                   <>
                     <h3>Antler Ridge</h3>
+                    <MathStrip game="vault" variant="panel" />
                     <p className="muted">{info?.rtpPublished || info?.info?.rtpNote}</p>
                     <h4>Paytable (× coin)</h4>
                     <table className="paytable">

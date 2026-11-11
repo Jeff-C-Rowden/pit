@@ -6,12 +6,12 @@
 import { REELS, evaluateGrid, LINE_COUNT } from "./slot";
 import { VS_REELS, VS_TIERS, VS_LINE_COUNT, evaluateVsGrid, tierContributionLaw, type TierDef } from "./slotProgressive";
 
-export type SlotExact = { rtp: number; hitRate: number; sdPerSpin: number };
+export type SlotExact = { rtp: number; hitRate: number; winRate: number; sdPerSpin: number };
 
 function enumerate5(reels: readonly (readonly string[])[], payCredits: (grid: string[][]) => number, lines: number): SlotExact {
   const windows = reels.map((strip) => strip.map((_, stop) => [0, 1, 2].map((row) => strip[(stop + row) % strip.length]!)));
   const len = reels.map((r) => r.length);
-  let sum = 0, sum2 = 0, hits = 0, combos = 0;
+  let sum = 0, sum2 = 0, hits = 0, wins = 0, combos = 0;
   const g: string[][] = [[], [], [], [], []];
   for (let a = 0; a < len[0]!; a++) { g[0] = windows[0]![a]!;
     for (let b = 0; b < len[1]!; b++) { g[1] = windows[1]![b]!;
@@ -19,20 +19,21 @@ function enumerate5(reels: readonly (readonly string[])[], payCredits: (grid: st
         for (let d = 0; d < len[3]!; d++) { g[3] = windows[3]![d]!;
           for (let e = 0; e < len[4]!; e++) { g[4] = windows[4]![e]!;
             const p = payCredits(g);
-            sum += p; sum2 += p * p; combos++; if (p > 0) hits++;
+            sum += p; sum2 += p * p; combos++; if (p > 0) hits++; if (p > lines) wins++;
           } } } } }
   const mean = sum / combos / lines;
-  return { rtp: mean, hitRate: hits / combos, sdPerSpin: Math.sqrt(sum2 / combos / (lines * lines) - mean * mean) };
+  return { rtp: mean, hitRate: hits / combos, winRate: wins / combos, sdPerSpin: Math.sqrt(sum2 / combos / (lines * lines) - mean * mean) };
 }
 
-/** Gilded Track: exact RTP over all 20^5 stop tuples, 9-line bet. */
-export function gildedTrackExact(): SlotExact {
+/** Sundown Trail: exact RTP over all 20^5 stop tuples, 9-line bet. */
+export function sundownTrailExact(): SlotExact {
   return enumerate5(REELS, (g) => evaluateGrid(g as never, 1).winCents, LINE_COUNT);
 }
 
-/** Canopy Spire base game (line pays only, excludes progressive awards). */
-export function canopyLineExact(): SlotExact {
-  return enumerate5(VS_REELS, (g) => evaluateVsGrid(g as never, 1).lineWinCents, VS_LINE_COUNT);
+/** Antler Ridge base game (line pays only, excludes progressive awards). */
+let antlerLineCache: SlotExact | undefined;
+export function antlerRidgeLineExact(): SlotExact {
+  return (antlerLineCache ??= enumerate5(VS_REELS, (g) => evaluateVsGrid(g as never, 1).lineWinCents, VS_LINE_COUNT));
 }
 
 export type TierReturn = { tier: string; contribPct: number; returnPct: number; seedFundingPct: number; spinsPerHit: number };
@@ -65,7 +66,7 @@ export function tierReturn(t: TierDef, betCents: number): TierReturn {
   return { tier: t.name, contribPct: eK / betCents, returnPct: (eK + t.seedCents * p) / betCents, seedFundingPct: (t.seedCents * p) / betCents, spinsPerHit: 1 / p };
 }
 
-export function canopyProgressiveExact(coinCents: number) {
+export function antlerRidgeProgressiveExact(coinCents: number) {
   const bet = coinCents * VS_LINE_COUNT;
   const tiers = VS_TIERS.map((t) => tierReturn(t, bet));
   return {
@@ -76,8 +77,21 @@ export function canopyProgressiveExact(coinCents: number) {
   };
 }
 
-/** Canopy Spire total RTP at a coin size: base line RTP + long-run progressive return. */
-export function canopyTotalExact(coinCents: number, line = canopyLineExact().rtp) {
-  const prog = canopyProgressiveExact(coinCents);
-  return { ...prog, lineRtp: line, totalRtp: line + prog.progressiveReturn };
+/** Antler Ridge total RTP at a coin size: base line RTP + long-run progressive return. */
+export function antlerRidgeTotalExact(coinCents: number, line: SlotExact | number = antlerRidgeLineExact()) {
+  const lineRtp = typeof line === "number" ? line : line.rtp;
+  const lineSd = typeof line === "number" ? antlerRidgeLineExact().sdPerSpin : line.sdPerSpin;
+  const prog = antlerRidgeProgressiveExact(coinCents);
+  // Jackpot SD per $1 bet, treating each tier as a rare award independent of the line pays.
+  let ev = 0, ev2 = 0;
+  for (const t of prog.tiers) {
+    const p = 1 / t.spinsPerHit;
+    const awardPerUnit = t.returnPct * t.spinsPerHit; // E[award] / bet
+    ev += p * awardPerUnit;
+    ev2 += p * awardPerUnit * awardPerUnit;
+  }
+  const sdProg = Math.sqrt(Math.max(0, ev2 - ev * ev));
+  const sdPerUnit = Math.sqrt(lineSd * lineSd + sdProg * sdProg);
+  return { ...prog, lineRtp, totalRtp: lineRtp + prog.progressiveReturn, sdPerUnit };
 }
+

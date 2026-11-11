@@ -3,6 +3,7 @@ import TableNameplate from "@/components/TableNameplate";
 import PauseStatus from "@/components/PauseStatus";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { pocketColor, coveredBy } from "@/lib/games/rouletteFelt";
+import { ROULETTE_BET_MATH } from "@/lib/gameMath";
 import { previewBets } from "@/lib/games/roulettePreview";
 import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
@@ -30,12 +31,6 @@ const FELTS: { id: Felt; label: string; sw: string }[] = [
 const HINT_KEY = "pit-rl-hint-v1";
 const CHIPS = [25, 100, 500, 1000, 2500];
 const HISTORY_N = 20;
-
-const ODDS: [string, string, number, number][] = [
-  ["Straight up", "35:1", 1, 5.26], ["Split", "17:1", 2, 5.26], ["Street", "11:1", 3, 5.26], ["Corner", "8:1", 4, 5.26],
-["Six line", "5:1", 6, 5.26], ["Dozen / Column", "2:1", 12, 5.26],
-  ["Red/Black, Even/Odd, 1-18/19-36", "1:1", 18, 5.26],
-];
 
 function HistoryStrip({ pockets }: { pockets: string[] }) {
   return (
@@ -82,12 +77,12 @@ function OddsPanel() {
     <details className="rl-odds panel">
       <summary>Odds &amp; payouts · house edge 5.26% on every bet</summary>
       <table>
-        <thead><tr><th>Bet</th><th className="num">Pays</th><th className="num">Win chance</th><th className="num">House edge</th></tr></thead>
-        <tbody>{ODDS.map(([name, pay, n, edge]) => (
-          <tr key={name}><td>{name}</td><td className="num">{pay}</td><td className="num">{n}/38 · {((n / 38) * 100).toFixed(2)}%</td><td className="num">{edge.toFixed(2)}%</td></tr>
+        <thead><tr><th>Bet</th><th className="num">Pays</th><th className="num">House edge</th><th>Volatility</th></tr></thead>
+        <tbody>{ROULETTE_BET_MATH.map((r) => (
+          <tr key={r.label}><td>{r.label}</td><td className="num">{r.payout}</td><td className="num">{r.edgePct.toFixed(2)}%</td><td>{r.volatility}</td></tr>
         ))}</tbody>
       </table>
-      <p className="muted">American wheel: 38 pockets (1-36, 0, 00). Results come from the server's RNG; the animation only shows the result. Sandbox chips only, no real money. 21+.</p>
+      <p className="muted">American wheel: 38 pockets (1-36, 0, 00). Volatility is the long-run spread of results for that bet, not a hint that a hit is due. Results come from the server&apos;s RNG; the animation only shows the result. Sandbox chips only, no real money. 21+.</p>
     </details>
   );
 }
@@ -402,7 +397,7 @@ export default function RoulettePage() {
               </div>
             </div>
             <div className="marquee-felt rl-felt-wrap" ref={feltRef}>
-<TableNameplate name="Roulette" sub="Double zero · 38 pockets" />
+<TableNameplate name="Roulette" sub="Double zero · 38 pockets" game="roulette" />
               <div className="rl-betbar">
                 <button type="button" className="rl-lacq" onClick={() => { setBets([]); setRemoveMode(false); }} disabled={busy || !bets.length}>Clear all bets</button>
                 <button type="button" className="rl-lacq" onClick={repeat} disabled={busy || !!bets.length || !lastStake.length}>Rebet</button>

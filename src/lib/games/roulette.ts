@@ -1,4 +1,5 @@
 import { randInt, newId } from "../rng";
+import { isAdjacentInside } from "./rouletteFelt";
 
 export const WHEEL: string[] = [
   "0", "28", "9", "26", "30", "11", "7", "20", "32", "17", "5", "22", "34", "15", "3", "24", "36", "13", "1",
@@ -53,11 +54,11 @@ export function validateBet(b: RouletteBet): void {
   const n = b.numbers;
   const ok = (pred: boolean) => { if (!pred) throw new Error(`invalid ${k} bet`); };
   if (k === "straight") ok(n.length === 1 && WHEEL.includes(n[0]!));
-  else if (k === "split") ok(n.length === 2 && n.every((x) => WHEEL.includes(x)) && !(n.includes("0") && n.includes("00")));
-  else if (k === "street") ok(n.length === 3);
-  else if (k === "corner") ok(n.length === 4);
+  else if (k === "split") ok(isAdjacentInside("split", n));
+  else if (k === "street") ok(isAdjacentInside("street", n));
+  else if (k === "corner") ok(isAdjacentInside("corner", n));
   else if (k === "five") throw new Error("the 0-00 (five-number) bet is not offered at this table");
-  else if (k === "six") ok(n.length === 6);
+  else if (k === "six") ok(isAdjacentInside("six", n));
   else if (k === "dozen") ok(n.length === 12);
   else if (k === "column") ok(n.length === 12);
   else if (k === "red") { b.numbers = [...RED]; }
