@@ -142,17 +142,26 @@
   background: transparent !important; box-shadow: inset 0 0 0 1px var(--rl-line) !important;
   font-family: var(--rd-display, Georgia, serif); font-style: italic; color: #fff8e8 !important; text-shadow: 0 1px 2px rgba(0,0,0,.6) !important;
 }
-.rl-felt-wrap .rl-cloth .rl-cell.n::before, .rl-felt-wrap .rl-cloth .rl-cell.green::before {
-  content: ""; position: absolute; left: 50%; top: 50%; width: 64%; height: 78%; transform: translate(-50%, -50%);
-  border-radius: 50%; z-index: -1;
-  box-shadow: inset 0 -3px 6px rgba(0,0,0,.45), inset 0 2px 3px rgba(255,255,255,.18), 0 1px 2px rgba(0,0,0,.4);
+/* Oval pip painted as layered background (highlight + body + rim shadow), no pseudo-element,
+   so chips and the dolly always sit on top of it */
+.rl-felt-wrap .rl-cloth .rl-cell.n, .rl-felt-wrap .rl-cloth .rl-cell.green { font-style: normal; font-weight: 800; }
+.rl-felt-wrap .rl-cloth .rl-cell.red {
+  background:
+    radial-gradient(ellipse 22% 26% at 42% 36%, rgba(255,255,255,.22), transparent 100%),
+    radial-gradient(ellipse 32% 39% at 50% 50%, #d0242e 0 70%, #8a0a12 92%, rgba(0,0,0,.35) 97%, transparent 100%) !important;
 }
-.rl-felt-wrap .rl-cloth .rl-cell.n, .rl-felt-wrap .rl-cloth .rl-cell.green { isolation: isolate; font-style: normal; font-weight: 800; }
-.rl-felt-wrap .rl-cloth .rl-cell.red::before { background: radial-gradient(ellipse at 40% 30%, #e0303a, #9a0c14 70%, #6a0710); }
-.rl-felt-wrap .rl-cloth .rl-cell.black::before { background: radial-gradient(ellipse at 40% 30%, #3a3a3a, #0e0e0e 70%, #000); }
-.rl-felt-wrap .rl-cloth .rl-cell.green::before { width: 56%; height: 70%; background: radial-gradient(ellipse at 40% 30%, #2ac070, #0c7a3e 70%, #064020); }
-.rl-felt-wrap .rl-cloth .rl-cell.hit::before { box-shadow: 0 0 0 3px #fff3b0, 0 0 16px 4px rgba(255,200,60,.85); }
-.rl-felt-wrap .rl-cloth .rl-cell.covered { background: rgba(255,240,180,.16) !important; }
+.rl-felt-wrap .rl-cloth .rl-cell.black {
+  background:
+    radial-gradient(ellipse 22% 26% at 42% 36%, rgba(255,255,255,.16), transparent 100%),
+    radial-gradient(ellipse 32% 39% at 50% 50%, #262626 0 70%, #050505 92%, rgba(0,0,0,.35) 97%, transparent 100%) !important;
+}
+.rl-felt-wrap .rl-cloth .rl-cell.green {
+  background:
+    radial-gradient(ellipse 20% 24% at 42% 36%, rgba(255,255,255,.22), transparent 100%),
+    radial-gradient(ellipse 30% 36% at 50% 50%, #1fb066 0 70%, #075a2c 92%, rgba(0,0,0,.35) 97%, transparent 100%) !important;
+}
+.rl-felt-wrap .rl-cloth .rl-cell.hit { box-shadow: inset 0 0 0 1px var(--rl-line), inset 0 0 22px rgba(255,210,90,.75) !important; }
+.rl-felt-wrap .rl-cloth .rl-cell.covered { box-shadow: inset 0 0 0 1px var(--rl-line), inset 0 0 0 100px rgba(255,240,180,.16) !important; }
 .rl-felt-wrap .rl-cloth .rl-cell.e-red .rl-diamond, .rl-felt-wrap .rl-cloth .rl-cell.e-black .rl-diamond { font-size: 26px; font-style: normal; filter: drop-shadow(0 2px 2px rgba(0,0,0,.5)); }
 
 /* ---------- Chips on the felt: raised stacks, lift-and-drop, sweep ---------- */
