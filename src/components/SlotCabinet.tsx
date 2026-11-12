@@ -11,7 +11,9 @@ import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, ty
 import Link from "next/link";
 import { autoNext, autoStopText, CAB_AUTO_SPINS, leverFires, leverTravel, ledText, paylineTabs } from "@/lib/cabinet";
 import { playChip, setSoundOn, soundOn } from "@/lib/feel";
+import type { PeekBet, PeekGame } from "@/lib/symbolPeek";
 import WinLineOverlay from "./WinLineOverlay";
+import { GameInfoButton, SymbolPeekLayer } from "./SymbolPeek";
 import type { WinShow } from "@/lib/winShow";
 
 /* ---------------- bulbs ---------------- */
@@ -44,12 +46,15 @@ function SoundPill() {
   );
 }
 
-export function CabinetTopper({ title, kicker, emblem, info, children }: { title: string; kicker?: string; emblem?: ReactNode; info?: ReactNode; children?: ReactNode }) {
+export function CabinetTopper({ title, kicker, emblem, info, infoGame, children }: { title: string; kicker?: string; emblem?: ReactNode; info?: ReactNode; infoGame?: PeekGame; children?: ReactNode }) {
   return (
     <div className="cab-topper">
       <div className="cab-topbar">
         <Link href="/floor" className="cab-pill cab-lobby">LOBBY</Link>
-        <SoundPill />
+        <span className="cab-topbar-right">
+          {infoGame && <GameInfoButton game={infoGame} />}
+          <SoundPill />
+        </span>
       </div>
       <div className="cab-sign">
         <BulbRow n={14} side="t" />
@@ -392,6 +397,8 @@ export function CabinetChrome({
   kick,
   singleLine,
   side,
+  peekGame,
+  peekBet,
   children,
 }: {
   /** One centre payline: show a PAYLINE arrow tab instead of numbered tabs. */
@@ -415,9 +422,13 @@ export function CabinetChrome({
   winShows?: WinShow[];
   windowLabel: string;
   kick: string[];
+  /** S2: long-press / hover / click a stopped symbol for pays at the current bet. */
+  peekGame?: PeekGame;
+  peekBet?: PeekBet;
   children: ReactNode;
 }) {
   const after = settled && !spinning;
+  const peekRootRef = useRef<HTMLDivElement>(null);
   const g = after ? glow : 0;
   const lit = new Set(after ? (winLines ?? []).map((l) => l + 1) : []);
   const tabs = (side: "left" | "right") => (
@@ -442,7 +453,7 @@ export function CabinetChrome({
           <span className="cab-strip cab-strip-l" aria-hidden><i /><i /><i /><i /><i /><i /><i /></span>
           <div className={`cab-bezel${singleLine ? " single" : ""}${side ? " has-side" : ""}`}>
             {singleLine ? <span className={`cab-payline-tab${lit.size ? " lit" : ""}`} aria-hidden>Payline</span> : tabs("left")}
-            <div className="slot-window cab-window" role="img" aria-label={windowLabel}>
+            <div className="slot-window cab-window" role="group" aria-label={windowLabel} ref={peekRootRef}>
               {children}
               <span className="cab-drum" aria-hidden />
               <span className="cab-payline" aria-hidden />
@@ -463,6 +474,9 @@ export function CabinetChrome({
           ))}
         </div>
       </div>
+      {peekGame && peekBet && (
+        <SymbolPeekLayer game={peekGame} bet={peekBet} active={after} rootRef={peekRootRef} />
+      )}
     </div>
   );
 }

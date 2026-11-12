@@ -3,6 +3,7 @@
 import { createContext, forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { PAYLINES, SYMBOLS, type Symbol } from "@/lib/games/slot";
 import type { WinShow } from "@/lib/winShow";
+import { peekTileProps, type PeekBet, type PeekGame } from "@/lib/symbolPeek";
 import { CabinetChrome, CabinetTopper } from "./SlotCabinet";
 import { slotBlurCycleMs, slotLandPlan, slotReelOffset, shouldReelBounce, SLOT_BOUNCE_PX, SLOT_SETTLE_MS_NORMAL, SLOT_SETTLE_MS_TURBO } from "@/lib/slotFeel";
 import { playThunk, reducedMotion } from "@/lib/feel";
@@ -48,10 +49,12 @@ function SymTile({
   sym,
   spinning,
   win,
+  peekable = false,
 }: {
   sym: Symbol;
   spinning?: boolean;
   win?: boolean;
+  peekable?: boolean;
 }) {
   const SYM_H = useContext(SymHCtx);
   const art = SYM_ART[sym] ?? SYM_ART.BAR;
@@ -60,7 +63,7 @@ function SymTile({
     <div
       className={`sym tone-${art.tone}${spinning ? " spinning" : ""}${win ? " win" : ""}`}
       style={{ height: SYM_H }}
-      aria-label={art.label}
+      {...peekTileProps(sym, art.label, !!peekable && !spinning)}
     >
       <span className="sym-face">
         <span className="sym-icon" aria-hidden>
@@ -268,6 +271,7 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
               sym={sym}
               spinning={blur}
               win={win}
+              peekable={settled && !blur && strip.length === 3}
             />
           );
         })}
@@ -315,8 +319,10 @@ const SlotMachine = forwardRef<
     lever?: ReactNode;
     /** 0-based winning lines from the server result; lit after settle only. */
     winLines?: number[];
+    peekGame?: PeekGame;
+    peekBet?: PeekBet;
   }
->(function SlotMachine({ grid, spinning, winCells, winShows, onSpinComplete, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines }, ref) {
+>(function SlotMachine({ grid, spinning, winCells, winShows, onSpinComplete, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines, peekGame, peekBet }, ref) {
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
   const [settled, setSettled] = useState(true);
@@ -395,6 +401,8 @@ const SlotMachine = forwardRef<
         winLines={winLines}
         windowLabel="Sundown Trail reels"
         kick={["9 lines", "5 reels", "Sandbox / test chips"]}
+        peekGame={peekGame}
+        peekBet={peekBet}
       >
         {reels}
       </CabinetChrome>

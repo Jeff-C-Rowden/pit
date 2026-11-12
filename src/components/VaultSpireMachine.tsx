@@ -14,6 +14,7 @@ import {
 } from "react";
 import { VS_PAYLINES, VS_SYMBOLS, type VsSymbol } from "@/lib/games/slotProgressive";
 import type { WinShow } from "@/lib/winShow";
+import { peekTileProps, type PeekBet, type PeekGame } from "@/lib/symbolPeek";
 import { CabinetChrome, CabinetTopper } from "./SlotCabinet";
 import { slotBlurCycleMs, slotLandPlan, slotReelOffset, shouldReelBounce, SLOT_BOUNCE_PX, SLOT_SETTLE_MS_NORMAL, SLOT_SETTLE_MS_TURBO } from "@/lib/slotFeel";
 import { playThunk, reducedMotion } from "@/lib/feel";
@@ -58,10 +59,12 @@ function SymTile({
   sym,
   spinning,
   win,
+  peekable = false,
 }: {
   sym: VsSymbol;
   spinning?: boolean;
   win?: boolean;
+  peekable?: boolean;
 }) {
   const SYM_H = useContext(SymHCtx);
   const art = VS_SYM_ART[sym] ?? VS_SYM_ART.VINE;
@@ -70,7 +73,7 @@ function SymTile({
     <div
       className={`sym tone-${art.tone}${spinning ? " spinning" : ""}${win ? " win" : ""}`}
       style={{ height: SYM_H }}
-      aria-label={art.label}
+      {...peekTileProps(sym, art.label, !!peekable && !spinning)}
     >
       <span className="sym-face">
         <span className="sym-icon" aria-hidden>
@@ -262,7 +265,7 @@ function Reel({ index, final, spinning, settled, winRows, spinGen, stopAllTick, 
         {strip.map((sym, i) => {
           const win = settled && !blur && strip.length === VISIBLE && winRows.has(i);
           return (
-            <SymTile key={`${spinGen}-${i}-${sym}-${strip.length}`} sym={sym} spinning={blur} win={win} />
+            <SymTile key={`${spinGen}-${i}-${sym}-${strip.length}`} sym={sym} spinning={blur} win={win} peekable={settled && !blur && strip.length === 3} />
           );
         })}
       </div>
@@ -327,8 +330,10 @@ const VaultSpireMachine = forwardRef<
     lever?: ReactNode;
     /** 0-based winning lines from the server result; lit after settle only. */
     winLines?: number[];
+    peekGame?: PeekGame;
+    peekBet?: PeekBet;
   }
->(function VaultSpireMachine({ grid, spinning, winCells, winShows, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines }, ref) {
+>(function VaultSpireMachine({ grid, spinning, winCells, winShows, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines, peekGame, peekBet }, ref) {
   const t = { ...DEFAULT_THEME, ...theme, kickLabels: theme?.kickLabels ?? DEFAULT_THEME.kickLabels };
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
@@ -422,6 +427,8 @@ const VaultSpireMachine = forwardRef<
         winLines={winLines}
         windowLabel={`${t.title} reels`}
         kick={t.kickLabels}
+        peekGame={peekGame}
+        peekBet={peekBet}
       >
         {reels}
       </CabinetChrome>

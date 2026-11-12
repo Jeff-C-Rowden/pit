@@ -9,6 +9,7 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "re
 import { BB_REELS, type BbSymbol } from "@/lib/games/buckshot";
 import { BUCKSHOT_ART } from "./WesternSymbols";
 import type { WinShow } from "@/lib/winShow";
+import { peekTileProps, type PeekBet, type PeekGame } from "@/lib/symbolPeek";
 import { CabinetChrome } from "./SlotCabinet";
 import { slotStaggerStops, SLOT_BOUNCE_PX, SLOT_SETTLE_MS_NORMAL, SLOT_SETTLE_MS_TURBO } from "@/lib/slotFeel";
 import { playThunk } from "@/lib/feel";
@@ -22,11 +23,11 @@ export function buckshotStopSchedule(turbo: boolean, reduced: boolean): number[]
   return slotStaggerStops(turbo ? 250 : 700, 3);
 }
 
-function Cell({ sym, h }: { sym: BbSymbol; h: number }) {
+function Cell({ sym, h, peekable = false }: { sym: BbSymbol; h: number; peekable?: boolean }) {
   const a = BUCKSHOT_ART[sym];
   const I = a.Svg;
   return (
-    <div className={`sym bb-cell tone-${a.tone}`} style={{ height: h }} aria-label={a.label}>
+    <div className={`sym bb-cell tone-${a.tone}`} style={{ height: h }} {...peekTileProps(sym, a.label, peekable)}>
       <span className="sym-face"><span className="sym-icon" aria-hidden><I /></span></span>
     </div>
   );
@@ -58,10 +59,12 @@ type Props = {
   deck: ReactNode;
   lever?: ReactNode;
   side?: ReactNode;
+  peekGame?: PeekGame;
+  peekBet?: PeekBet;
 };
 
 const BuckshotMachine = forwardRef<BuckshotHandle, Props>(function BuckshotMachine(
-  { window: win, spinning, turbo, reduced, onSpinComplete, glow, glowLive, won, winShows, topper, deck, lever, side },
+  { window: win, spinning, turbo, reduced, onSpinComplete, glow, glowLive, won, winShows, topper, deck, lever, side, peekGame, peekBet },
   ref,
 ) {
   const h = useSymH();
@@ -136,22 +139,15 @@ const BuckshotMachine = forwardRef<BuckshotHandle, Props>(function BuckshotMachi
       kick={["1 payline", "3 reels", "Sandbox / test chips"]}
       singleLine
       side={side}
+      peekGame={peekGame}
+      peekBet={peekBet}
     >
       <div className="bb-reels" style={{ ["--bb-h" as string]: `${h}px` }}>
         {[0, 1, 2].map((r) => {
           const moving = spinning && !stopped[r];
           const strip = BB_REELS[r]!;
           const cells = moving ? [...strip, ...strip] : (spinning && win ? win[r]! : shown.current[r]!);
-          return (
-            <button
-              key={r}
-              type="button"
-              className={`reel bb-reel${moving ? " moving" : ""}${won && settled ? " win" : ""}`}
-              onClick={() => stopOne(r)}
-              aria-label={moving ? `Stop reel ${r + 1}` : `Reel ${r + 1}`}
-              title={moving && win ? "Tap to stop" : undefined}
-              disabled={!moving}
-            >
+          const stripEl = (
               <span
                 className={`bb-strip${moving ? " spin" : slammed ? "" : " settle"}`}
                 style={{
@@ -160,9 +156,27 @@ const BuckshotMachine = forwardRef<BuckshotHandle, Props>(function BuckshotMachi
                   ...(moving ? { ["--bb-n" as string]: strip.length } : {}),
                 }}
               >
-                {cells.map((s, i) => <Cell key={i} sym={s} h={h} />)}
+                {cells.map((s, i) => <Cell key={i} sym={s} h={h} peekable={settled && !moving} />)}
               </span>
+          );
+          const reelClass = `reel bb-reel${moving ? " moving" : ""}${won && settled ? " win" : ""}`;
+          // Only a button while this reel can be tapped to stop — a settled
+          // <button> would wrap the peekable symbols and block keyboard / click.
+          return moving ? (
+            <button
+              key={r}
+              type="button"
+              className={reelClass}
+              onClick={() => stopOne(r)}
+              aria-label={`Stop reel ${r + 1}`}
+              title={win ? "Tap to stop" : undefined}
+            >
+              {stripEl}
             </button>
+          ) : (
+            <div key={r} className={reelClass} aria-label={`Reel ${r + 1}`}>
+              {stripEl}
+            </div>
           );
         })}
       </div>

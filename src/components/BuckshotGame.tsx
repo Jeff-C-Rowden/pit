@@ -156,6 +156,8 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
           <div className="slot-stage-wrap">
             <BuckshotMachine
               ref={machineRef}
+              peekGame={variant}
+              peekBet={{ coinCents: denom, coins, denomCents: denom }}
               window={win}
               spinning={spinning}
               turbo={turboOn}
@@ -170,6 +172,7 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
                   title={V.title}
                   kicker={V.kicker}
                   emblem={<AntlerShoe size={40} />}
+                  infoGame={variant}
                   info={<>Coins played: {coins} of {BB_MAX_COINS} · Spins this visit: {spins} · Horseshoe is wild</>}
                 />
               }

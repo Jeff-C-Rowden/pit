@@ -322,6 +322,8 @@ export default function VaultPage() {
             <div className="vault-stage-wrap">
               <VaultSpireMachine
                 ref={machineRef}
+              peekGame="vault"
+              peekBet={{ coinCents: coin }}
                 grid={grid}
                 spinning={spinning}
                 winCells={winCells}
@@ -332,7 +334,7 @@ export default function VaultPage() {
                 turbo={turboOn}
                 winLines={winLines}
                 topper={
-                  <CabinetTopper title="Antler Ridge" kicker="Progressive · 9 lines" info={<>All bets qualify · Coin {money(coin)} × 9 lines · 3% of each bet feeds the pots</>}>
+                  <CabinetTopper title="Antler Ridge" kicker="Progressive · 9 lines" infoGame="vault" info={<>All bets qualify · Coin {money(coin)} × 9 lines · 3% of each bet feeds the pots</>}>
                     <ProgressiveMeterStrip
                       meters={meters}
                       quiet={spinning || busy}

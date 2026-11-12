@@ -355,6 +355,8 @@ export default function CloverPage() {
               )}
               <CloverMachine
                 ref={machineRef}
+              peekGame="clover"
+              peekBet={{ coinCents: coin }}
                 grid={grid}
                 spinning={spinning}
                 winCells={winCells}
@@ -367,7 +369,7 @@ export default function CloverPage() {
                 trigger={reduced ? null : trigger}
                 freeMode={phase === "fs"}
                 expandReels={expandReels}
-                topper={<CabinetTopper title="Kettle of Clover" kicker="Rainbow Wheel · Free spins · 10 lines" info={<>Rainbows on reels 1, 3 &amp; 5 = Rainbow Wheel · 3+ kettles = free spins with expanding clovers · Coin {money(coin)} × {CL_BET_COINS} lines</>} />}
+                topper={<CabinetTopper title="Kettle of Clover" kicker="Rainbow Wheel · Free spins · 10 lines" infoGame="clover" info={<>Rainbows on reels 1, 3 &amp; 5 = Rainbow Wheel · 3+ kettles = free spins with expanding clovers · Coin {money(coin)} × {CL_BET_COINS} lines</>} />}
                 belly={<CabinetBelly pays={pays} note={<>5 of a kind × coin · wheel up to 250× bet · RTP {(CLOVER_MATH.rtp * 100).toFixed(2)}% incl. features</>} />}
                 deck={
                   <CabinetDeck

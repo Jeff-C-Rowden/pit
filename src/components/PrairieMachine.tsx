@@ -14,6 +14,7 @@ import {
 } from "react";
 import { coinLabel, type PrSymbol } from "@/lib/games/prairie";
 import type { WinShow } from "@/lib/winShow";
+import { peekTileProps, type PeekBet, type PeekGame } from "@/lib/symbolPeek";
 import { CabinetChrome, CabinetTopper } from "./SlotCabinet";
 import { slotBlurCycleMs, slotLandPlan, slotReelOffset, shouldReelBounce, SLOT_BOUNCE_PX, SLOT_SETTLE_MS_NORMAL, SLOT_SETTLE_MS_TURBO } from "@/lib/slotFeel";
 import { playThunk, reducedMotion } from "@/lib/feel";
@@ -63,12 +64,14 @@ function SymTile({
   spinning,
   win,
   coinX,
+  peekable = false,
 }: {
   sym: PrSymbol;
   spinning?: boolean;
   win?: boolean;
   /** Coin value (x bet) printed on a landed COIN. */
   coinX?: number | null;
+  peekable?: boolean;
 }) {
   const SYM_H = useContext(SymHCtx);
   const art = PR_SYM_ART[sym] ?? PR_SYM_ART.J;
@@ -77,7 +80,7 @@ function SymTile({
     <div
       className={`sym tone-${art.tone}${spinning ? " spinning" : ""}${win ? " win" : ""}`}
       style={{ height: SYM_H }}
-      aria-label={art.label}
+      {...peekTileProps(sym, art.label, !!peekable && !spinning)}
     >
       <span className="sym-face">
         <span className="sym-icon" aria-hidden>
@@ -273,7 +276,7 @@ function Reel({ index, final, spinning, settled, winRows, coins, spinGen, stopAl
         {strip.map((sym, i) => {
           const win = settled && !blur && strip.length === VISIBLE && winRows.has(i);
           return (
-            <SymTile key={`${spinGen}-${i}-${sym}-${strip.length}`} sym={sym} spinning={blur} win={win} coinX={!blur && landed && strip.length === VISIBLE && sym === "COIN" ? coins?.[i] ?? null : null} />
+            <SymTile key={`${spinGen}-${i}-${sym}-${strip.length}`} sym={sym} spinning={blur} win={win} coinX={!blur && landed && strip.length === VISIBLE && sym === "COIN" ? coins?.[i] ?? null : null} peekable={settled && !blur && strip.length === VISIBLE} />
           );
         })}
       </div>
@@ -344,8 +347,10 @@ const PrairieMachine = forwardRef<
     trigger?: "fs" | "hold" | null;
     /** Free-spins mode skin. */
     freeMode?: boolean;
+    peekGame?: PeekGame;
+    peekBet?: PeekBet;
   }
->(function PrairieMachine({ grid, spinning, winCells, winShows, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, coins = null, hold, trigger = null, freeMode = false }, ref) {
+>(function PrairieMachine({ grid, spinning, winCells, winShows, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, coins = null, hold, trigger = null, freeMode = false, peekGame, peekBet }, ref) {
   const t = { ...DEFAULT_THEME, ...theme, kickLabels: theme?.kickLabels ?? DEFAULT_THEME.kickLabels };
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
@@ -446,6 +451,8 @@ const PrairieMachine = forwardRef<
         winShows={winShows}
         windowLabel={`${t.title} reels`}
         kick={t.kickLabels}
+        peekGame={peekGame}
+        peekBet={peekBet}
       >
         {hold ?? reels}
       </CabinetChrome>

@@ -190,6 +190,8 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
           <div className="slot-stage-wrap">
             <SlotMachine
               ref={machineRef}
+              peekGame="slot"
+              peekBet={{ coinCents: coin }}
               grid={grid}
               spinning={spinning}
               winCells={winCells}
@@ -199,7 +201,7 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
               glowLive={feelLive}
               turbo={turboOn}
               winLines={winLines}
-              topper={<CabinetTopper title="Sundown Trail" kicker="9 lines · 5 reels" info={<>Lines played: 9 · Coin {money(coin)} · Spins pay left to right</>} />}
+              topper={<CabinetTopper title="Sundown Trail" kicker="9 lines · 5 reels" infoGame="slot" info={<>Lines played: 9 · Coin {money(coin)} · Spins pay left to right</>} />}
               belly={<CabinetBelly pays={pays} note={<>Pays left to right on 9 lines · × coin · {info?.rtpPublished ? "RTP 95.53%" : "Sandbox"}</>} />}
               deck={
                 <CabinetDeck

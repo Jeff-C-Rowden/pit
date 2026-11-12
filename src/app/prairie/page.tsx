@@ -414,6 +414,8 @@ export default function PrairiePage() {
               )}
               <PrairieMachine
                 ref={machineRef}
+              peekGame="prairie"
+              peekBet={{ coinCents: coin }}
                 grid={grid}
                 coins={coins}
                 spinning={spinning}
@@ -426,7 +428,7 @@ export default function PrairiePage() {
                 trigger={reduced ? null : trigger}
                 freeMode={phase === "fs"}
                 hold={phase === "hold" && spin?.hold ? <HoldBoard hold={spin.hold} step={holdStep} betCents={spin.betCents} /> : undefined}
-                topper={<CabinetTopper title="Thunderhoof Prairie" kicker="243 ways · Free spins · Hold & Spin" info={<>3+ storm clouds = free spins with 2×/3× wilds · {PR_HS_TRIGGER}+ coins = Hold &amp; Spin · Coin {money(coin)} × {PR_BET_COINS}</>} />}
+                topper={<CabinetTopper title="Thunderhoof Prairie" kicker="243 ways · Free spins · Hold & Spin" infoGame="prairie" info={<>3+ storm clouds = free spins with 2×/3× wilds · {PR_HS_TRIGGER}+ coins = Hold &amp; Spin · Coin {money(coin)} × {PR_BET_COINS}</>} />}
                 belly={<CabinetBelly pays={pays} note={<>5-reel way × coin, per way · MINI {10}× · MINOR {25}× · MAJOR {100}× bet · RTP {(PRAIRIE_MATH.rtp * 100).toFixed(2)}% incl. features</>} />}
                 deck={
                   <CabinetDeck

@@ -391,6 +391,8 @@ export default function MinePage() {
               )}
               <MineMachine
                 ref={machineRef}
+              peekGame="mine"
+              peekBet={{ coinCents: coin }}
                 grid={grid}
                 spinning={spinning}
                 winCells={winCells}
@@ -402,7 +404,7 @@ export default function MinePage() {
                 winLines={winLines}
                 trigger={reduced ? null : trigger}
                 freeMode={phase === "fs"}
-                topper={<CabinetTopper title="Canary Creek Mine" kicker="Free spins · Mine Cart · 9 lines" info={<>3+ dynamite = free spins · carts on reels 1, 3 &amp; 5 = Mine Cart pick · Coin {money(coin)} × 9 lines</>} />}
+                topper={<CabinetTopper title="Canary Creek Mine" kicker="Free spins · Mine Cart · 9 lines" infoGame="mine" info={<>3+ dynamite = free spins · carts on reels 1, 3 &amp; 5 = Mine Cart pick · Coin {money(coin)} × 9 lines</>} />}
                 belly={<CabinetBelly pays={pays} note={<>5 of a kind × coin · 3+ dynamite pay 2× / 10× / 50× bet · RTP 95.42% incl. features</>} />}
                 deck={
                   <CabinetDeck
