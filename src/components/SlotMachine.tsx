@@ -2,6 +2,7 @@
 
 import { createContext, forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { PAYLINES, SYMBOLS, type Symbol } from "@/lib/games/slot";
+import type { WinShow } from "@/lib/winShow";
 import { CabinetChrome, CabinetTopper } from "./SlotCabinet";
 import { slotBlurCycleMs, slotLandPlan, slotReelOffset, shouldReelBounce, SLOT_BOUNCE_PX, SLOT_SETTLE_MS_NORMAL, SLOT_SETTLE_MS_TURBO } from "@/lib/slotFeel";
 import { playThunk, reducedMotion } from "@/lib/feel";
@@ -298,6 +299,8 @@ const SlotMachine = forwardRef<
     grid: Symbol[][] | null;
     spinning: boolean;
     winCells?: WinCell[];
+    /** Paid wins drawn over the reels after they settle (src/lib/winShow.ts). */
+    winShows?: WinShow[];
     onSpinComplete?: () => void;
     /** 0–4 from slotGlowTier on the real paid return; lights only after the reels settle. */
     glow?: number;
@@ -313,7 +316,7 @@ const SlotMachine = forwardRef<
     /** 0-based winning lines from the server result; lit after settle only. */
     winLines?: number[];
   }
->(function SlotMachine({ grid, spinning, winCells, onSpinComplete, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines }, ref) {
+>(function SlotMachine({ grid, spinning, winCells, winShows, onSpinComplete, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines }, ref) {
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
   const [settled, setSettled] = useState(true);
@@ -388,6 +391,7 @@ const SlotMachine = forwardRef<
         deck={deck}
         lever={lever}
         paylines={PAYLINES}
+        winShows={winShows}
         winLines={winLines}
         windowLabel="Sundown Trail reels"
         kick={["9 lines", "5 reels", "Sandbox / test chips"]}

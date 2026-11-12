@@ -6,7 +6,8 @@ import { ClemPortrait, MineCart } from "@/components/MineSymbols";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
-import { MINE_PAYLINES, MINE_PAYTABLE, MINE_FS_AWARD, MINE_FS_CAP, MINE_PICK_CARTS, MINE_PICK_PRIZES, MINE_SCATTER_PAY, type MineSymbol, type CartItem } from "@/lib/games/mine";
+import { lineShows, scatterShow, freeSpinShows } from "@/lib/winShow";
+import { MINE_PAYLINES, MINE_FS_MULT, MINE_PAYTABLE, MINE_FS_AWARD, MINE_FS_CAP, MINE_PICK_CARTS, MINE_PICK_PRIZES, MINE_SCATTER_PAY, type MineSymbol, type CartItem } from "@/lib/games/mine";
 import { MINE_MATH, MINE_FEATURE_LINE } from "@/lib/gameMath";
 import { slotGlowTier, soundOn, reducedMotion, playSpin, playFeature } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
@@ -219,6 +220,13 @@ export default function MinePage() {
     return [];
   }, [spin, spinning, phase, fsSpin, fsShown]);
 
+  const winShows = useMemo(() => {
+    if (spinning) return [];
+    if (phase === "fs" && fsSpin && fsShown) return freeSpinShows(fsSpin.grid, fsSpin.lineWins, MINE_PAYLINES, "DYNAMITE", "DYNAMITE scatter", fsSpin.winCents, MINE_FS_MULT);
+    if (phase === "idle" && spin) return [...lineShows(spin.lineWins, MINE_PAYLINES), ...scatterShow(spin.grid, "DYNAMITE", spin.scatterWinCents, "DYNAMITE scatter")];
+    return [];
+  }, [spin, spinning, phase, fsSpin, fsShown]);
+
   const winCells = useMemo(() => {
     if (spinning) return [];
     if (phase === "fs" && fsSpin && fsShown) return cellsFor(fsSpin.grid, fsSpin.lineWins, fsSpin.retrigger ? ["DYNAMITE"] : []);
@@ -383,6 +391,7 @@ export default function MinePage() {
                 grid={grid}
                 spinning={spinning}
                 winCells={winCells}
+                winShows={winShows}
                 onSpinComplete={onSpinComplete}
                 glow={showResult && spin ? slotGlowTier(coinIn, spin.winCents) : 0}
                 glowLive={feelLive}

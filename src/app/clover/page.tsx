@@ -7,6 +7,7 @@ import RainbowWheel, { type WheelResult } from "@/components/RainbowWheel";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
+import { lineShows, scatterShow, freeSpinShows } from "@/lib/winShow";
 import { CL_PAYLINES, CL_PAYTABLE, CL_FS_AWARD, CL_FS_CAP, CL_SCATTER_PAY, CL_BET_COINS, CL_INNER_WHEEL, CL_OUTER_WHEEL, CL_WHEEL_FS, type ClSymbol, type ClPaySymbol, type Wedge } from "@/lib/games/clover";
 import { CLOVER_MATH, CLOVER_FEATURE_LINE } from "@/lib/gameMath";
 import { slotGlowTier, soundOn, reducedMotion, playSpin, playFeature } from "@/lib/feel";
@@ -168,6 +169,13 @@ export default function CloverPage() {
     if (spinning) return [];
     if (phase === "fs" && fsSpin && fsShown) return fsSpin.lineWins.map((w) => w.line);
     if (phase === "idle" || phase === "trigger") return (spin?.lineWins ?? []).map((w) => w.line);
+    return [];
+  }, [spin, spinning, phase, fsSpin, fsShown]);
+
+  const winShows = useMemo(() => {
+    if (spinning) return [];
+    if (phase === "fs" && fsSpin && fsShown) return freeSpinShows(fsSpin.grid, fsSpin.lineWins, CL_PAYLINES, "KETTLE", "KETTLE scatter", fsSpin.winCents, 1);
+    if (phase === "idle" && spin) return [...lineShows(spin.lineWins, CL_PAYLINES), ...scatterShow(spin.grid, "KETTLE", spin.scatterWinCents, "KETTLE scatter")];
     return [];
   }, [spin, spinning, phase, fsSpin, fsShown]);
 
@@ -347,6 +355,7 @@ export default function CloverPage() {
                 grid={grid}
                 spinning={spinning}
                 winCells={winCells}
+                winShows={winShows}
                 onSpinComplete={onSpinComplete}
                 glow={showResult && spin ? slotGlowTier(coinIn, spin.winCents) : 0}
                 glowLive={feelLive}

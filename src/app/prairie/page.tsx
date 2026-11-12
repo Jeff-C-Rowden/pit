@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
+import { scatterShow, waysShows } from "@/lib/winShow";
 import PrairieMachine, { PR_SYM_ART, type PrairieMachineHandle, type WinCell } from "@/components/PrairieMachine";
 import { AdaPortrait, PrairieCoin } from "@/components/PrairieSymbols";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
@@ -34,6 +35,10 @@ type Phase = "idle" | "spinning" | "trigger" | "hold" | "fs" | "summary";
 const STORY_KEY = "pit_story_v1:prairie";
 const WILDS: PrSymbol[] = ["WILD", "W2", "W3"];
 const coinText = (x: number) => coinLabel(x) ?? `${x}×`;
+
+function prWayShows(grid: PrSymbol[][] | null, wins: WayWin[] | undefined) {
+  return waysShows(grid, wins, WILDS, (s) => PR_SYM_ART[s as PrSymbol]?.label ?? s);
+}
 
 function cellsFor(grid: PrSymbol[][] | null, wins: WayWin[] | undefined, extra: PrSymbol[] = []): WinCell[] {
   const out: WinCell[] = [];
@@ -194,6 +199,17 @@ export default function PrairiePage() {
 
   const fsSpin: FreeSpin | null = spin?.freeSpins && fsIdx >= 0 ? spin.freeSpins.spins[fsIdx] ?? null : null;
   const inFs = phase === "fs" || (phase === "summary" && !!spin?.freeSpins && fsIdx >= 0);
+
+  const winShows = useMemo(() => {
+    if (spinning) return [];
+    if (phase === "fs" && fsSpin && fsShown) {
+      const ways = prWayShows(fsSpin.grid, fsSpin.wins);
+      const waysCents = fsSpin.wins.reduce((a, w) => a + w.winCents, 0);
+      return [...ways, ...scatterShow(fsSpin.grid, "STORM", fsSpin.winCents - waysCents, "STORM scatter")];
+    }
+    if (phase === "idle" && spin) return [...prWayShows(spin.grid, spin.wins), ...scatterShow(spin.grid, "STORM", spin.scatterWinCents, "STORM scatter")];
+    return [];
+  }, [spin, spinning, phase, fsSpin, fsShown]);
 
   const winCells = useMemo(() => {
     if (spinning) return [];
@@ -399,6 +415,7 @@ export default function PrairiePage() {
                 coins={coins}
                 spinning={spinning}
                 winCells={winCells}
+                winShows={winShows}
                 onSpinComplete={onSpinComplete}
                 glow={showResult && spin ? slotGlowTier(coinIn, spin.winCents) : 0}
                 glowLive={feelLive}

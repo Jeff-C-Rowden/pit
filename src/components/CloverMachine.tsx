@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { CL_PAYLINES, CL_SYMBOLS, type ClSymbol } from "@/lib/games/clover";
+import type { WinShow } from "@/lib/winShow";
 import { CabinetChrome, CabinetTopper } from "./SlotCabinet";
 import { slotBlurCycleMs, slotLandPlan, slotReelOffset, shouldReelBounce, SLOT_BOUNCE_PX, SLOT_SETTLE_MS_NORMAL, SLOT_SETTLE_MS_TURBO } from "@/lib/slotFeel";
 import { playThunk, reducedMotion } from "@/lib/feel";
@@ -317,6 +318,8 @@ const CloverMachine = forwardRef<
     grid: ClSymbol[][] | null;
     spinning: boolean;
     winCells?: WinCell[];
+    /** Paid wins drawn over the reels after they settle (src/lib/winShow.ts). */
+    winShows?: WinShow[];
     onSpinComplete?: () => void;
     theme?: CloverTheme;
     /** 0–4 from slotGlowTier on the real paid return; lights only after the reels settle. */
@@ -339,7 +342,7 @@ const CloverMachine = forwardRef<
     /** Free-spins mode skin. */
     freeMode?: boolean;
   }
->(function CloverMachine({ grid, spinning, winCells, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines, trigger = null, freeMode = false, expandReels = [] }, ref) {
+>(function CloverMachine({ grid, spinning, winCells, winShows, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines, trigger = null, freeMode = false, expandReels = [] }, ref) {
   const t = { ...DEFAULT_THEME, ...theme, kickLabels: theme?.kickLabels ?? DEFAULT_THEME.kickLabels };
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
@@ -430,6 +433,7 @@ const CloverMachine = forwardRef<
         deck={deck}
         lever={lever}
         paylines={CL_PAYLINES}
+        winShows={winShows}
         winLines={winLines}
         windowLabel={`${t.title} reels`}
         kick={t.kickLabels}

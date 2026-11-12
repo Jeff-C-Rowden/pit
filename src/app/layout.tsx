@@ -6,6 +6,7 @@ import "./mine.css";
 import "./prairie.css";
 import "./clover.css";
 import "./stag.css";
+import "./winlines.css";
 import { Nunito, Passion_One, PT_Sans_Narrow } from "next/font/google";
 
 import { UserProvider } from "@/components/useUser";

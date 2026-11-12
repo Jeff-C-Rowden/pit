@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { MINE_PAYLINES, MINE_SYMBOLS, type MineSymbol } from "@/lib/games/mine";
+import type { WinShow } from "@/lib/winShow";
 import { CabinetChrome, CabinetTopper } from "./SlotCabinet";
 import { slotBlurCycleMs, slotLandPlan, slotReelOffset, shouldReelBounce, SLOT_BOUNCE_PX, SLOT_SETTLE_MS_NORMAL, SLOT_SETTLE_MS_TURBO } from "@/lib/slotFeel";
 import { playThunk, reducedMotion } from "@/lib/feel";
@@ -309,6 +310,8 @@ const MineMachine = forwardRef<
     grid: MineSymbol[][] | null;
     spinning: boolean;
     winCells?: WinCell[];
+    /** Paid wins drawn over the reels after they settle (src/lib/winShow.ts). */
+    winShows?: WinShow[];
     onSpinComplete?: () => void;
     theme?: MineTheme;
     /** 0–4 from slotGlowTier on the real paid return; lights only after the reels settle. */
@@ -329,7 +332,7 @@ const MineMachine = forwardRef<
     /** Free-spins mode skin. */
     freeMode?: boolean;
   }
->(function MineMachine({ grid, spinning, winCells, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines, trigger = null, freeMode = false }, ref) {
+>(function MineMachine({ grid, spinning, winCells, winShows, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines, trigger = null, freeMode = false }, ref) {
   const t = { ...DEFAULT_THEME, ...theme, kickLabels: theme?.kickLabels ?? DEFAULT_THEME.kickLabels };
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
@@ -419,6 +422,7 @@ const MineMachine = forwardRef<
         deck={deck}
         lever={lever}
         paylines={MINE_PAYLINES}
+        winShows={winShows}
         winLines={winLines}
         windowLabel={`${t.title} reels`}
         kick={t.kickLabels}

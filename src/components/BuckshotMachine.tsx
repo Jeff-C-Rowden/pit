@@ -8,6 +8,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { BB_REELS, type BbSymbol } from "@/lib/games/buckshot";
 import { BUCKSHOT_ART } from "./WesternSymbols";
+import type { WinShow } from "@/lib/winShow";
 import { CabinetChrome } from "./SlotCabinet";
 import { slotStaggerStops, SLOT_BOUNCE_PX, SLOT_SETTLE_MS_NORMAL, SLOT_SETTLE_MS_TURBO } from "@/lib/slotFeel";
 import { playThunk } from "@/lib/feel";
@@ -51,6 +52,8 @@ type Props = {
   glow: number;
   glowLive: boolean;
   won: boolean;
+  /** Paid win drawn over the payline after the reels settle. */
+  winShows?: WinShow[];
   topper: ReactNode;
   deck: ReactNode;
   lever?: ReactNode;
@@ -58,7 +61,7 @@ type Props = {
 };
 
 const BuckshotMachine = forwardRef<BuckshotHandle, Props>(function BuckshotMachine(
-  { window: win, spinning, turbo, reduced, onSpinComplete, glow, glowLive, won, topper, deck, lever, side },
+  { window: win, spinning, turbo, reduced, onSpinComplete, glow, glowLive, won, winShows, topper, deck, lever, side },
   ref,
 ) {
   const h = useSymH();
@@ -128,6 +131,7 @@ const BuckshotMachine = forwardRef<BuckshotHandle, Props>(function BuckshotMachi
       lever={lever}
       paylines={[[1, 1, 1]]}
       winLines={won ? [0] : []}
+      winShows={winShows}
       windowLabel={label}
       kick={["1 payline", "3 reels", "Sandbox / test chips"]}
       singleLine

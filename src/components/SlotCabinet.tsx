@@ -11,6 +11,8 @@ import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, ty
 import Link from "next/link";
 import { autoNext, autoStopText, CAB_AUTO_SPINS, leverFires, leverTravel, ledText, paylineTabs } from "@/lib/cabinet";
 import { playChip, setSoundOn, soundOn } from "@/lib/feel";
+import WinLineOverlay from "./WinLineOverlay";
+import type { WinShow } from "@/lib/winShow";
 
 /* ---------------- bulbs ---------------- */
 
@@ -385,6 +387,7 @@ export function CabinetChrome({
   lever,
   paylines,
   winLines,
+  winShows,
   windowLabel,
   kick,
   singleLine,
@@ -408,6 +411,8 @@ export function CabinetChrome({
   paylines: readonly (readonly number[])[];
   /** 0-based winning lines; lit only once the reels have settled. */
   winLines?: number[];
+  /** Paid wins to draw over the reels (lines / ways / scatters); shown only once settled. */
+  winShows?: WinShow[];
   windowLabel: string;
   kick: string[];
   children: ReactNode;
@@ -442,6 +447,7 @@ export function CabinetChrome({
               <span className="cab-drum" aria-hidden />
               <span className="cab-payline" aria-hidden />
               <div className="slot-glass cab-glass" aria-hidden />
+              <WinLineOverlay shows={winShows ?? []} active={after} />
             </div>
             {singleLine ? null : tabs("right")}
             {side && <div className="cab-side">{side}</div>}

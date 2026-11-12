@@ -1,0 +1,39 @@
+/* Win lines: drawn over the reel window after the reels settle (src/components/WinLineOverlay.tsx). */
+.wl-host { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
+.wl-svg { position: absolute; left: 0; top: 0; overflow: visible; }
+.wl-dim { fill: rgba(6, 4, 2, .58); }
+.wl-frame {
+  fill: none; stroke: var(--wl-c, #ffd23a); stroke-width: 4;
+  filter: drop-shadow(0 0 5px var(--wl-c, #ffd23a)) drop-shadow(0 0 2px #000);
+  animation: wl-pulse 900ms ease-in-out infinite alternate;
+}
+.wl-path line, .wl-path polyline { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.wl-under line, polyline.wl-under { stroke: rgba(0, 0, 0, .75); stroke-width: 12; }
+.wl-stroke line, polyline.wl-stroke {
+  stroke: var(--wl-c, #ffd23a); stroke-width: 6;
+  filter: drop-shadow(0 0 6px var(--wl-c, #ffd23a));
+}
+polyline.wl-stroke { stroke-dasharray: 100; stroke-dashoffset: 0; animation: wl-draw 320ms ease-out both; }
+.wl-stroke line { animation: wl-fade 260ms ease-out both; }
+.wl-label {
+  position: absolute; left: 0; right: 0; bottom: 6px; margin: 0 auto;
+  width: fit-content; max-width: calc(100% - 12px); box-sizing: border-box;
+  padding: 4px 10px; border-radius: 999px;
+  background: rgba(12, 8, 4, .9); border: 2px solid var(--wl-c, #ffd23a);
+  color: #fff; font: 800 13px/1.2 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .01em;
+  text-align: center; white-space: normal; overflow-wrap: anywhere;
+  box-shadow: 0 0 10px var(--wl-c, #ffd23a), 0 2px 6px rgba(0,0,0,.6);
+  animation: wl-fade 200ms ease-out both;
+}
+.wl-label.top { bottom: auto; top: 6px; }
+.wl-label.mid { bottom: auto; top: 50%; transform: translateY(-50%); }
+.wl-count { color: var(--wl-c, #ffd23a); margin-right: 6px; font-weight: 900; }
+@keyframes wl-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+@keyframes wl-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes wl-pulse { from { stroke-opacity: 1; } to { stroke-opacity: .55; } }
+@media (max-width: 380px) { .wl-label { font-size: 12px; padding: 3px 8px; } }
+/* reduced motion: lines and frames still show, nothing animates */
+.wl-reduced .wl-frame, .wl-reduced polyline.wl-stroke, .wl-reduced .wl-stroke line, .wl-reduced .wl-label { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .wl-frame, polyline.wl-stroke, .wl-stroke line, .wl-label { animation: none !important; }
+}

@@ -13,6 +13,7 @@ import {
   type ReactNode,
 } from "react";
 import { coinLabel, type PrSymbol } from "@/lib/games/prairie";
+import type { WinShow } from "@/lib/winShow";
 import { CabinetChrome, CabinetTopper } from "./SlotCabinet";
 import { slotBlurCycleMs, slotLandPlan, slotReelOffset, shouldReelBounce, SLOT_BOUNCE_PX, SLOT_SETTLE_MS_NORMAL, SLOT_SETTLE_MS_TURBO } from "@/lib/slotFeel";
 import { playThunk, reducedMotion } from "@/lib/feel";
@@ -320,6 +321,8 @@ const PrairieMachine = forwardRef<
     grid: PrSymbol[][] | null;
     spinning: boolean;
     winCells?: WinCell[];
+    /** Paid wins drawn over the reels after they settle (src/lib/winShow.ts). */
+    winShows?: WinShow[];
     onSpinComplete?: () => void;
     theme?: PrairieTheme;
     /** 0–4 from slotGlowTier on the real paid return; lights only after the reels settle. */
@@ -342,7 +345,7 @@ const PrairieMachine = forwardRef<
     /** Free-spins mode skin. */
     freeMode?: boolean;
   }
->(function PrairieMachine({ grid, spinning, winCells, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, coins = null, hold, trigger = null, freeMode = false }, ref) {
+>(function PrairieMachine({ grid, spinning, winCells, winShows, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, coins = null, hold, trigger = null, freeMode = false }, ref) {
   const t = { ...DEFAULT_THEME, ...theme, kickLabels: theme?.kickLabels ?? DEFAULT_THEME.kickLabels };
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
@@ -433,6 +436,7 @@ const PrairieMachine = forwardRef<
         deck={deck}
         lever={lever}
         paylines={[]}
+        winShows={winShows}
         windowLabel={`${t.title} reels`}
         kick={t.kickLabels}
       >

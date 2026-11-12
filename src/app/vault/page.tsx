@@ -13,6 +13,7 @@ import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { VS_PAYLINES, VS_TOTAL_CONTRIBUTION_BPS, type VsSymbol } from "@/lib/games/slotProgressive";
+import { lineShows } from "@/lib/winShow";
 import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
@@ -171,6 +172,8 @@ export default function VaultPage() {
     return () => window.clearInterval(t);
   }, [spinning, busy, jackpotModal, refreshMeters]);
 
+  const winShows = useMemo(() => (showOutcome ? lineShows(spin?.lineWins as LineWin[] | undefined, VS_PAYLINES) : []), [spin, showOutcome]);
+
   const winCells = useMemo(
     () => (showOutcome ? cellsFromLineWins(spin?.lineWins as LineWin[] | undefined) : []),
     [spin, showOutcome],
@@ -322,6 +325,7 @@ export default function VaultPage() {
                 grid={grid}
                 spinning={spinning}
                 winCells={winCells}
+                winShows={winShows}
                 onSpinComplete={onSpinComplete}
                 glow={showOutcome ? slotGlowTier(coinIn, lastWinCents) : 0}
                 glowLive={feelLive}

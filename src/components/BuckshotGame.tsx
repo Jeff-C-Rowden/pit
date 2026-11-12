@@ -1,4 +1,5 @@
 "use client";
+import { classicShow } from "@/lib/winShow";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import BuckshotMachine, { type BuckshotHandle } from "@/components/BuckshotMachine";
@@ -161,6 +162,7 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
               glow={showOutcome && spin ? slotGlowTier(stake, spin.winCents) : 0}
               glowLive={feelLive}
               won={won}
+              winShows={won ? classicShow(spin?.line, spin?.kind, spin?.winCents ?? 0) : []}
               topper={
                 <CabinetTopper
                   title={V.title}

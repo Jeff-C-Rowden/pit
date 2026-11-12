@@ -7,6 +7,7 @@ import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { PAYLINES, type Symbol } from "@/lib/games/slot";
+import { lineShows } from "@/lib/winShow";
 import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
@@ -101,6 +102,8 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
     [spin, showOutcome],
   );
 
+  const winShows = useMemo(() => (showOutcome ? lineShows(spin?.lineWins as LineWin[] | undefined, PAYLINES) : []), [spin, showOutcome]);
+
   const winCells = useMemo(
     () => (showOutcome ? cellsFromLineWins(spin?.lineWins as LineWin[] | undefined) : []),
     [spin, showOutcome],
@@ -187,6 +190,7 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
               grid={grid}
               spinning={spinning}
               winCells={winCells}
+              winShows={winShows}
               onSpinComplete={onSpinComplete}
               glow={showOutcome && spin ? slotGlowTier(coinIn, spin.winCents) : 0}
               glowLive={feelLive}
