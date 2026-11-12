@@ -35,6 +35,9 @@ export function ActionDock({ hint, children, busy }: { hint?: string; children: 
 
 export type HandResultTone = "win" | "loss" | "push";
 
+/** A quiet losing-spin note dims this long after it appears (it never flashes or plays a sound). */
+export const QUIET_LOSS_DIM_MS = 1200;
+
 export function OutcomeBanner({
   win,
   push,
@@ -44,7 +47,10 @@ export function OutcomeBanner({
   subtitle,
   stakeCents,
   cageHref,
+  quiet,
 }: {
+  /** Slot Scout S3: a losing spin resolves quietly (muted, compact, no entry animation, dims after a beat). */
+  quiet?: boolean;
   /** Link to the matching ledger lines in the Cage. */
   cageHref?: string | null;
   /** What was risked on this result; lets effects scale with real profit. */
@@ -65,6 +71,13 @@ export function OutcomeBanner({
   useEffect(() => {
     if (slide) playPayout(level);
   }, [slide, level, amountCents]);
+  const [dimmed, setDimmed] = useState(false);
+  useEffect(() => {
+    setDimmed(false);
+    if (!quiet) return;
+    const t = window.setTimeout(() => setDimmed(true), QUIET_LOSS_DIM_MS);
+    return () => window.clearTimeout(t);
+  }, [quiet, title, subtitle]);
   if (!message && !title && !subtitle && !hasAmount && win == null && !push) return null;
 
   const tone: HandResultTone = push ? "push" : win ? "win" : "loss";
@@ -93,7 +106,7 @@ export function OutcomeBanner({
 
   return (
     <div
-      className={`result-banner hand-result ${tone} fx-l${level}`}
+      className={`result-banner hand-result ${tone} fx-l${level}${quiet ? " quiet" : ""}${quiet && dimmed ? " dimmed" : ""}`}
       role="status"
       aria-live="polite"
     >

@@ -465,7 +465,7 @@ export default function MinePage() {
             {showResult && spin && !spin.freeSpins && !spin.pick && spin.winCents > 0 && spin.winCents <= coinIn && (
               <OutcomeBanner push title={spin.winCents === coinIn ? "BET BACK" : "PART BACK"} amountCents={spin.winCents} stakeCents={coinIn} subtitle={spin.winCents === coinIn ? `${money(spin.winCents)} back · net $0.00` : `${money(spin.winCents)} back on a ${money(coinIn)} bet · net −${money(coinIn - spin.winCents)}`} />
             )}
-            {showResult && spin && !spin.freeSpins && !spin.pick && spin.winCents === 0 && <OutcomeBanner title="NO LINE" subtitle="You lose this spin." />}
+            {showResult && spin && !spin.freeSpins && !spin.pick && spin.winCents === 0 && <OutcomeBanner quiet title="NO LINE" subtitle="You lose this spin." />}
             {showResult && spin && (spin.freeSpins || spin.pick) && (
               <OutcomeBanner win title="FEATURE WIN" amountCents={spin.winCents} stakeCents={coinIn} subtitle={`${money(spin.winCents)} back on a ${money(coinIn)} bet, features included`} />
             )}

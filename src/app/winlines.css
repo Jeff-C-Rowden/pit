@@ -37,3 +37,7 @@ polyline.wl-stroke { stroke-dasharray: 100; stroke-dashoffset: 0; animation: wl-
 @media (prefers-reduced-motion: reduce) {
   .wl-frame, polyline.wl-stroke, .wl-stroke line, .wl-label { animation: none !important; }
 }
+/* S3 walkthrough: tap the reels while it steps to skip to the total; the settled total ignores taps */
+.wl-host.wl-walking { pointer-events: auto; cursor: pointer; touch-action: manipulation; }
+.wl-label.total { font-size: 14px; letter-spacing: .02em; }
+@media (max-width: 380px) { .wl-label.total { font-size: 13px; } }

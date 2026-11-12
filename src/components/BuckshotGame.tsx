@@ -228,7 +228,7 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
               subtitle={`${money(spin.winCents)} back on a ${money(stake)} bet · net +${money(spin.winCents - stake)}`}
             />
           )}
-          {showOutcome && spin && spin.winCents === 0 && <OutcomeBanner title="NO WIN" subtitle="You lose this spin." />}
+          {showOutcome && spin && spin.winCents === 0 && <OutcomeBanner quiet title="NO WIN" subtitle="You lose this spin." />}
 
           {info && (
             <div className="panel bb-paytable" id="paytable" style={{ marginTop: 20 }}>

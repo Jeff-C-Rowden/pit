@@ -2,12 +2,14 @@
 /**
  * Draws the server's paid wins over the reel window once every reel has landed: a thick glowing
  * line through each winning payline (or a path joining each ways group), a frame on every winning
- * symbol, dimmed non-winning symbols, and a payout label. Several wins cycle one at a time.
+ * symbol, dimmed non-winning symbols, and a payout label. Several wins walk through (Slot Scout S3):
+ * the total first with every win drawn together, then each win ~400ms, then it settles on the total
+ * and stays still. Tap the reels to skip to the total. Reduced motion: the still total view only.
  * Purely presentational: it only ever shows wins that are in the spin result.
  */
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { reducedMotion } from "@/lib/feel";
-import { showIndexAt, showText, WIN_SHOW_DELAY_MS, WIN_SHOW_HOLD_MS, type WinCell, type WinShow } from "@/lib/winShow";
+import { showText, totalText, unionCells, walkDurationMs, walkStep, WIN_SHOW_DELAY_MS, type WalkStep, type WinCell, type WinShow } from "@/lib/winShow";
 
 type Geo = { w: number; h: number; cols: { x: number; w: number; y: number; h: number }[]; rows: number };
 
@@ -50,33 +52,72 @@ function pickLabelRow(show: WinShow, reels: number, rows: number): number {
   return best;
 }
 
+const lineColor = (s: WinShow, i: number) => s.kind === "scatter" ? "#ffd23a" : COLORS[(s.kind === "line" ? Number(s.key.replace(/\D/g, "")) || 0 : i) % COLORS.length]!;
+
+function ShowPath({ g, show, color, id }: { g: Geo; show: WinShow; color: string; id: string }) {
+  if (show.kind === "scatter") return null;
+  const segs = show.segments.map(([a, b], i) => {
+    const p = centre(g, a), q = centre(g, b);
+    if (!p || !q) return null;
+    return <line key={i} x1={p.x} y1={p.y} x2={q.x} y2={q.y} />;
+  });
+  // a straight polyline for paylines reads better than separate segments (joins are rounded)
+  const linePts = show.kind === "line" && show.segments.length
+    ? [show.segments[0]![0], ...show.segments.map((s) => s[1])].map((c) => centre(g, c)).filter(Boolean).map((p) => `${p!.x},${p!.y}`).join(" ")
+    : "";
+  return (
+    <g key={id} className="wl-path" style={{ ["--wl-c" as string]: color }}>
+      {linePts ? (
+        <>
+          <polyline className="wl-under" points={linePts} />
+          <polyline className="wl-stroke" points={linePts} pathLength={100} />
+        </>
+      ) : (
+        <>
+          <g className="wl-under">{segs}</g>
+          <g className="wl-stroke">{segs}</g>
+        </>
+      )}
+    </g>
+  );
+}
+
 export default function WinLineOverlay({ shows, active }: { shows: WinShow[]; active: boolean }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [geo, setGeo] = useState<Geo | null>(null);
-  const [idx, setIdx] = useState(-1);
+  const [step, setStep] = useState<WalkStep | null>(null);
   const [reduced, setReduced] = useState(false);
+  const skipRef = useRef<() => void>(() => {});
   const sig = useMemo(() => shows.map((s) => `${s.key}:${s.winCents}:${s.cells.map((c) => `${c.reel}${c.row}`).join("")}`).join("|"), [shows]);
   const on = active && shows.length > 0;
 
   useEffect(() => { setReduced(reducedMotion()); }, []);
 
-  // start after the reels settle; cycle; stop the moment a new spin begins (active goes false)
+  // start after the reels settle; walk through once; stop the moment a new spin begins (active goes false)
   useEffect(() => {
-    setIdx(-1);
+    setStep(null);
+    skipRef.current = () => {};
     if (!on) return;
     let iv = 0;
-    const t0 = { v: 0 };
+    let skipped = reducedMotion();
+    let t0 = 0;
+    const tick = () => {
+      const s = walkStep(shows.length, performance.now() - t0, skipped);
+      setStep((prev) => (prev && prev.phase === s.phase && prev.index === s.index ? prev : s));
+      if (s.phase === "done" && iv) { window.clearInterval(iv); iv = 0; }
+    };
     const to = window.setTimeout(() => {
-      t0.v = performance.now();
-      setIdx(0);
-      if (shows.length > 1) iv = window.setInterval(() => setIdx(showIndexAt(shows.length, performance.now() - t0.v)), 200);
+      t0 = performance.now();
+      tick();
+      if (!skipped && walkDurationMs(shows.length) > 0) iv = window.setInterval(tick, 50);
     }, WIN_SHOW_DELAY_MS);
-    return () => { window.clearTimeout(to); if (iv) window.clearInterval(iv); };
+    skipRef.current = () => { if (skipped) return; skipped = true; if (t0) tick(); };
+    return () => { window.clearTimeout(to); if (iv) window.clearInterval(iv); skipRef.current = () => {}; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [on, sig]);
 
   useLayoutEffect(() => {
-    if (!on || idx < 0) return;
+    if (!on || !step) return;
     const host = hostRef.current;
     if (!host) return;
     const sync = () => setGeo(measure(host));
@@ -86,15 +127,20 @@ export default function WinLineOverlay({ shows, active }: { shows: WinShow[]; ac
     if (ro && win) ro.observe(win);
     window.addEventListener("resize", sync);
     return () => { ro?.disconnect(); window.removeEventListener("resize", sync); };
-  }, [on, idx >= 0]);
+  }, [on, !!step]);
 
-  const show = on && idx >= 0 ? shows[idx] ?? null : null;
-  const summary = on ? shows.map(showText).join("; ") : "";
-  if (!show || !geo) {
+  const summary = on ? `${shows.length > 1 ? `${totalText(shows)}. ` : ""}${shows.map(showText).join("; ")}` : "";
+  if (!on || !step || !geo) {
     return <div ref={hostRef} className="wl-host" aria-hidden={!summary}>{summary && <span className="sr-only">Wins: {summary}</span>}</div>;
   }
-  const color = show.kind === "scatter" ? "#ffd23a" : COLORS[(show.kind === "line" ? Number(show.key.replace(/\D/g, "")) || 0 : idx) % COLORS.length]!;
-  const hit = new Set(show.cells.map((c) => `${c.reel}-${c.row}`));
+  // which wins are drawn: the one stepped to, or all of them on the total view
+  const single = step.index >= 0 ? shows[step.index] ?? null : null;
+  const drawn = single ? [single] : shows;
+  const walking = step.phase !== "done";
+  const isTotal = !single;
+  const color = single ? lineColor(single, step.index) : "#ffd23a";
+  const cells = unionCells(drawn);
+  const hit = new Set(cells.map((c) => `${c.reel}-${c.row}`));
   const dims: JSX.Element[] = [];
   const frames: JSX.Element[] = [];
   geo.cols.forEach((col, reel) => {
@@ -105,41 +151,30 @@ export default function WinLineOverlay({ shows, active }: { shows: WinShow[]; ac
       else dims.push(<rect key={k} className="wl-dim" x={p.left} y={p.top} width={p.cw} height={p.rh} />);
     }
   });
-  const segs = show.segments.map(([a, b], i) => {
-    const p = centre(geo, a), q = centre(geo, b);
-    if (!p || !q) return null;
-    return <line key={i} x1={p.x} y1={p.y} x2={q.x} y2={q.y} />;
-  });
-  // a straight polyline for paylines reads better than separate segments (joins are rounded)
-  const linePts = show.kind === "line" && show.segments.length
-    ? [show.segments[0]![0], ...show.segments.map((s) => s[1])].map((c) => centre(geo, c)).filter(Boolean).map((p) => `${p!.x},${p!.y}`).join(" ")
-    : "";
   // label away from the winning cells when possible
-  const labelRow = pickLabelRow(show, geo.cols.length, geo.rows);
+  const labelRow = pickLabelRow({ ...drawn[0]!, cells }, geo.cols.length, geo.rows);
+  const viewKey = `${step.phase}-${step.index}`;
+  const kind = isTotal && shows.length > 1 ? "total" : drawn[0]!.kind;
   return (
-    <div ref={hostRef} className={`wl-host on${reduced ? " wl-reduced" : ""}`} data-win-show={show.kind} data-win-index={idx} data-win-count={shows.length} style={{ ["--wl-c" as string]: color }}>
+    <div
+      ref={hostRef}
+      className={`wl-host on${reduced ? " wl-reduced" : ""}${walking ? " wl-walking" : ""}`}
+      data-win-show={kind}
+      data-win-phase={step.phase}
+      data-win-index={step.index}
+      data-win-count={shows.length}
+      style={{ ["--wl-c" as string]: color }}
+      onPointerDown={walking ? (e) => { e.stopPropagation(); skipRef.current(); } : undefined}
+      title={walking ? "Tap to skip to the total" : undefined}
+    >
       <svg className="wl-svg" width={geo.w} height={geo.h} viewBox={`0 0 ${geo.w} ${geo.h}`} aria-hidden>
         <g className="wl-dims">{dims}</g>
-        {show.kind !== "scatter" && (
-          <g key={`${show.key}-${idx}`} className="wl-path">
-            {linePts ? (
-              <>
-                <polyline className="wl-under" points={linePts} />
-                <polyline className="wl-stroke" points={linePts} pathLength={100} />
-              </>
-            ) : (
-              <>
-                <g className="wl-under">{segs}</g>
-                <g className="wl-stroke">{segs}</g>
-              </>
-            )}
-          </g>
-        )}
-        <g key={`f-${show.key}-${idx}`} className="wl-frames">{frames}</g>
+        <g key={`p-${viewKey}`}>{drawn.map((s, i) => <ShowPath key={s.key} id={s.key} g={geo} show={s} color={single ? color : lineColor(s, i)} />)}</g>
+        <g key={`f-${viewKey}`} className="wl-frames">{frames}</g>
       </svg>
-      <span key={`t-${show.key}-${idx}`} className={`wl-label${labelRow === 0 ? " top" : labelRow === 1 ? " mid" : ""}`} data-win-label>
-        {shows.length > 1 && <b className="wl-count">{idx + 1}/{shows.length}</b>}
-        {showText(show)}
+      <span key={`t-${viewKey}`} className={`wl-label${isTotal && shows.length > 1 ? " total" : ""}${labelRow === 0 ? " top" : labelRow === 1 ? " mid" : ""}`} data-win-label>
+        {single && shows.length > 1 && <b className="wl-count">{step.index + 1}/{shows.length}</b>}
+        {isTotal && shows.length > 1 ? totalText(shows) : showText(drawn[0]!)}
       </span>
       <span className="sr-only">Wins: {summary}</span>
     </div>

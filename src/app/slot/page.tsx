@@ -251,6 +251,7 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
           )}
           {showOutcome && spin && spin.winCents === 0 && (
             <OutcomeBanner
+              quiet
               title="NO LINE"
               subtitle="You lose this spin."
             />

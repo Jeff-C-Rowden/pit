@@ -3649,3 +3649,17 @@ label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spa
 .spin-notice-stage { margin-top: 10px; }
 .spin-notice-cage { color: var(--gold-hi, #f3d27a); font-weight: 700; text-decoration: underline; white-space: nowrap; }
 .spin-notice-x { background: none; border: 0; color: inherit; font-size: 18px; line-height: 1; padding: 2px 6px; cursor: pointer; min-width: 32px; min-height: 32px; }
+/* Slot Scout S3: a losing spin resolves quietly. Muted, compact, no entry animation or glow; dims after a beat. */
+.result-banner.hand-result.quiet {
+  animation: none;
+  background: rgba(20, 16, 14, .72);
+  border: 1px solid rgba(255, 255, 255, .14);
+  color: #cfc6bd;
+  box-shadow: none;
+  padding: 8px 14px;
+  transition: opacity .6s ease;
+}
+.result-banner.hand-result.quiet .result-banner-title { color: #d8cfc6; font-size: 15px; letter-spacing: .12em; text-shadow: none; }
+.result-banner.hand-result.quiet .result-banner-sub { margin-top: 2px; font-size: 12px; }
+.result-banner.hand-result.quiet.dimmed { opacity: .45; }
+@media (prefers-reduced-motion: reduce) { .result-banner.hand-result.quiet { transition: none; } }

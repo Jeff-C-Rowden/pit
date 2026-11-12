@@ -383,7 +383,7 @@ export default function VaultPage() {
             />
           )}
           {showOutcome && !hasJackpot && lastWinCents === 0 && (
-            <OutcomeBanner title="NO LINE" subtitle="You lose this spin." />
+            <OutcomeBanner quiet title="NO LINE" subtitle="You lose this spin." />
           )}
 
           {jackpotModal && (

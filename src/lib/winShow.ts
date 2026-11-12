@@ -152,3 +152,57 @@ export function showIndexAt(count: number, elapsedMs: number, holdMs = WIN_SHOW_
   if (count === 1) return 0;
   return Math.floor(Math.max(0, elapsedMs) / Math.max(1, holdMs)) % count;
 }
+
+/*
+ * Slot Scout S3: multi-win walkthrough. Total first (every paid win drawn together with the spin
+ * total), then each paid win on its own for ~400ms, then it settles back on the total view and
+ * stays still (no endless cycling). Tap skips straight to the settled total. Losing spins have no
+ * shows, so nothing is drawn. Timing only; the shows and amounts are exactly the server's.
+ */
+/** How long the opening "total" view holds before the per-win steps. */
+export const WALK_TOTAL_MS = 700;
+/** How long each paid win holds during the walkthrough. */
+export const WALK_STEP_MS = 400;
+
+export type WalkStep = { phase: "total" | "line" | "done"; index: number };
+
+/** Total walkthrough length for `count` wins (0 for none or a single win: it is its own total). */
+export function walkDurationMs(count: number): number {
+  return count >= 2 ? WALK_TOTAL_MS + count * WALK_STEP_MS : 0;
+}
+
+/**
+ * Which view to show `elapsedMs` after the walkthrough started. index is the win shown in the
+ * "line" phase (-1 otherwise). A single win is shown on its own from the start ("done", 0).
+ * `skipped` (tap) or reduced motion jumps straight to the settled view.
+ */
+export function walkStep(count: number, elapsedMs: number, skipped = false): WalkStep {
+  if (count <= 0) return { phase: "done", index: -1 };
+  if (count === 1) return { phase: "done", index: 0 };
+  const t = Math.max(0, elapsedMs);
+  if (skipped || t >= walkDurationMs(count)) return { phase: "done", index: -1 };
+  if (t < WALK_TOTAL_MS) return { phase: "total", index: -1 };
+  return { phase: "line", index: Math.min(count - 1, Math.floor((t - WALK_TOTAL_MS) / WALK_STEP_MS)) };
+}
+
+/** Sum of every paid show (equals the spin's base-game pay). */
+export function showsTotalCents(shows: readonly WinShow[]): number {
+  return shows.reduce((a, s) => a + Math.max(0, Math.round(s.winCents)), 0);
+}
+
+/** Label for the total view, e.g. "Total win $3.75 · 3 wins". */
+export function totalText(shows: readonly WinShow[]): string {
+  const n = shows.length;
+  return `Total win ${showMoney(showsTotalCents(shows))}${n > 1 ? ` · ${n} wins` : ""}`;
+}
+
+/** Every winning cell across all shows, de-duplicated (the total view frames them all at once). */
+export function unionCells(shows: readonly WinShow[]): WinCell[] {
+  const seen = new Set<string>();
+  const out: WinCell[] = [];
+  for (const s of shows) for (const c of s.cells) {
+    const k = `${c.reel}-${c.row}`;
+    if (!seen.has(k)) { seen.add(k); out.push(c); }
+  }
+  return out;
+}
