@@ -94,7 +94,7 @@ for (const g of GAMES) {
   await p.goto(BASE + g.path, { waitUntil: "networkidle2" }); await W(800);
   for (const t of ["Head into the mine", "Ride out", "Cross the bridge", "Got it"]) await clickX(`.//button[contains(., "${t}")]`, 800).catch(() => {});
   await p.$eval(".rl-toggle input", (e) => { if (!e.checked) e.click(); }).catch(() => {}); // turbo
-  while (r.spins < MAX && !(r.win && r.multi && (r.scatter || r.spins > 60))) {
+  while (r.spins < MAX && !(r.win && r.multi && (r.scatter || r.spins > Number(process.env.SCATTER_SPINS || 60)))) {
     r.spins++;
     const res = p.waitForResponse((x) => x.url().includes(g.api) && x.request().method() === "POST", { timeout: 30000 });
     await p.$eval("[data-cab-spin]", (e) => e.click());
