@@ -179,6 +179,7 @@ export function CabinetDeck({
 }) {
   const locked = busy || spinning || !!auto?.running;
   const [recapOpen, setRecapOpen] = useState(false);
+  const recapBtn = useRef<HTMLButtonElement>(null);
   return (
     <div className="cab-deck">
       <div className="cab-meters" aria-live="polite">
@@ -191,6 +192,7 @@ export function CabinetDeck({
         {recap ? (
           <button
             type="button"
+            ref={recapBtn}
             className="cab-led-btn"
             onClick={() => setRecapOpen(true)}
             aria-haspopup="dialog"
@@ -238,7 +240,7 @@ export function CabinetDeck({
       </div>
       {auto?.note && <p className="cab-auto-note" role="status">{auto.note}</p>}
       {note && <p className="cab-deck-note">{note}</p>}
-      {recap && recapOpen && <SpinRecapSheet recap={recap} onClose={() => setRecapOpen(false)} />}
+      {recap && recapOpen && <SpinRecapSheet recap={recap} onClose={() => setRecapOpen(false)} returnFocus={recapBtn} />}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type RefObject } from "react";
 import { createPortal } from "react-dom";
 import { SandboxChip } from "@/components/SandboxChip";
 import {
@@ -28,7 +28,7 @@ export function useSpinRecap() {
  * focus returns to the Win meter. Portaled to <body> so the phone bet dock
  * cannot cover it. No animation, no colour-only meaning (net carries a sign).
  */
-export function SpinRecapSheet({ recap, onClose }: { recap: RecapState; onClose: () => void }) {
+export function SpinRecapSheet({ recap, onClose, returnFocus }: { recap: RecapState; onClose: () => void; returnFocus?: RefObject<HTMLElement | null> }) {
   const titleId = useId();
   const boxRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -36,7 +36,8 @@ export function SpinRecapSheet({ recap, onClose }: { recap: RecapState; onClose:
   closeCb.current = onClose;
 
   useEffect(() => {
-    const opener = document.activeElement as HTMLElement | null;
+    // Tapping a button does not focus it on every browser, so prefer the explicit opener.
+    const opener = returnFocus?.current ?? (document.activeElement as HTMLElement | null);
     closeRef.current?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -64,6 +65,7 @@ export function SpinRecapSheet({ recap, onClose }: { recap: RecapState; onClose:
       document.removeEventListener("keydown", onKey);
       if (opener && document.contains(opener)) opener.focus();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const rows = recapRows(recap);
