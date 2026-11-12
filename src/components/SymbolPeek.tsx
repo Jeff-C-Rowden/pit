@@ -399,8 +399,8 @@ export function GameInfoSheet({ game, onClose }: { game: PeekGame; onClose: () =
     };
   }, []);
 
-  return (
-    <div className="vault-sheet-backdrop pot-sheet-backdrop" onClick={onClose} role="presentation">
+  return createPortal(
+    <div className="vault-sheet-backdrop pot-sheet-backdrop game-info-backdrop" onClick={onClose} role="presentation">
       <div
         ref={boxRef}
         className="vault-sheet panel pot-sheet game-info-sheet"
@@ -421,7 +421,8 @@ export function GameInfoSheet({ game, onClose }: { game: PeekGame; onClose: () =
         <p className="pot-sheet-note">Long-press a symbol on the stopped reels (hover or click on a computer) to see what it pays at your current bet.</p>
         <button ref={closeRef} type="button" className="pot-sheet-close" onClick={onClose}>Close</button>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

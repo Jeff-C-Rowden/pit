@@ -318,6 +318,8 @@ describe("no duplicated pay numbers; cabinets are wired", () => {
     expect(bb).toContain("peekGame={variant}");
     expect(bb).toContain("infoGame={variant}");
     expect(read("src/app/layout.tsx")).toContain("symbolPeek.css");
+    expect(read("src/components/SymbolPeek.tsx")).toContain("createPortal");
+    expect(read("src/app/symbolPeek.css")).toContain("game-info-backdrop");
     // Settled Buckshot reels must not be a disabled button wrapping the tiles.
     const classic = read("src/components/BuckshotMachine.tsx");
     expect(classic).toContain('return moving ? (');
