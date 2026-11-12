@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from "node:fs";
 const BASE = process.env.BASE || "http://127.0.0.1:3000";
 const OUT = process.env.OUT || "/workspace/pit/screenshots";
 const JAR = process.env.JAR;
-if (!JAR || !existsSync(JAR)) { console.error("JAR with a valid session required (no signups)"); process.exit(2); }
+if (!JAR || !existsSync(JAR)) { console.error("JAR with a valid session required (it never creates accounts)"); process.exit(2); }
 const W = (ms) => new Promise((r) => setTimeout(r, ms));
 const b = await puppeteer.launch({ executablePath: process.env.CHROME || "/usr/bin/google-chrome", args: ["--no-sandbox"] });
 const p = await b.newPage();
