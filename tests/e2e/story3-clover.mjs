@@ -154,7 +154,7 @@ let s2 = 0, feat = false;
 while (!feat && s2 < MAX) {
   s2++;
   const s = await spinOnce(s2);
-  if (s2 === 1) { await settled(30000).catch(() => {}); await W(500); await p.evaluate(() => window.scrollTo(0, 0)); await W(300); await shot("base"); }
+  if (s2 === 1 && !s.wheel && !s.freeSpins) { await settled(30000).catch(() => {}); await W(500); await p.evaluate(() => window.scrollTo(0, 0)); await W(300); await shot("base"); }
   if (s.wheel) { feat = true; await playWheel(s, s2, true); }
   else if (s.freeSpins) { feat = true; await playFree(s, s2, true, false); }
   await settled(120000);
