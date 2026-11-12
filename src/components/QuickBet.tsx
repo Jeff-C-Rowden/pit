@@ -32,6 +32,7 @@ export default function QuickBetRow({
   lines = SLOT_LINES,
   minCents = SLOT_COIN_MIN,
   maxCents = SLOT_COIN_MAX,
+  variant = "slot",
   children,
 }: {
   amounts: readonly number[];
@@ -44,14 +45,18 @@ export default function QuickBetRow({
   lines?: number;
   minCents?: number;
   maxCents?: number;
+  /** "table": one bet per hand (Blackjack, Pai Gow) — labels say bet, not coin × lines. */
+  variant?: "slot" | "table";
   children?: ReactNode;
 }) {
   const rep = repeatBetState({ lastCoinCents, currentCoinCents: selected, balanceCents, lines, busy, min: minCents, max: maxCents });
+  const table = variant === "table";
+  const dollars = (c: number) => (c / 100).toFixed(2);
   return (
-    <div className="quick-bet">
-      <div className="chip-row quick-chips" role="group" aria-label="Coin size per line (sandbox chips)">
+    <div className={table ? "quick-bet table-quick" : "quick-bet"}>
+      <div className="chip-row quick-chips" role="group" aria-label={table ? "Bet size per hand (sandbox chips)" : "Coin size per line (sandbox chips)"}>
         {amounts.map((c) => (
-          <Chip key={c} cents={c} selected={selected === c} onClick={() => onSelect(c)} label={`Coin ${(c / 100).toFixed(2)} dollars per line`} />
+          <Chip key={c} cents={c} selected={selected === c} onClick={() => onSelect(c)} label={table ? `Bet ${dollars(c)} dollars` : `Coin ${dollars(c)} dollars per line`} />
         ))}
       </div>
       <div className="quick-bet-sub">
@@ -62,7 +67,9 @@ export default function QuickBetRow({
             className="btn repeat-bet"
             disabled={!rep.enabled}
             onClick={() => rep.enabled && onRepeat(rep.coinCents)}
-            aria-label={`Repeat last bet: ${rep.label.replace("Repeat ", "")} total, coin ${(rep.coinCents / 100).toFixed(2)} dollars × ${lines} lines${rep.reason ? ` — ${rep.reason}` : ""}`}
+            aria-label={table
+              ? `Repeat last bet: ${rep.label.replace("Repeat ", "")} and deal${rep.reason ? ` — ${rep.reason}` : ""}`
+              : `Repeat last bet: ${rep.label.replace("Repeat ", "")} total, coin ${dollars(rep.coinCents)} dollars × ${lines} lines${rep.reason ? ` — ${rep.reason}` : ""}`}
             title={rep.reason ?? undefined}
           >
             <span aria-hidden className="repeat-ico">↻</span> {rep.label}

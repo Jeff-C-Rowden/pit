@@ -15,27 +15,50 @@ export const SLOT_LINES = 9;
 
 export type LastBets = Record<string, number>;
 
+/**
+ * Table bet docks (backlog #7 follow-up): same quick row, one bet per hand
+ * (lines = 1). Ranges mirror the server checks in startBlackjack/startPaiGow.
+ */
+export const TABLE_QUICK = {
+  blackjack: { chips: [500, 1000, 2500, 5000, 10000], min: 100, max: 500_000 },
+  paigow: { chips: [500, 1000, 2500, 5000, 10000], min: 500, max: 500_000 },
+} as const;
+export type QuickTable = keyof typeof TABLE_QUICK;
+
+/** Valid stored-bet range for a game key (slots use the coin range). */
+export function lastBetRange(game: string): { min: number; max: number } {
+  const t = (TABLE_QUICK as Record<string, { min: number; max: number }>)[game];
+  return t ? { min: t.min, max: t.max } : { min: SLOT_COIN_MIN, max: SLOT_COIN_MAX };
+}
+
 function validCoin(n: unknown, min: number, max: number): n is number {
   return typeof n === "number" && Number.isInteger(n) && n >= min && n <= max;
 }
 
-/** Parse stored last bets; drops anything malformed or out of range. */
-export function parseLastBets(raw: string | null | undefined, min = SLOT_COIN_MIN, max = SLOT_COIN_MAX): LastBets {
+/**
+ * Parse stored last bets; drops anything malformed or out of range. Without
+ * explicit bounds each game key is checked against its own range, so a $50
+ * blackjack bet and a 25¢ slot coin can live side by side.
+ */
+export function parseLastBets(raw: string | null | undefined, min?: number, max?: number): LastBets {
   if (!raw) return {};
   let v: unknown;
   try { v = JSON.parse(raw); } catch { return {}; }
   if (!v || typeof v !== "object" || Array.isArray(v)) return {};
   const out: LastBets = {};
   for (const [k, n] of Object.entries(v as Record<string, unknown>)) {
-    if (/^[a-z-]{1,24}$/.test(k) && validCoin(n, min, max)) out[k] = n;
+    if (!/^[a-z-]{1,24}$/.test(k)) continue;
+    const r = min != null && max != null ? { min, max } : lastBetRange(k);
+    if (validCoin(n, r.min, r.max)) out[k] = n;
   }
   return out;
 }
 
 /** Record a server-accepted bet; returns the new serialized value. */
-export function recordLastBet(raw: string | null | undefined, game: string, coinCents: number, min = SLOT_COIN_MIN, max = SLOT_COIN_MAX): string {
-  const cur = parseLastBets(raw, min, max);
-  if (validCoin(coinCents, min, max)) cur[game] = coinCents;
+export function recordLastBet(raw: string | null | undefined, game: string, coinCents: number, min?: number, max?: number): string {
+  const cur = parseLastBets(raw);
+  const r = min != null && max != null ? { min, max } : lastBetRange(game);
+  if (validCoin(coinCents, r.min, r.max)) cur[game] = coinCents;
   return JSON.stringify(cur);
 }
 

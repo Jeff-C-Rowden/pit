@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { paigowResultLabel } from "@/lib/feel";
 import PlayingCard from "@/components/PlayingCard";
-import { ActionDock, ChipRow, OutcomeBanner, ResultsStrip, TableReplay, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import { ActionDock, OutcomeBanner, ResultsStrip, TableReplay, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { CARD_BACK, DealerBooth, TableHeart, TableSeat, botPaiGowCards, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 import { usePausedLabel } from "@/components/PauseStatus";
+import QuickBetRow, { useLastBet } from "@/components/QuickBet";
+import { TABLE_QUICK } from "@/lib/quickBet";
 
 export default function PaiGowPage() {
   const { setUser } = useUser();
@@ -17,6 +19,7 @@ export default function PaiGowPage() {
   useClearErrOnBalance(setErr);
   const [sel, setSel] = useState<number[]>([]);
   const [busy, setBusy] = useState(false);
+  const [lastBet, rememberBet] = useLastBet("paigow");
 
   async function load() {
     const d = await api("/api/games/paigow");
@@ -28,11 +31,14 @@ export default function PaiGowPage() {
   async function act(action: string, extra: Record<string, unknown> = {}) {
     setErr(null);
     setBusy(true);
+    const betCents = typeof extra.betCents === "number" ? extra.betCents : bet;
     try {
       const d = await api("/api/games/paigow", {
         method: "POST",
-        body: JSON.stringify({ action, gameId: game?.id, betCents: bet, ...extra, idempotencyKey: crypto.randomUUID() }),
+        body: JSON.stringify({ action, gameId: game?.id, ...extra, betCents, idempotencyKey: crypto.randomUUID() }),
       });
+      // Remember the bet only after the server accepted the deal.
+      if (action === "deal") rememberBet(betCents);
       setGame(d.game);
       if (d.user) setUser(d.user);
       setSel([]);
@@ -66,19 +72,20 @@ export default function PaiGowPage() {
         <PaiGowFelt
           u={u} game={game} bet={bet} setBet={setBet} err={err} sel={sel} busy={busy}
           act={act} toggle={toggle} manualSet={manualSet} betting={betting}
-          pay={pay} won={won} push={push} lost={lost} hint={hint}
+          pay={pay} won={won} push={push} lost={lost} hint={hint} lastBet={lastBet}
         />
       )}
     </Shell>
   );
 }
 
-function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualSet, betting, pay, won, push, lost, hint }: any) {
+function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualSet, betting, pay, won, push, lost, hint, lastBet }: any) {
   const paused = usePausedLabel();
   const [botRows, setBotRows] = useState(true);
   useEffect(() => { try { setBotRows(localStorage.getItem("pit.pgBotRows") !== "0"); } catch {} }, []);
   const toggleBotRows = () => { const v = !botRows; setBotRows(v); try { localStorage.setItem("pit.pgBotRows", v ? "1" : "0"); } catch {} };
   const { occupants, setYouSeat, n } = useTableSeats("paigow", u.displayName, u.balanceCents);
+  const canAfford = u.balanceCents >= bet;
   return (
     <>
       <div className="hero game-hero pg-hero">
@@ -200,8 +207,26 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
         )} />
         {betting && (
           <>
-            <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} minCents={500} maxCents={500_000} />
-            <button className="btn primary hero-act" disabled={busy || !!paused} data-paused={paused ? "1" : undefined} onClick={() => act("deal")}>
+            <QuickBetRow
+              variant="table"
+              amounts={TABLE_QUICK.paigow.chips}
+              selected={bet}
+              onSelect={setBet}
+              lastCoinCents={lastBet}
+              balanceCents={u.balanceCents}
+              busy={busy || !!paused}
+              lines={1}
+              minCents={TABLE_QUICK.paigow.min}
+              maxCents={TABLE_QUICK.paigow.max}
+              onRepeat={(c: number) => { setBet(c); void act("deal", { betCents: c }); }}
+            />
+            <button
+              className="btn primary hero-act"
+              disabled={busy || !!paused || !canAfford}
+              data-paused={paused ? "1" : undefined}
+              title={!canAfford ? "Add sandbox chips to deal." : undefined}
+              onClick={() => act("deal")}
+            >
               {paused || (busy ? "Dealing…" : game?.phase === "settled" ? "Next hand" : "Deal")}
             </button>{paused && <a className="paused-why" href="/wallet#time">Why is this paused?</a>}
           </>

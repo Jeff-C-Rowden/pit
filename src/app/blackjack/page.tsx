@@ -10,6 +10,8 @@ import LiveAnnounce from "@/components/LiveAnnounce";
 import { api, money, useUser } from "@/components/useUser";
 import { usePausedLabel } from "@/components/PauseStatus";
 import TournamentStrip from "@/components/TournamentStrip";
+import QuickBetRow, { useLastBet } from "@/components/QuickBet";
+import { TABLE_QUICK } from "@/lib/quickBet";
 
 export default function BlackjackPage({ searchParams }: { searchParams?: { t?: string } }) {
   const { setUser } = useUser();
@@ -32,6 +34,7 @@ export default function BlackjackPage({ searchParams }: { searchParams?: { t?: s
     } catch (e) { setErr(e instanceof Error ? e.message : "failed"); }
   }
   const settledFor = useRef<string | null>(null);
+  const [lastBet, rememberBet] = useLastBet("blackjack");
 
   async function load() {
     const d = await api(tournamentId ? `/api/games/blackjack?t=${encodeURIComponent(tournamentId)}` : "/api/games/blackjack");
@@ -46,11 +49,14 @@ export default function BlackjackPage({ searchParams }: { searchParams?: { t?: s
     setReplay(null);
     setBusy(true);
     if (action === "deal") playDeal();
+    const betCents = typeof extra.betCents === "number" ? extra.betCents : bet;
     try {
       const d = await api("/api/games/blackjack", {
         method: "POST",
-        body: JSON.stringify({ action, gameId: game?.id, betCents: bet, ...extra, idempotencyKey: crypto.randomUUID(), ...(tournamentId ? { tournamentId } : {}) }),
+        body: JSON.stringify({ action, gameId: game?.id, ...extra, betCents, idempotencyKey: crypto.randomUUID(), ...(tournamentId ? { tournamentId } : {}) }),
       });
+      // Remember the wallet bet only after the server accepted the deal.
+      if (action === "deal" && !tournamentId) rememberBet(betCents);
       setGame(d.game);
       if (d.tournament) setTourney(d.tournament);
       if (d.user) setUser(d.user);
@@ -92,13 +98,14 @@ export default function BlackjackPage({ searchParams }: { searchParams?: { t?: s
           tournamentId={tournamentId}
           tourney={tourney}
           setTourney={setTourney}
+          lastBet={lastBet}
         />
       )}
     </Shell>
   );
 }
 
-function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, err, busy, act, betting, isPush, isWin, isLoss, result, hint, settledFor, tournamentId, tourney, setTourney }: any) {
+function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, err, busy, act, betting, isPush, isWin, isLoss, result, hint, settledFor, tournamentId, tourney, setTourney, lastBet }: any) {
   const paused = usePausedLabel();
   const tny = !!tournamentId;
   const stack: number = tny ? (tourney?.stackCents ?? 0) : u.balanceCents;
@@ -255,7 +262,21 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
           <>
             {tny
               ? <ChipRow amounts={[100, 200, 500, 1000, 2000]} selected={bet} onSelect={setBet} minCents={tourney?.minBetCents ?? 100} maxCents={tourney?.maxBetCents ?? 2000} />
-              : <ChipRow amounts={[500, 1000, 2500, 5000]} selected={bet} onSelect={setBet} minCents={100} maxCents={500_000} />}
+              : (
+                <QuickBetRow
+                  variant="table"
+                  amounts={TABLE_QUICK.blackjack.chips}
+                  selected={bet}
+                  onSelect={setBet}
+                  lastCoinCents={lastBet}
+                  balanceCents={stack}
+                  busy={busy || !!paused}
+                  lines={1}
+                  minCents={TABLE_QUICK.blackjack.min}
+                  maxCents={TABLE_QUICK.blackjack.max}
+                  onRepeat={(c) => { setBet(c); void act("deal", { betCents: c }); }}
+                />
+              )}
             <button
               className="btn primary hero-act"
               disabled={busy || !canAfford || !!paused}
