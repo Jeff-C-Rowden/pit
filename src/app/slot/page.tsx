@@ -13,6 +13,7 @@ import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
 import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
+import { useSpinRecap } from "@/components/SpinRecap";
 import { bellyPays, ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 import { WalletSplit } from "@/components/WalletSplit";
 import TournamentStrip from "@/components/TournamentStrip";
@@ -110,15 +111,19 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
   );
 
   const winRef = useRef(0);
+  const betRef = useRef(0);
+  const { recap, add: addRecap } = useSpinRecap();
   const [paid, setPaid] = useState(0);
   const onSpinComplete = useCallback(() => {
     setPaid((p) => p + winRef.current);
+    if (betRef.current > 0) addRecap(betRef.current, winRef.current);
+    betRef.current = 0;
     winRef.current = 0;
     setSpinning(false);
     setBusy(false);
     setShowOutcome(true);
     setSettleTick((n) => n + 1);
-  }, []);
+  }, [addRecap]);
 
   async function go(coinOverride?: number) {
     if (busy || spinning) return;
@@ -139,6 +144,7 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
       if (d.tournament) setTourney(d.tournament);
       rememberCoin(c); // only after the server accepted the bet
       winRef.current = d.spin.winCents || 0;
+      betRef.current = c * 9;
       setSpin(d.spin);
       setGrid(d.spin.grid as Symbol[][]);
       if (d.user) setUser(d.user);
@@ -223,6 +229,7 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
                   onPayTable={() => document.getElementById("paytable")?.scrollIntoView({ behavior: "smooth", block: "start" })}
                   coinLabel={money(coin)}
                   paidCents={paid}
+                  recap={recap}
                   maxLabel="Max bet"
                   auto={tournamentId ? undefined : auto}
                   note={tournamentId ? "TOURNEY CREDIT · tournament chips · no cash value" : "Sandbox / test chips · no cash value · 21+"}

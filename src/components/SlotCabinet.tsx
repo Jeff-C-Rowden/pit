@@ -15,6 +15,8 @@ import type { PeekBet, PeekGame } from "@/lib/symbolPeek";
 import WinLineOverlay from "./WinLineOverlay";
 import { GameInfoButton, SymbolPeekLayer } from "./SymbolPeek";
 import type { WinShow } from "@/lib/winShow";
+import type { RecapState } from "@/lib/spinRecap";
+import { SpinRecapSheet } from "./SpinRecap";
 
 /* ---------------- bulbs ---------------- */
 
@@ -145,6 +147,7 @@ export function CabinetDeck({
   fine = "Malfunction voids all spins · sandbox chips, no cash value",
   maxLabel = "Play max",
   creditLabel,
+  recap,
 }: {
   creditCents: number;
   betCents: number;
@@ -171,8 +174,11 @@ export function CabinetDeck({
   fine?: ReactNode;
   maxLabel?: string;
   creditLabel?: string;
+  /** Slot Scout S4: settled spins this visit; makes the Win meter open the recap sheet. */
+  recap?: RecapState;
 }) {
   const locked = busy || spinning || !!auto?.running;
+  const [recapOpen, setRecapOpen] = useState(false);
   return (
     <div className="cab-deck">
       <div className="cab-meters" aria-live="polite">
@@ -182,7 +188,21 @@ export function CabinetDeck({
         </div>
         {coinLabel && <div className="cab-coin-plate" aria-label={`Coin value ${coinLabel}`}>{coinLabel}</div>}
         <CabinetLed label="Bet" cents={betCents} />
-        <CabinetLed label="Win" value={win} lit={winLit} />
+        {recap ? (
+          <button
+            type="button"
+            className="cab-led-btn"
+            onClick={() => setRecapOpen(true)}
+            aria-haspopup="dialog"
+            aria-label="Win meter: open session recap"
+            title="Tap for session recap"
+            data-testid="win-meter-recap"
+          >
+            <CabinetLed label="Win ▸" value={win} lit={winLit} />
+          </button>
+        ) : (
+          <CabinetLed label="Win" value={win} lit={winLit} />
+        )}
         <CabinetLed label="Paid" cents={paidCents ?? 0} />
       </div>
       <div className="cab-console" role="group" aria-label="Cabinet buttons">
@@ -218,6 +238,7 @@ export function CabinetDeck({
       </div>
       {auto?.note && <p className="cab-auto-note" role="status">{auto.note}</p>}
       {note && <p className="cab-deck-note">{note}</p>}
+      {recap && recapOpen && <SpinRecapSheet recap={recap} onClose={() => setRecapOpen(false)} />}
     </div>
   );
 }

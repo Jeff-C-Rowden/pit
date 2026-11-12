@@ -19,6 +19,7 @@ import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
 import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
+import { useSpinRecap } from "@/components/SpinRecap";
 import { bellyPays, ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 
 type LineWin = { line: number; symbol: VsSymbol | null; count: number; pay: number; winCents: number };
@@ -180,9 +181,13 @@ export default function VaultPage() {
   );
 
   const winRef = useRef(0);
+  const betRef = useRef(0);
+  const { recap, add: addRecap } = useSpinRecap();
   const [paid, setPaid] = useState(0);
   const onSpinComplete = useCallback(() => {
     setPaid((p) => p + winRef.current);
+    if (betRef.current > 0) addRecap(betRef.current, winRef.current);
+    betRef.current = 0;
     winRef.current = 0;
     setSpinning(false);
     setBusy(false);
@@ -200,7 +205,7 @@ export default function VaultPage() {
       setReseedBeat(false);
       window.setTimeout(() => setReseedBeat(true), 900);
     }
-  }, []);
+  }, [addRecap]);
 
   // Failsafe: if reels never call onSpinComplete, unstick the dock
   useEffect(() => {
@@ -249,6 +254,7 @@ export default function VaultPage() {
       setGrid(d.spin.grid as VsSymbol[][]);
       setLastWinCents(d.spin.winCents || 0);
       winRef.current = d.spin.winCents || 0;
+      betRef.current = c * 9;
       if (d.meters) {
         if ((d.spin.progressiveHits as ProgHit[] | undefined)?.length) pendingMetersRef.current = d.meters;
         else setMeters(d.meters);
@@ -365,6 +371,7 @@ export default function VaultPage() {
                     onPayTable={() => setInfoSheet("game")}
                     coinLabel={money(coin)}
                     paidCents={paid}
+                    recap={recap}
                     maxLabel="Max bet"
                     auto={auto}
                     note="Sandbox / test chips · no cash value · 21+"

@@ -439,3 +439,27 @@
 /* bigger reel art on the video cabinets */
 .cab .sym:not(.bb-cell) .sym-icon { width: calc(var(--sym-h) * .52); height: calc(var(--sym-h) * .52); display: grid; place-items: center; }
 .cab .sym:not(.bb-cell) .sym-icon svg { width: 100%; height: 100%; }
+
+/* Slot Scout S4: Win meter opens the session recap */
+.cab-led-btn { all: unset; display: block; min-width: 0; cursor: pointer; border-radius: 4px; }
+.cab-led-btn:focus-visible { outline: 2px solid #ffd75e; outline-offset: 2px; }
+.cab-led-btn:hover .cab-led-lbl { color: #ffe0a0; }
+.recap-sheet { background: var(--st-bg-deep, #200C0D) !important; border: 1px solid #cb9831 !important; color: #f6e7c8; overflow-wrap: anywhere; }
+.recap-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; margin-bottom: 10px; }
+.recap-head h3 { margin: 0; font-family: var(--st-display); font-weight: 400; color: var(--st-jackpot, #ffd75e); font-size: clamp(18px, 5vw, 22px); }
+.recap-sum { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 10px; }
+.recap-sum > div { min-width: 0; padding: 6px 8px; border-radius: 4px; background: var(--st-shortcut, #4a1a19); border: 1px solid rgba(203,152,49,.35); }
+.recap-sum dt { font: 700 10px var(--st-narrow, system-ui); letter-spacing: .1em; text-transform: uppercase; color: #ffe0a0; }
+.recap-sum dd { margin: 2px 0 0; font-weight: 800; font-variant-numeric: tabular-nums; }
+.recap-net.up dd, .recap-table tr.up td:last-child { color: #8fe39a; }
+.recap-net.down dd, .recap-table tr.down td:last-child { color: #ffb4a8; }
+.recap-table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; margin-bottom: 8px; }
+.recap-table caption { text-align: left; font-size: 12px; color: #ffe0a0; padding-bottom: 4px; }
+.recap-table th, .recap-table td { padding: 5px 6px; border-bottom: 1px solid rgba(203,152,49,.2); text-align: right; }
+.recap-table th:first-child, .recap-table td:first-child { text-align: left; }
+.recap-table th { font: 700 10px var(--st-narrow, system-ui); letter-spacing: .1em; text-transform: uppercase; color: #ffe0a0; }
+.recap-feat { color: #ffd75e; }
+.recap-empty, .recap-note { margin: 0 0 8px; font-size: 13px; line-height: 1.45; }
+.recap-note { opacity: .85; }
+.recap-close { width: 100%; margin-top: 4px; }
+@media (max-width: 380px) { .recap-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

@@ -83,7 +83,7 @@ Merged the RTP audit onto the restyle (Sundown Trail / Antler Ridge / Buckshot B
 - S1 SHIPPED 2026-11-11 (afternoon). Weighted reel stops: L→R ~120ms apart, 5px overshoot + settle + soft thunk; Stop / tap-to-stop slams remaining reels. No suspense slowdown; reduced motion drops bounce. Tests: tests/slotFeel.test.ts.
 - S2 Symbol paytable peek: long-press a symbol on stopped reels for 3/4/5-of-a-kind pays at current bet; info button = one plain screen with RTP + feature trigger. — SHIPPED 2026-11-12
 - S3 Multi-line win walkthrough: total first, then each paying line ~400ms, tap to skip; losing spins resolve quietly (no lights/sound/lingering). — SHIPPED 2026-11-12 (54cffa6)
-- S4 Session recap chip: tap Win meter for sheet of last 10 spins (bet/win/net) + session net; plain numbers.
+- S4 Session recap chip: tap Win meter for sheet of last 10 spins (bet/win/net) + session net; plain numbers. — SHIPPED 2026-11-12 (6am): Win meter on all 7 cabinets is a button (label "Win ▸") opening a portaled role=dialog "Session recap": spins / bet / won / session net for this visit on this machine, plus the last 10 settled spins newest first (bet, win, signed net, ★ when a bonus feature paid in). Recorded beside the Paid meter only after reels/features settle; true minus sign, no plus on zero; SandboxChip; note that past spins don't change the next one. src/lib/spinRecap.ts, src/components/SpinRecap.tsx; tests/spinRecap.test.ts (565 tests).
 - S5 Player-paced bonus bookends: intro card (what was won, one rule line, Start, no countdown) and summary card before crediting Balance; pairs with hold-and-win research #5.
 - Guardrail: cabinet lighting only after result resolves; never brighten or slow reels mid-spin as scatters land.
 

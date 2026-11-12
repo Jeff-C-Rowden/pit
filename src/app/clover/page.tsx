@@ -15,6 +15,7 @@ import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
 import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
+import { useSpinRecap } from "@/components/SpinRecap";
 import { ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 import SpinNotice from "@/components/SpinNotice";
 
@@ -114,6 +115,7 @@ export default function CloverPage() {
   const stepRef = useRef(0);
   const [story, setStory] = useState(false);
   const [paid, setPaid] = useState(0);
+  const { recap, add: addRecap } = useSpinRecap();
   const [lastCoin, rememberCoin] = useLastBet("clover");
   const [feelLive, setFeelLive] = useState(false);
   const [turbo, setTurbo] = useState(false);
@@ -245,9 +247,10 @@ export default function CloverPage() {
       return;
     }
     setPaid((v) => v + (s?.winCents ?? 0));
+    if (s) addRecap(s.betCents, s.winCents ?? 0);
     setPh("idle");
     setSettleTick((n) => n + 1);
-  }, [playNextFree, runStep, auto]);
+  }, [playNextFree, runStep, auto, addRecap]);
 
   function skipFree() {
     const f = fsRef.current;
@@ -263,6 +266,7 @@ export default function CloverPage() {
 
   function finishFeature() {
     setPaid((v) => v + (spinRef.current?.winCents ?? 0));
+    if (spinRef.current) addRecap(spinRef.current.betCents, spinRef.current.winCents ?? 0, true);
     setPh("idle");
     setFsIdx(-1);
     fsIdxRef.current = -1;
@@ -390,6 +394,7 @@ export default function CloverPage() {
                     onPayTable={() => document.getElementById("paytable")?.scrollIntoView({ behavior: "smooth", block: "start" })}
                     coinLabel={money(coin)}
                     paidCents={paid}
+                    recap={recap}
                     maxLabel="Max bet"
                     auto={auto}
                     note="Sandbox / test chips · no cash value · 21+"

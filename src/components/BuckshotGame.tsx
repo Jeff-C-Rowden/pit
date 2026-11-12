@@ -10,6 +10,7 @@ import { BB_DENOMS, BB_MAX_COINS, type BbSymbol } from "@/lib/games/buckshot";
 import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import { CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
+import { useSpinRecap } from "@/components/SpinRecap";
 import { ledText, maxBetRefusal, playMaxCoins } from "@/lib/cabinet";
 import { AntlerShoe } from "@/components/WesternArt";
 import { WalletSplit } from "@/components/WalletSplit";
@@ -44,6 +45,8 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
   const [reduced, setReduced] = useState(false);
   const [spins, setSpins] = useState(0);
   const [paid, setPaid] = useState(0);
+  const betRef = useRef(0);
+  const { recap, add: addRecap } = useSpinRecap();
   const winRef = useRef(0);
   const machineRef = useRef<BuckshotHandle>(null);
   const balRef = useRef(0);
@@ -81,12 +84,14 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
 
   const onSpinComplete = useCallback(() => {
     setPaid((p) => p + winRef.current);
+    if (betRef.current > 0) addRecap(betRef.current, winRef.current);
+    betRef.current = 0;
     winRef.current = 0;
     setSpinning(false);
     setBusy(false);
     setShowOutcome(true);
     setSettleTick((n) => n + 1);
-  }, []);
+  }, [addRecap]);
 
   async function go(coinsOverride?: number) {
     if (busy || spinning) return;
@@ -105,6 +110,7 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
       setFunding(d.funded ? { funded: d.funded, paid: d.paid } : null);
       if (d.tournament) setTourney(d.tournament);
       winRef.current = d.spin.winCents || 0;
+      betRef.current = c * denom;
       setSpin(d.spin);
       setWin(d.spin.window as BbSymbol[][]);
       setSpins((n) => n + 1);
@@ -190,6 +196,7 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
                   win={ledText(showOutcome && spin ? spin.winCents : 0)}
                   winLit={won}
                   paidCents={paid}
+                  recap={recap}
                   coinLabel={denomLabel(denom)}
                   spinning={spinning}
                   busy={busy}
