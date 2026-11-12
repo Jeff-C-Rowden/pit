@@ -347,6 +347,13 @@ const CloverMachine = forwardRef<
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
   const [settled, setSettled] = useState(true);
+  // "Skip to total" ends a free spin mid-roll: reels snap to their final symbols when spinning
+  // drops, so count them as settled (win lines and after-lights can show) without a reel callback.
+  useEffect(() => {
+    if (spinning || settled) return;
+    const t = window.setTimeout(() => setSettled(true), 250);
+    return () => window.clearTimeout(t);
+  }, [spinning, settled]);
   const [stopAllTick, setStopAllTick] = useState(0);
   const stopped = useRef<Set<number>>(new Set());
   const completedGen = useRef(-1);

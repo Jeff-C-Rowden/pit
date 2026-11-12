@@ -17,7 +17,7 @@ import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
 import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
-import { ledText, stepCoin } from "@/lib/cabinet";
+import { ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 import SpinNotice from "@/components/SpinNotice";
 
 type WayWin = { symbol: PrPaySymbol; reels: number; ways: number; mult: number; pay: number; winCents: number };
@@ -361,9 +361,12 @@ export default function PrairiePage() {
   }
 
   function onMaxBet() {
+    const best = maxBetCoin(balRef.current, PR_BET_COINS, SLOT_COIN_MIN, SLOT_COIN_MAX);
+    if (best === null) { setMaxArmed(false); setErr(maxBetRefusal(money(balRef.current), money(SLOT_COIN_MIN * PR_BET_COINS))); return; }
     if (!maxArmed) { setMaxArmed(true); return; }
-    setCoin(SLOT_COIN_MAX);
+    setCoin(best);
     setMaxArmed(false);
+    setErr(null);
   }
 
   const pays = (["BUFFALO", "EAGLE", "COYOTE", "BOOTS"] as PrPaySymbol[]).map((k) => {

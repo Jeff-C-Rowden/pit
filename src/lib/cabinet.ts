@@ -114,3 +114,28 @@ export function paylineTabs(paylines: readonly (readonly number[])[], side: "lef
   });
   return rows;
 }
+
+/**
+ * Max Bet: the largest valid coin the player's usable credit covers for one spin
+ * (coin × `coinsPerSpin` ≤ credit), capped at the game's published max coin.
+ * Null when even the smallest coin is not covered (the page shows the refusal notice).
+ * Credit is whatever that game can spend (cash, plus usable bonus where the game takes it,
+ * or the tournament stack). The server still re-checks every spin.
+ */
+export function maxBetCoin(creditCents: number, coinsPerSpin: number, minCoin = SLOT_COIN_MIN, maxCoin = SLOT_COIN_MAX): number | null {
+  const credit = Math.floor(Number(creditCents) || 0);
+  const per = Math.max(1, Math.floor(coinsPerSpin) || 1);
+  const c = Math.min(maxCoin, Math.floor(credit / per));
+  return c >= minCoin ? c : null;
+}
+
+/** Classic PLAY MAX (Buckshot / Bounty Bars): the most coins (up to `maxCoins`) at the chosen coin value the credit covers. */
+export function playMaxCoins(creditCents: number, denomCents: number, maxCoins = 3): number {
+  const d = Math.max(1, Math.floor(denomCents) || 1);
+  return Math.max(0, Math.min(maxCoins, Math.floor((Math.floor(Number(creditCents) || 0)) / d)));
+}
+
+/** Refusal text when Max Bet finds no covered bet. Mentions the Cage so the notice links there. */
+export function maxBetRefusal(creditText: string, smallestText: string): string {
+  return `Max bet: your ${creditText} doesn't cover a spin here (smallest bet ${smallestText}). Add sandbox chips in the Cage.`;
+}

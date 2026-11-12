@@ -10,7 +10,7 @@ import { BB_DENOMS, BB_MAX_COINS, type BbSymbol } from "@/lib/games/buckshot";
 import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import { CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
-import { ledText } from "@/lib/cabinet";
+import { ledText, maxBetRefusal, playMaxCoins } from "@/lib/cabinet";
 import { AntlerShoe } from "@/components/WesternArt";
 import { WalletSplit } from "@/components/WalletSplit";
 import TournamentStrip from "@/components/TournamentStrip";
@@ -127,11 +127,13 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
     void go();
   }
 
-  /** PLAY MAX: three coins at the current coin value, then spin (max is only 3 × coin). */
+  /** PLAY MAX: the most coins (up to three) at the current coin value the credit covers, then spin. */
   function onPlayMax() {
     if (busy || spinning) return;
-    setCoins(BB_MAX_COINS);
-    void go(BB_MAX_COINS);
+    const n = playMaxCoins(balRef.current, denom, BB_MAX_COINS);
+    if (n < 1) { setErr(maxBetRefusal(money(balRef.current), money(denom))); return; }
+    setCoins(n);
+    void go(n);
   }
 
   const won = !!(showOutcome && spin && spin.winCents > 0);

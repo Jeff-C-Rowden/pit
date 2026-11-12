@@ -12,14 +12,14 @@ import { momentsFromNewHits, momentsFromSpinHits } from "@/lib/reseedMoment";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
-import { VS_PAYLINES, VS_TOTAL_CONTRIBUTION_BPS, type VsSymbol } from "@/lib/games/slotProgressive";
+import { VS_MAX_COIN_CENTS, VS_MIN_COIN_CENTS, VS_PAYLINES, VS_TOTAL_CONTRIBUTION_BPS, type VsSymbol } from "@/lib/games/slotProgressive";
 import { lineShows } from "@/lib/winShow";
 import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
 import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
-import { bellyPays, ledText, stepCoin } from "@/lib/cabinet";
+import { bellyPays, ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 
 type LineWin = { line: number; symbol: VsSymbol | null; count: number; pay: number; winCents: number };
 type ProgHit = { tierId: string; name: string; awardCents: number; reseedsTo?: number };
@@ -278,12 +278,12 @@ export default function VaultPage() {
   }
 
   function onMaxBet() {
-    if (!maxArmed) {
-      setMaxArmed(true);
-      return;
-    }
-    setCoin(5000);
+    const best = maxBetCoin(balRef.current, 9, VS_MIN_COIN_CENTS, VS_MAX_COIN_CENTS);
+    if (best === null) { setMaxArmed(false); setErr(maxBetRefusal(money(balRef.current), money(VS_MIN_COIN_CENTS * 9))); return; }
+    if (!maxArmed) { setMaxArmed(true); return; }
+    setCoin(best);
     setMaxArmed(false);
+    setErr(null);
   }
 
   const pays = bellyPays(info?.paytable).flatMap((p) => {
@@ -516,7 +516,7 @@ export default function VaultPage() {
                     onClick={onMaxBet}
                     disabled={busy || spinning}
                   >
-                    {maxArmed ? "Confirm Max $50 coin" : "Max Bet"}
+                    {maxArmed ? `Confirm Max ${money(maxBetCoin(balRef.current, 9, VS_MIN_COIN_CENTS, VS_MAX_COIN_CENTS) ?? VS_MIN_COIN_CENTS)} coin` : "Max Bet"}
                   </button>
                 </div>
                 <QuickBetRow

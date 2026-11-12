@@ -13,7 +13,7 @@ import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
 import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
-import { bellyPays, ledText, stepCoin } from "@/lib/cabinet";
+import { bellyPays, ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 import { WalletSplit } from "@/components/WalletSplit";
 import TournamentStrip from "@/components/TournamentStrip";
 import SpinNotice from "@/components/SpinNotice";
@@ -161,9 +161,12 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
   }
 
   function onMaxBet() {
+    const best = maxBetCoin(balRef.current, 9, SLOT_COIN_MIN, SLOT_COIN_MAX);
+    if (best === null) { setMaxArmed(false); setErr(maxBetRefusal(money(balRef.current), money(SLOT_COIN_MIN * 9))); return; }
     if (!maxArmed) { setMaxArmed(true); return; }
-    setCoin(SLOT_COIN_MAX);
+    setCoin(best);
     setMaxArmed(false);
+    setErr(null);
   }
 
   const pays = bellyPays(info?.paytable).flatMap((p) => {
