@@ -20,6 +20,8 @@ import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } f
 import { useSpinRecap } from "@/components/SpinRecap";
 import { ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 import SpinNotice from "@/components/SpinNotice";
+import { BonusIntroCard, BonusSummaryCard, useFeatureCredit } from "@/components/BonusBookend";
+import { bonusIntro, prairieSummary } from "@/lib/bonusBookends";
 
 type WayWin = { symbol: PrPaySymbol; reels: number; ways: number; mult: number; pay: number; winCents: number };
 type FreeSpin = { n: number; grid: PrSymbol[][]; wins: WayWin[]; scatters: number; winCents: number; retrigger: number; awardedTotal: number };
@@ -74,28 +76,6 @@ function StoryCard({ onClose }: { onClose: () => void }) {
   );
 }
 
-function TriggerBanner({ kind, spins, coins, reduced }: { kind: "fs" | "hold"; spins?: number; coins?: number; reduced: boolean }) {
-  return (
-    <div className={`mine-trigger pr-trigger pr-trigger-${kind}${reduced ? " still" : ""}`} role="status" aria-live="assertive">
-      <div className="mine-trigger-card">
-        {kind === "fs" ? (
-          <>
-            <span className="mine-trigger-k">The storm rolls in</span>
-            <span className="mine-trigger-h">{spins} FREE SPINS</span>
-            <span className="mine-trigger-s">Wilds carry 2× or 3× and multiply each other</span>
-          </>
-        ) : (
-          <>
-            <span className="mine-trigger-k">{coins} herd coins</span>
-            <span className="mine-trigger-h">HOLD &amp; SPIN</span>
-            <span className="mine-trigger-s">Coins lock · {PR_HS_RESPINS} respins · new coins reset to {PR_HS_RESPINS}</span>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 /** Hold & Spin board, replayed from the server result one respin at a time. */
 function HoldBoard({ hold, step, betCents }: { hold: Hold; step: number; betCents: number }) {
   const board: (number | null)[] = Array(15).fill(null);
@@ -127,6 +107,7 @@ function HoldBoard({ hold, step, betCents }: { hold: Hold; step: number; betCent
 
 export default function PrairiePage() {
   const { setUser } = useUser();
+  const credit = useFeatureCredit(setUser);
   const [spin, setSpin] = useState<Spin | null>(null);
   const [grid, setGrid] = useState<PrSymbol[][] | null>(null);
   const [coins, setCoins] = useState<(number | null)[][] | null>(null);
@@ -238,12 +219,12 @@ export default function PrairiePage() {
     later(() => setGrid(s.freeSpins!.spins[idx]!.grid), 180);
   }, [toSummary]);
 
+  // S5: each trigger shows a player-paced intro card; nothing starts until Start.
   const startFree = useCallback(() => {
     setTrigger("fs");
     setPh("trigger");
     playFeature();
-    later(() => { setTrigger(null); setPh("fs"); setFsWon(0); playNextFree(0); }, reducedMotion() ? 900 : 2000);
-  }, [playNextFree]);
+  }, []);
 
   const afterHold = useCallback(() => {
     const s = spinRef.current;
@@ -265,8 +246,15 @@ export default function PrairiePage() {
     setTrigger("hold");
     setPh("trigger");
     playFeature();
-    later(() => { setTrigger(null); runHold(); }, reducedMotion() ? 900 : 2000);
-  }, [runHold]);
+  }, []);
+
+  const beginFeature = useCallback(() => {
+    if (phaseRef.current !== "trigger") return;
+    const kind = trigger;
+    setTrigger(null);
+    if (kind === "hold") runHold();
+    else { setPh("fs"); setFsWon(0); playNextFree(0); }
+  }, [trigger, runHold, playNextFree]);
 
   const onSpinComplete = useCallback(() => {
     setSpinning(false);
@@ -313,6 +301,7 @@ export default function PrairiePage() {
   }
 
   function finishFeature() {
+    credit.release();
     setPaid((v) => v + (spinRef.current?.winCents ?? 0));
     if (spinRef.current) addRecap(spinRef.current.betCents, spinRef.current.winCents ?? 0, true);
     setPh("idle");
@@ -347,7 +336,7 @@ export default function PrairiePage() {
       spinRef.current = d.spin;
       setCoins(d.spin.coins);
       setGrid(d.spin.grid);
-      if (d.user) setUser(d.user);
+      credit.accept(d.user, d.spin);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "failed");
       auto.fail();
@@ -461,7 +450,6 @@ export default function PrairiePage() {
                 }
                 lever={<CabinetLever onPull={() => void go()} disabled={busy || spinning || auto.running || phase !== "idle"} reduced={reduced} />}
               />
-              {phase === "trigger" && trigger && <TriggerBanner kind={trigger} spins={spin?.freeSpins?.initial} coins={coinsOnGrid} reduced={reduced} />}
               {phase === "fs" && retrig > 0 && (
                 <div className="mine-trigger pr-trigger still" role="status"><div className="mine-trigger-card"><span className="mine-trigger-k">Retrigger</span><span className="mine-trigger-h">+{retrig} FREE SPINS</span></div></div>
               )}
@@ -477,25 +465,15 @@ export default function PrairiePage() {
               )}
             </div>
 
-            {phase === "summary" && spin && (
-              <div className="mine-modal pr-modal" role="dialog" aria-modal="true" aria-labelledby="pr-sum-h">
-                <div className="mine-modal-card mine-summary">
-                  <p className="mine-kicker">Feature complete</p>
-                  <h2 id="pr-sum-h">{money(spin.winCents)}</h2>
-                  <table className="mine-sum-table">
-                    <tbody>
-                      <tr><td>Base spin</td><td>{money(spin.baseWinCents)}</td></tr>
-                      {spin.hold && <tr><td>Hold &amp; Spin ({spin.hold.board.filter((v) => v != null).length} coins, {spin.hold.totalX}× bet)</td><td>{money(spin.hold.totalWinCents)}</td></tr>}
-                      {spin.freeSpins && <tr><td>Free spins ({spin.freeSpins.spins.length} played)</td><td>{money(spin.freeSpins.totalWinCents)}</td></tr>}
-                      <tr className="mine-sum-total"><td>Total on a {money(spin.betCents)} bet</td><td>{money(spin.winCents)}</td></tr>
-                    </tbody>
-                  </table>
-                  {spin.freeSpins?.capped && <p className="muted">This feature reached the {PR_FS_CAP}-free-spin cap.</p>}
-                  <p className="muted">Already credited to your sandbox balance by the server.</p>
-                  <button type="button" className="btn primary" onClick={finishFeature} autoFocus>Back to the reels</button>
-                </div>
-              </div>
+            {phase === "trigger" && trigger && spin && (
+              <BonusIntroCard
+                theme="pr-bookend"
+                intro={bonusIntro("prairie", trigger === "fs" ? { kind: "fs", spins: spin.freeSpins?.initial ?? 0, scatters: spin.scatters } : { kind: "hold", coins: coinsOnGrid }, spin.betCents)}
+                onStart={beginFeature}
+              />
             )}
+
+            {phase === "summary" && spin && <BonusSummaryCard theme="pr-bookend" summary={prairieSummary(spin, PR_FS_CAP)} onCollect={finishFeature} />}
 
             {showResult && spin && !hasFeature && spin.winCents > coinIn && (
               <OutcomeBanner win title="YOU WIN" amountCents={spin.winCents} stakeCents={coinIn} subtitle={`${money(spin.winCents)} back on a ${money(coinIn)} bet · net +${money(spin.winCents - coinIn)}`} />

@@ -17,6 +17,8 @@ import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } f
 import { useSpinRecap } from "@/components/SpinRecap";
 import { ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 import SpinNotice from "@/components/SpinNotice";
+import { BonusIntroCard, BonusSummaryCard, useFeatureCredit } from "@/components/BonusBookend";
+import { bonusIntro, mineSummary } from "@/lib/bonusBookends";
 
 type LineWin = { line: number; symbol: string; count: number; pay: number; winCents: number };
 type FreeSpin = { n: number; grid: MineSymbol[][]; lineWins: LineWin[]; scatters: number; winCents: number; retrigger: number; awardedTotal: number };
@@ -55,28 +57,6 @@ function StoryCard({ onClose }: { onClose: () => void }) {
         </p>
         <p className="mine-story-note">Sandbox / test chips only · no cash value · 21+. Every result is drawn by the server; features don&apos;t change the odds of the next spin.</p>
         <button type="button" className="btn primary" onClick={onClose} autoFocus>Head into the mine</button>
-      </div>
-    </div>
-  );
-}
-
-function TriggerBanner({ kind, spins, reduced }: { kind: "fs" | "pick"; spins?: number; reduced: boolean }) {
-  return (
-    <div className={`mine-trigger mine-trigger-${kind}${reduced ? " still" : ""}`} role="status" aria-live="assertive">
-      <div className="mine-trigger-card">
-        {kind === "fs" ? (
-          <>
-            <span className="mine-trigger-k">Dynamite!</span>
-            <span className="mine-trigger-h">{spins} FREE SPINS</span>
-            <span className="mine-trigger-s">Every free-spin win ×2</span>
-          </>
-        ) : (
-          <>
-            <span className="mine-trigger-k">Carts rolling in</span>
-            <span className="mine-trigger-h">MINE CART BONUS</span>
-            <span className="mine-trigger-s">Pick carts until a lamp says collect</span>
-          </>
-        )}
       </div>
     </div>
   );
@@ -144,6 +124,7 @@ function PickBoard({ pick, betCents, onDone, reduced }: { pick: NonNullable<Spin
 
 export default function MinePage() {
   const { setUser } = useUser();
+  const credit = useFeatureCredit(setUser);
   const [spin, setSpin] = useState<Spin | null>(null);
   const [grid, setGrid] = useState<MineSymbol[][] | null>(null);
   const [coin, setCoin] = useState(25);
@@ -155,6 +136,7 @@ export default function MinePage() {
   const phaseRef = useRef<Phase>("idle");
   const setPh = (p: Phase) => { phaseRef.current = p; setPhase(p); };
   const [trigger, setTrigger] = useState<"fs" | "pick" | null>(null);
+  const triggerRef = useRef<"fs" | "pick">("fs");
   const [fsIdx, setFsIdx] = useState(-1);
   const fsIdxRef = useRef(-1);
   const [fsWon, setFsWon] = useState(0);
@@ -251,18 +233,20 @@ export default function MinePage() {
     later(() => setGrid(s.freeSpins!.spins[idx]!.grid), 180);
   }, []);
 
+  // S5: the trigger shows a player-paced intro card; nothing starts until Start.
   const startFeature = useCallback((kind: "fs" | "pick") => {
-    const s = spinRef.current!;
+    triggerRef.current = kind;
     setTrigger(kind);
     setPh("trigger");
     playFeature();
-    const hold = reducedMotion() ? 900 : 2000;
-    later(() => {
-      setTrigger(null);
-      if (kind === "pick") setPh("pick");
-      else { setPh("fs"); setFsWon(0); playNextFree(0); }
-    }, hold);
-    void s;
+  }, []);
+
+  const beginFeature = useCallback(() => {
+    if (phaseRef.current !== "trigger") return;
+    const kind = triggerRef.current;
+    setTrigger(null);
+    if (kind === "pick") setPh("pick");
+    else { setPh("fs"); setFsWon(0); playNextFree(0); }
   }, [playNextFree]);
 
   const onSpinComplete = useCallback(() => {
@@ -303,6 +287,7 @@ export default function MinePage() {
   }
 
   function finishFeature() {
+    credit.release();
     setPaid((v) => v + (spinRef.current?.winCents ?? 0));
     if (spinRef.current) addRecap(spinRef.current.betCents, spinRef.current.winCents ?? 0, true);
     setPh("idle");
@@ -334,7 +319,7 @@ export default function MinePage() {
       setSpin(d.spin);
       spinRef.current = d.spin;
       setGrid(d.spin.grid);
-      if (d.user) setUser(d.user);
+      credit.accept(d.user, d.spin);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "failed");
       auto.fail();
@@ -437,34 +422,22 @@ export default function MinePage() {
                 }
                 lever={<CabinetLever onPull={() => void go()} disabled={busy || spinning || auto.running || phase !== "idle"} reduced={reduced} />}
               />
-              {phase === "trigger" && trigger && <TriggerBanner kind={trigger} spins={spin?.freeSpins?.initial} reduced={reduced} />}
-              {phase === "trigger" && !trigger && reduced && null}
               {phase === "fs" && retrig > 0 && (
                 <div className="mine-trigger mine-trigger-fs still" role="status"><div className="mine-trigger-card"><span className="mine-trigger-k">Retrigger</span><span className="mine-trigger-h">+{retrig} FREE SPINS</span></div></div>
               )}
             </div>
 
-            {phase === "pick" && spin?.pick && <PickBoard pick={spin.pick} betCents={spin.betCents} reduced={reduced} onDone={() => setPh("summary")} />}
+            {phase === "pick" && spin?.pick && <PickBoard pick={spin.pick} betCents={spin.betCents} reduced={reduced} onDone={() => { if (spin.freeSpins) startFeature("fs"); else setPh("summary"); }} />}
 
-            {phase === "summary" && spin && (
-              <div className="mine-modal" role="dialog" aria-modal="true" aria-labelledby="mine-sum-h">
-                <div className="mine-modal-card mine-summary">
-                  <p className="mine-kicker">Feature complete</p>
-                  <h2 id="mine-sum-h">{money(spin.winCents)}</h2>
-                  <table className="mine-sum-table">
-                    <tbody>
-                      <tr><td>Base spin</td><td>{money(spin.baseWinCents)}</td></tr>
-                      {spin.freeSpins && <tr><td>Free spins ({spin.freeSpins.spins.length} played, ×2)</td><td>{money(spin.freeSpins.totalWinCents)}</td></tr>}
-                      {spin.pick && <tr><td>Mine Cart ({spin.pick.totalX}× bet)</td><td>{money(spin.pick.totalWinCents)}</td></tr>}
-                      <tr className="mine-sum-total"><td>Total on a {money(spin.betCents)} bet</td><td>{money(spin.winCents)}</td></tr>
-                    </tbody>
-                  </table>
-                  {spin.freeSpins?.capped && <p className="muted">This feature reached the {MINE_FS_CAP}-free-spin cap.</p>}
-                  <p className="muted">Already credited to your sandbox balance by the server.</p>
-                  <button type="button" className="btn primary" onClick={finishFeature} autoFocus>Back to the reels</button>
-                </div>
-              </div>
+            {phase === "trigger" && trigger && spin && (
+              <BonusIntroCard
+                theme="mine-bookend"
+                intro={bonusIntro("mine", trigger === "fs" ? { kind: "fs", spins: spin.freeSpins?.initial ?? 0, scatters: spin.scatters } : { kind: "pick" }, spin.betCents)}
+                onStart={beginFeature}
+              />
             )}
+
+            {phase === "summary" && spin && <BonusSummaryCard theme="mine-bookend" summary={mineSummary(spin, MINE_FS_CAP)} onCollect={finishFeature} />}
 
             {showResult && spin && !spin.freeSpins && !spin.pick && spin.winCents > coinIn && (
               <OutcomeBanner win title="YOU WIN" amountCents={spin.winCents} stakeCents={coinIn} subtitle={`${money(spin.winCents)} back on a ${money(coinIn)} bet · net +${money(spin.winCents - coinIn)}`} />

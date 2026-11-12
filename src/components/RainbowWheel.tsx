@@ -5,6 +5,7 @@
  * Every wedge is the same size and equally likely. Under reduced motion the wheel jumps straight to its stop.
  */
 import { useEffect, useRef, useState } from "react";
+import { SandboxChip } from "@/components/SandboxChip";
 import { CL_INNER_WHEEL, CL_OUTER_WHEEL, type Wedge } from "@/lib/games/clover";
 import { money } from "@/components/useUser";
 import { landingRotation, wedgeAtPointer } from "@/lib/wheel";
@@ -69,7 +70,7 @@ export default function RainbowWheel({ wheel, betCents, reduced, onDone }: { whe
   return (
     <div className="mine-modal cl-modal" role="dialog" aria-modal="true" aria-labelledby="cl-wheel-h">
       <div className="mine-modal-card cl-wheel-card">
-        <p className="mine-kicker">Bonus</p>
+        <div className="bookend-head"><p className="mine-kicker">Bonus</p><SandboxChip /></div>
         <h2 id="cl-wheel-h">{stage === "innerDone" || stage === "outer" || (stage === "done" && upgraded) ? "Pot-of-Gold Wheel" : "Rainbow Wheel"}</h2>
         <div className={`cl-wheel${upgraded && stage !== "ready" && stage !== "inner" ? " outer-live" : ""}`}>
           <span className="cl-wheel-pointer" aria-hidden />

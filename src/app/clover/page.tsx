@@ -18,6 +18,8 @@ import { CabinetBelly, CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } f
 import { useSpinRecap } from "@/components/SpinRecap";
 import { ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 import SpinNotice from "@/components/SpinNotice";
+import { BonusIntroCard, BonusSummaryCard, useFeatureCredit } from "@/components/BonusBookend";
+import { bonusIntro, cloverSummary } from "@/lib/bonusBookends";
 
 type LineWin = { line: number; symbol: string; count: number; pay: number; winCents: number };
 type FreeSpin = { n: number; grid: ClSymbol[][]; shown: ClSymbol[][]; lineWins: LineWin[]; scatters: number; winCents: number; retrigger: number; awardedTotal: number };
@@ -70,30 +72,9 @@ function StoryCard({ onClose }: { onClose: () => void }) {
   );
 }
 
-function TriggerBanner({ kind, spins, source, reduced }: { kind: "fs" | "wheel"; spins?: number; source?: string; reduced: boolean }) {
-  return (
-    <div className={`mine-trigger cl-trigger cl-trigger-${kind}${reduced ? " still" : ""}`} role="status" aria-live="assertive">
-      <div className="mine-trigger-card">
-        {kind === "fs" ? (
-          <>
-            <span className="mine-trigger-k">{source === "wheel" ? "From the wheel" : "Three kettles!"}</span>
-            <span className="mine-trigger-h">{spins} FREE SPINS</span>
-            <span className="mine-trigger-s">Clover wilds expand to fill their reel</span>
-          </>
-        ) : (
-          <>
-            <span className="mine-trigger-k">Rainbow bridges on reels 1, 3 &amp; 5</span>
-            <span className="mine-trigger-h">RAINBOW WHEEL</span>
-            <span className="mine-trigger-s">Credits · free spins · or upgrade to the Pot-of-Gold wheel</span>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function CloverPage() {
   const { setUser } = useUser();
+  const credit = useFeatureCredit(setUser);
   const [spin, setSpin] = useState<Spin | null>(null);
   const [grid, setGrid] = useState<ClSymbol[][] | null>(null);
   const [coin, setCoin] = useState(25);
@@ -215,13 +196,23 @@ export default function CloverPage() {
     const st = list[i]!;
     setTrigger(st.kind);
     if (st.kind === "fs") { fsRef.current = st.fs; setFsCur(st.fs); setFsIdx(-1); }
-    setPh("trigger");
     playFeature();
-    later(() => {
-      setTrigger(null);
-      if (st.kind === "wheel") setPh("wheel");
-      else { setPh("fs"); setFsWon(0); playNextFree(0); }
-    }, reducedMotion() ? 900 : 2000);
+    // The Rainbow Wheel's own "Spin the wheel" screen is already a player-paced intro, and its
+    // "Start free spins" button starts wheel free spins, so those skip the S5 intro card.
+    if (st.kind === "wheel") { setTrigger(null); setPh("wheel"); return; }
+    if (st.fs.source === "wheel") { setTrigger(null); setPh("fs"); setFsWon(0); playNextFree(0); return; }
+    setPh("trigger");
+  }, [playNextFree]);
+
+  // S5: each trigger shows a player-paced intro card; nothing starts until Start.
+  const beginFeature = useCallback(() => {
+    if (phaseRef.current !== "trigger") return;
+    const s = spinRef.current;
+    const st = s ? steps(s)[stepRef.current] : undefined;
+    if (!st) return;
+    setTrigger(null);
+    if (st.kind === "wheel") setPh("wheel");
+    else { setPh("fs"); setFsWon(0); playNextFree(0); }
   }, [playNextFree]);
 
   const onSpinComplete = useCallback(() => {
@@ -265,6 +256,7 @@ export default function CloverPage() {
   }
 
   function finishFeature() {
+    credit.release();
     setPaid((v) => v + (spinRef.current?.winCents ?? 0));
     if (spinRef.current) addRecap(spinRef.current.betCents, spinRef.current.winCents ?? 0, true);
     setPh("idle");
@@ -298,7 +290,7 @@ export default function CloverPage() {
       setSpin(d.spin);
       spinRef.current = d.spin;
       setGrid(d.spin.grid);
-      if (d.user) setUser(d.user);
+      credit.accept(d.user, d.spin);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "failed");
       auto.fail();
@@ -402,7 +394,6 @@ export default function CloverPage() {
                 }
                 lever={<CabinetLever onPull={() => void go()} disabled={busy || spinning || auto.running || phase !== "idle"} reduced={reduced} />}
               />
-              {phase === "trigger" && trigger && <TriggerBanner kind={trigger} spins={fsCur?.initial} source={fsCur?.source} reduced={reduced} />}
               {phase === "fs" && retrig > 0 && (
                 <div className="mine-trigger cl-trigger still" role="status"><div className="mine-trigger-card"><span className="mine-trigger-k">Retrigger</span><span className="mine-trigger-h">+{retrig} FREE SPINS</span></div></div>
               )}
@@ -410,26 +401,15 @@ export default function CloverPage() {
 
             {phase === "wheel" && spin?.wheel && <RainbowWheel wheel={spin.wheel} betCents={spin.betCents} reduced={reduced} onDone={() => runStep(stepRef.current + 1)} />}
 
-            {phase === "summary" && spin && (
-              <div className="mine-modal cl-modal" role="dialog" aria-modal="true" aria-labelledby="cl-sum-h">
-                <div className="mine-modal-card mine-summary">
-                  <p className="mine-kicker">Feature complete</p>
-                  <h2 id="cl-sum-h">{money(spin.winCents)}</h2>
-                  <table className="mine-sum-table">
-                    <tbody>
-                      <tr><td>Base spin</td><td>{money(spin.baseWinCents)}</td></tr>
-                      {spin.wheel && <tr><td>Rainbow Wheel ({spin.wheel.outer !== null ? `upgrade → ${wedgeText(spin.wheel.result)}` : wedgeText(spin.wheel.result)})</td><td>{money(spin.wheel.creditWinCents)}</td></tr>}
-                      {spin.wheel?.freeSpins && <tr><td>Wheel free spins ({spin.wheel.freeSpins.spins.length} played)</td><td>{money(spin.wheel.freeSpins.totalWinCents)}</td></tr>}
-                      {spin.freeSpins && <tr><td>Kettle free spins ({spin.freeSpins.spins.length} played)</td><td>{money(spin.freeSpins.totalWinCents)}</td></tr>}
-                      <tr className="mine-sum-total"><td>Total on a {money(spin.betCents)} bet</td><td>{money(spin.winCents)}</td></tr>
-                    </tbody>
-                  </table>
-                  {(spin.freeSpins?.capped || spin.wheel?.freeSpins?.capped) && <p className="muted">A feature reached the {CL_FS_CAP}-free-spin cap.</p>}
-                  <p className="muted">Already credited to your sandbox balance by the server.</p>
-                  <button type="button" className="btn primary" onClick={finishFeature} autoFocus>Back to the reels</button>
-                </div>
-              </div>
+            {phase === "trigger" && trigger && spin && (
+              <BonusIntroCard
+                theme="cl-bookend"
+                intro={bonusIntro("clover", trigger === "fs" ? { kind: "fs", spins: fsCur?.initial ?? 0, source: fsCur?.source, scatters: fsCur?.source === "kettle" ? spin.scatters : undefined } : { kind: "wheel" }, spin.betCents)}
+                onStart={beginFeature}
+              />
             )}
+
+            {phase === "summary" && spin && <BonusSummaryCard theme="cl-bookend" summary={cloverSummary(spin, CL_FS_CAP)} onCollect={finishFeature} />}
 
             {showResult && spin && !hasFeature && spin.winCents > coinIn && (
               <OutcomeBanner win title="YOU WIN" amountCents={spin.winCents} stakeCents={coinIn} subtitle={`${money(spin.winCents)} back on a ${money(coinIn)} bet · net +${money(spin.winCents - coinIn)}`} />

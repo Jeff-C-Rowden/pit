@@ -463,3 +463,22 @@
 .recap-note { opacity: .85; }
 .recap-close { width: 100%; margin-top: 4px; }
 @media (max-width: 380px) { .recap-sum { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Slot Scout S5 player-paced bonus bookends (portaled to <body>; z-index 90 sits above the phone bet dock). */
+.bookend-modal { z-index: 95; }
+.bookend-card { text-align: center; overflow-wrap: anywhere; }
+.bookend-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 10px; }
+.bookend-won { margin: 0 0 8px; font-size: 16px; font-weight: 700; }
+.bookend-rule { margin: 0 0 6px; font-size: 14px; line-height: 1.4; }
+.bookend-played { margin: 0 0 4px; font-size: 14px; color: #ffe9a8; }
+.bookend-note { margin: 8px 0 10px !important; }
+.bookend-net td { border-bottom: 0; font-size: 14px; }
+.bookend-net.up td:last-child { color: #8fe39a; }
+.bookend-net.down td:last-child { color: #ffb4a8; }
+.bookend-card .bookend-act { min-height: 48px; min-width: 220px; max-width: 100%; }
+.pr-bookend .mine-modal-card { background: radial-gradient(130% 90% at 50% 0%, #5a2a4a, #1a0a24 75%); }
+.cl-bookend .mine-modal-card { background: radial-gradient(130% 90% at 50% 0%, #1f5a32, #071a0e 75%); }
+@media (max-width: 420px) {
+  .bookend-modal { padding: 10px; }
+  .bookend-card h2 { font-size: 26px; }
+}
