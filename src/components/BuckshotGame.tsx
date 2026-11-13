@@ -1,4 +1,5 @@
 "use client";
+import { celebrationFor } from "@/lib/winCelebration";
 import { classicShow } from "@/lib/winShow";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
@@ -7,7 +8,7 @@ import { OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { BB_DENOMS, BB_MAX_COINS, type BbSymbol } from "@/lib/games/buckshot";
-import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
+import { soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import { CabinetDeck, CabinetLever, CabinetTopper, useAutoSpin } from "@/components/SlotCabinet";
 import { useSpinRecap } from "@/components/SpinRecap";
@@ -145,6 +146,8 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
   const won = !!(showOutcome && spin && spin.winCents > 0);
   const stake = spin?.betCents ?? betCents;
 
+  // Backlog #6: one shared honest celebration (plate + glow) from the server's settled result.
+  const cele = celebrationFor({ betCents: stake, winCents: spin?.winCents, settled: showOutcome && !!spin, feature: false, reduced, feelOn: feelLive });
   return (
     <Shell>
       {(u) => { const credit = tournamentId ? (tourney?.stackCents ?? 0) : u.balanceCents + (u.bonusCents ?? 0); balRef.current = credit; return (
@@ -169,8 +172,9 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
               turbo={turboOn}
               reduced={reduced}
               onSpinComplete={onSpinComplete}
-              glow={showOutcome && spin ? slotGlowTier(stake, spin.winCents) : 0}
-              glowLive={feelLive}
+              glow={cele.glow}
+              glowLive={cele.live}
+              celebration={cele}
               won={won}
               winShows={won ? classicShow(spin?.line, spin?.kind, spin?.winCents ?? 0) : []}
               topper={

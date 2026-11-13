@@ -3,6 +3,8 @@
 // stake never celebrate. Sound & feel stay off by default (localStorage pit.sound !== "on")
 // and are remembered per device. Buzz never fires when feel is off or reduced-motion is on.
 
+import { tierGlow, winTier } from "./winCelebration";
+
 export type FeelLevel = 0 | 1 | 2 | 3;
 
 /**
@@ -208,8 +210,5 @@ export function rulesHref(game: string): string {
  * 1: profit under 1x bet · 2: return at least 2x · 3: at least 6x · 4: at least 21x
  */
 export function slotGlowTier(betCents: number | null | undefined, returnCents: number | null | undefined): 0 | 1 | 2 | 3 | 4 {
-  const bet = Number(betCents) || 0, ret = Number(returnCents) || 0;
-  if (bet <= 0 || ret <= bet) return 0;
-  const m = ret / bet;
-  return m >= 21 ? 4 : m >= 6 ? 3 : m >= 2 ? 2 : 1;
+  return tierGlow(winTier(betCents, returnCents));
 }

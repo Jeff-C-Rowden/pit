@@ -7,6 +7,7 @@ import "./prairie.css";
 import "./clover.css";
 import "./stag.css";
 import "./winlines.css";
+import "./wincele.css";
 import "./symbolPeek.css";
 import { Nunito, Passion_One, PT_Sans_Narrow } from "next/font/google";
 

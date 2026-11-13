@@ -1,0 +1,57 @@
+/* Backlog #6: shared win plate on every slot cabinet. Original CSS art.
+   Appears only after the reels settle and only for wins that beat the bet. Size scales with the
+   real win ÷ bet tier. Reduced motion: still plate, no sparks, no pop. */
+.win-cele {
+  position: absolute; left: 50%; top: 0; z-index: 6;
+  transform: translate(-50%, -62%);
+  display: flex; align-items: baseline; justify-content: center; gap: 8px; flex-wrap: nowrap;
+  max-width: calc(100% - 24px); white-space: nowrap;
+  padding: 4px 12px; border-radius: 999px;
+  font-family: inherit; line-height: 1.1; pointer-events: none;
+  color: #3a1d00;
+  background: linear-gradient(180deg, #fff6d0 0%, #ffd86a 48%, #e2a52a 100%);
+  border: 2px solid #7a4a00;
+  box-shadow: 0 0 0 2px #fff3c0 inset, 0 3px 0 #5c3700, 0 6px 14px rgba(0,0,0,.45);
+}
+.win-cele-title { font-weight: 900; letter-spacing: .08em; font-size: 13px; }
+.win-cele-amt { font-weight: 900; font-variant-numeric: tabular-nums; font-size: 15px; }
+.win-cele-x { font-size: 10px; font-weight: 700; opacity: .8; letter-spacing: .02em; }
+.win-cele-small { background: linear-gradient(180deg, #fbf4dc, #e9d6a0); border-color: #8a6a2a; box-shadow: 0 2px 0 #5c4a20, 0 4px 10px rgba(0,0,0,.35); }
+.win-cele-small .win-cele-title { font-size: 12px; }
+.win-cele-big { padding: 5px 14px; }
+.win-cele-big .win-cele-title { font-size: 15px; }
+.win-cele-big .win-cele-amt { font-size: 17px; }
+.win-cele-huge {
+  padding: 6px 16px; color: #fff8e0;
+  background: linear-gradient(180deg, #ff6a4a 0%, #c8102e 55%, #7a0018 100%);
+  border-color: #ffd86a;
+  box-shadow: 0 0 0 2px #ffd86a inset, 0 3px 0 #4a000e, 0 0 26px 6px rgba(255,200,90,.65);
+  text-shadow: 0 1px 0 #4a000e;
+}
+.win-cele-huge .win-cele-title { font-size: 16px; color: #ffe27a; }
+.win-cele-huge .win-cele-amt { font-size: 19px; }
+.win-cele-sparks { position: absolute; left: 50%; top: 50%; width: 0; height: 0; }
+.win-cele-sparks i {
+  position: absolute; left: -3px; top: -3px; width: 6px; height: 6px; border-radius: 50%;
+  background: radial-gradient(circle, #fffbe6 0 35%, #ffd36a 70%, rgba(255,211,106,0) 100%);
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .win-cele-motion { animation: winCelePop .42s cubic-bezier(.2,1.6,.4,1) 1 both; }
+  .win-cele-sparks i { animation: winCeleSpark .9s ease-out var(--t, 0ms) 1 both; }
+  .win-cele-huge.win-cele-motion { animation: winCelePop .42s cubic-bezier(.2,1.6,.4,1) 1 both, winCeleHuge 1.1s ease-in-out .45s 2; }
+}
+@keyframes winCelePop { 0% { transform: translate(-50%, -62%) scale(.4); opacity: 0; } 100% { transform: translate(-50%, -62%) scale(1); opacity: 1; } }
+@keyframes winCeleSpark {
+  0% { opacity: 1; transform: rotate(var(--a)) translateY(0) scale(1); }
+  100% { opacity: 0; transform: rotate(var(--a)) translateY(calc(-1 * var(--d))) scale(.4); }
+}
+@keyframes winCeleHuge { 50% { box-shadow: 0 0 0 2px #ffd86a inset, 0 3px 0 #4a000e, 0 0 40px 12px rgba(255,200,90,.85); } }
+@media (prefers-reduced-motion: reduce) {
+  .win-cele, .win-cele-sparks i { animation: none !important; }
+  .win-cele-sparks { display: none; }
+}
+@media (max-width: 420px) {
+  .win-cele { gap: 6px; padding: 3px 10px; }
+  .win-cele-x { font-size: 9px; }
+}

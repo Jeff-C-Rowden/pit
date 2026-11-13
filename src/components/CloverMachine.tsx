@@ -1,5 +1,6 @@
 "use client";
 
+import type { Celebration } from "@/lib/winCelebration";
 import {
   createContext,
   forwardRef,
@@ -329,6 +330,8 @@ const CloverMachine = forwardRef<
     glow?: number;
     /** Animate the lights (Sound & feel on and no reduced motion). Otherwise they light steadily. */
     glowLive?: boolean;
+    /** Backlog #6 shared win plate; shown by the chrome after settle. */
+    celebration?: Celebration | null;
     /** Shorten reel settle times; outcomes still come from the server. */
     turbo?: boolean;
     /** Cabinet parts (physical-cabinet chrome). */
@@ -347,7 +350,7 @@ const CloverMachine = forwardRef<
     peekGame?: PeekGame;
     peekBet?: PeekBet;
   }
->(function CloverMachine({ grid, spinning, winCells, winShows, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines, trigger = null, freeMode = false, expandReels = [], peekGame, peekBet }, ref) {
+>(function CloverMachine({ grid, spinning, winCells, winShows, onSpinComplete, theme, glow = 0, glowLive = false, celebration, turbo = false, topper, belly, deck, lever, winLines, trigger = null, freeMode = false, expandReels = [], peekGame, peekBet }, ref) {
   const t = { ...DEFAULT_THEME, ...theme, kickLabels: theme?.kickLabels ?? DEFAULT_THEME.kickLabels };
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
@@ -437,6 +440,7 @@ const CloverMachine = forwardRef<
         themeClass={`cab-clover ${t.cabinetClass}${trigger ? ` cl-trig cl-trig-${trigger}` : ""}${freeMode ? " cl-free" : ""}`}
         glow={glow}
         glowLive={glowLive}
+        celebration={celebration}
         spinning={spinning}
         settled={settled}
         symH={symH}

@@ -7,6 +7,8 @@
  * Original CSS/SVG art. Purely presentational: results, odds and paytables come from the
  * server; lights react only after the reels have settled (never during a spin).
  */
+import { WinCelebration } from "./WinCelebration";
+import type { Celebration } from "@/lib/winCelebration";
 import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import { autoNext, autoStopText, CAB_AUTO_SPINS, leverFires, leverTravel, ledText, paylineTabs } from "@/lib/cabinet";
@@ -422,8 +424,11 @@ export function CabinetChrome({
   side,
   peekGame,
   peekBet,
+  celebration,
   children,
 }: {
+  /** Backlog #6: shared honest win plate (src/lib/winCelebration.ts); shown only once settled. */
+  celebration?: Celebration | null;
   /** One centre payline: show a PAYLINE arrow tab instead of numbered tabs. */
   singleLine?: boolean;
   /** Optional right-hand column inside the cabinet (e.g. a PLAY 3 COINS sign). */
@@ -473,6 +478,7 @@ export function CabinetChrome({
         <div className="slot-win-halo" aria-hidden />
         {topper}
         <div className="cab-body">
+          {after && <WinCelebration celebration={celebration} />}
           <span className="cab-strip cab-strip-l" aria-hidden><i /><i /><i /><i /><i /><i /><i /></span>
           <div className={`cab-bezel${singleLine ? " single" : ""}${side ? " has-side" : ""}`}>
             {singleLine ? <span className={`cab-payline-tab${lit.size ? " lit" : ""}`} aria-hidden>Payline</span> : tabs("left")}

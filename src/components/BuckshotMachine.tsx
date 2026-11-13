@@ -5,6 +5,7 @@
  * outcome; any reel can be tapped to stop early once the server result is in. No near-miss
  * slow-downs, no anticipation, no re-ordering.
  */
+import type { Celebration } from "@/lib/winCelebration";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import { BB_REELS, type BbSymbol } from "@/lib/games/buckshot";
 import { BUCKSHOT_ART } from "./WesternSymbols";
@@ -52,6 +53,7 @@ type Props = {
   onSpinComplete: () => void;
   glow: number;
   glowLive: boolean;
+  celebration?: Celebration | null;
   won: boolean;
   /** Paid win drawn over the payline after the reels settle. */
   winShows?: WinShow[];
@@ -64,7 +66,7 @@ type Props = {
 };
 
 const BuckshotMachine = forwardRef<BuckshotHandle, Props>(function BuckshotMachine(
-  { window: win, spinning, turbo, reduced, onSpinComplete, glow, glowLive, won, winShows, topper, deck, lever, side, peekGame, peekBet },
+  { window: win, spinning, turbo, reduced, onSpinComplete, glow, glowLive, celebration, won, winShows, topper, deck, lever, side, peekGame, peekBet },
   ref,
 ) {
   const h = useSymH();
@@ -126,6 +128,7 @@ const BuckshotMachine = forwardRef<BuckshotHandle, Props>(function BuckshotMachi
       themeClass="cab-classic"
       glow={glow}
       glowLive={glowLive}
+      celebration={celebration}
       spinning={spinning}
       settled={settled}
       symH={h}

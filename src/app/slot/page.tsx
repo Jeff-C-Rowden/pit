@@ -1,4 +1,5 @@
 "use client";
+import { celebrationFor } from "@/lib/winCelebration";
 import { SYM_ART } from "@/components/SlotMachine";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
@@ -8,7 +9,7 @@ import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { PAYLINES, type Symbol } from "@/lib/games/slot";
 import { lineShows } from "@/lib/winShow";
-import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
+import { soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
@@ -180,6 +181,8 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
     return a ? [{ key: p.sym, label: a.label, tone: a.tone, Svg: a.Svg, pay5: p.pay5 }] : [];
   });
 
+  // Backlog #6: one shared honest celebration (plate + glow) from the server's settled result.
+  const cele = celebrationFor({ betCents: coinIn, winCents: spin?.winCents, settled: showOutcome && !!spin, feature: false, reduced, feelOn: feelLive });
   return (
     <Shell>
       {(u) => { const credit = tournamentId ? (tourney?.stackCents ?? 0) : u.balanceCents + (u.bonusCents ?? 0); balRef.current = credit; return (
@@ -203,8 +206,9 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
               winCells={winCells}
               winShows={winShows}
               onSpinComplete={onSpinComplete}
-              glow={showOutcome && spin ? slotGlowTier(coinIn, spin.winCents) : 0}
-              glowLive={feelLive}
+              glow={cele.glow}
+              glowLive={cele.live}
+              celebration={cele}
               turbo={turboOn}
               winLines={winLines}
               topper={<CabinetTopper title="Sundown Trail" kicker="9 lines · 5 reels" infoGame="slot" info={<>Lines played: 9 · Coin {money(coin)} · Spins pay left to right</>} />}

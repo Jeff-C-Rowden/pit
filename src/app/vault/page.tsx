@@ -1,5 +1,6 @@
 "use client";
 
+import { celebrationFor } from "@/lib/winCelebration";
 import { SandboxChip } from "@/components/SandboxChip";
 import { VS_SYM_ART } from "@/components/VaultSpireMachine";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -14,7 +15,7 @@ import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { VS_MAX_COIN_CENTS, VS_MIN_COIN_CENTS, VS_PAYLINES, VS_TOTAL_CONTRIBUTION_BPS, type VsSymbol } from "@/lib/games/slotProgressive";
 import { lineShows } from "@/lib/winShow";
-import { slotGlowTier, soundOn, reducedMotion, playSpin } from "@/lib/feel";
+import { soundOn, reducedMotion, playSpin } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
@@ -301,6 +302,8 @@ export default function VaultPage() {
   const hasJackpot = showOutcome && hits.length > 0;
   const lineOnlyWin = showOutcome && !hasJackpot && lastWinCents > 0;
 
+  // Backlog #6: one shared honest celebration (plate + glow) from the server's settled result.
+  const cele = celebrationFor({ betCents: coinIn, winCents: lastWinCents, settled: showOutcome, feature: hasJackpot, reduced, feelOn: feelLive });
   return (
     <Shell>
       {(u) => {
@@ -335,8 +338,9 @@ export default function VaultPage() {
                 winCells={winCells}
                 winShows={winShows}
                 onSpinComplete={onSpinComplete}
-                glow={showOutcome ? slotGlowTier(coinIn, lastWinCents) : 0}
-                glowLive={feelLive}
+                glow={cele.glow}
+                glowLive={cele.live}
+                celebration={cele}
                 turbo={turboOn}
                 winLines={winLines}
                 topper={
@@ -382,13 +386,22 @@ export default function VaultPage() {
             </div>
           </div>
 
-          {lineOnlyWin && (
+          {lineOnlyWin && lastWinCents > coinIn && (
             <OutcomeBanner
               win
               title="YOU WIN"
               amountCents={lastWinCents}
               stakeCents={coinIn}
-              subtitle={`${money(lastWinCents)} added to your stack`}
+              subtitle={`${money(lastWinCents)} back on a ${money(coinIn)} bet · net +${money(lastWinCents - coinIn)}`}
+            />
+          )}
+          {lineOnlyWin && lastWinCents <= coinIn && (
+            <OutcomeBanner
+              push
+              title={lastWinCents === coinIn ? "BET BACK" : "PART BACK"}
+              amountCents={lastWinCents}
+              stakeCents={coinIn}
+              subtitle={lastWinCents === coinIn ? `${money(lastWinCents)} back on a ${money(coinIn)} bet · net $0.00` : `${money(lastWinCents)} back on a ${money(coinIn)} bet · net −${money(coinIn - lastWinCents)}`}
             />
           )}
           {showOutcome && !hasJackpot && lastWinCents === 0 && (

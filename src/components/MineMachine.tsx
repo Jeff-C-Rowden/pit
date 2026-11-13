@@ -1,5 +1,6 @@
 "use client";
 
+import type { Celebration } from "@/lib/winCelebration";
 import {
   createContext,
   forwardRef,
@@ -321,6 +322,8 @@ const MineMachine = forwardRef<
     glow?: number;
     /** Animate the lights (Sound & feel on and no reduced motion). Otherwise they light steadily. */
     glowLive?: boolean;
+    /** Backlog #6 shared win plate; shown by the chrome after settle. */
+    celebration?: Celebration | null;
     /** Shorten reel settle times; outcomes still come from the server. */
     turbo?: boolean;
     /** Cabinet parts (physical-cabinet chrome). */
@@ -337,7 +340,7 @@ const MineMachine = forwardRef<
     peekGame?: PeekGame;
     peekBet?: PeekBet;
   }
->(function MineMachine({ grid, spinning, winCells, winShows, onSpinComplete, theme, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines, trigger = null, freeMode = false, peekGame, peekBet }, ref) {
+>(function MineMachine({ grid, spinning, winCells, winShows, onSpinComplete, theme, glow = 0, glowLive = false, celebration, turbo = false, topper, belly, deck, lever, winLines, trigger = null, freeMode = false, peekGame, peekBet }, ref) {
   const t = { ...DEFAULT_THEME, ...theme, kickLabels: theme?.kickLabels ?? DEFAULT_THEME.kickLabels };
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
@@ -426,6 +429,7 @@ const MineMachine = forwardRef<
         themeClass={`cab-mine ${t.cabinetClass}${trigger ? ` mine-trig mine-trig-${trigger}` : ""}${freeMode ? " mine-free" : ""}`}
         glow={glow}
         glowLive={glowLive}
+        celebration={celebration}
         spinning={spinning}
         settled={settled}
         symH={symH}

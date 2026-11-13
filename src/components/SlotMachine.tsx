@@ -1,5 +1,6 @@
 "use client";
 
+import type { Celebration } from "@/lib/winCelebration";
 import { createContext, forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode } from "react";
 import { PAYLINES, SYMBOLS, type Symbol } from "@/lib/games/slot";
 import type { WinShow } from "@/lib/winShow";
@@ -310,6 +311,8 @@ const SlotMachine = forwardRef<
     glow?: number;
     /** Animate the lights (Sound & feel on and no reduced motion). Otherwise they light steadily. */
     glowLive?: boolean;
+    /** Backlog #6 shared win plate; shown by the chrome after settle. */
+    celebration?: Celebration | null;
     /** Shorten reel settle times; outcomes still come from the server. */
     turbo?: boolean;
     /** Cabinet parts (physical-cabinet chrome). */
@@ -322,7 +325,7 @@ const SlotMachine = forwardRef<
     peekGame?: PeekGame;
     peekBet?: PeekBet;
   }
->(function SlotMachine({ grid, spinning, winCells, winShows, onSpinComplete, glow = 0, glowLive = false, turbo = false, topper, belly, deck, lever, winLines, peekGame, peekBet }, ref) {
+>(function SlotMachine({ grid, spinning, winCells, winShows, onSpinComplete, glow = 0, glowLive = false, celebration, turbo = false, topper, belly, deck, lever, winLines, peekGame, peekBet }, ref) {
   const symH = useSymHeight();
   const [spinGen, setSpinGen] = useState(0);
   const [settled, setSettled] = useState(true);
@@ -389,6 +392,7 @@ const SlotMachine = forwardRef<
         themeClass="cab-sundown"
         glow={glow}
         glowLive={glowLive}
+        celebration={celebration}
         spinning={spinning}
         settled={settled}
         symH={symH}

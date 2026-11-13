@@ -1,4 +1,5 @@
 "use client";
+import { celebrationFor } from "@/lib/winCelebration";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import CloverMachine, { CL_SYM_ART, type CloverMachineHandle, type WinCell } from "@/components/CloverMachine";
@@ -10,7 +11,7 @@ import { api, money, useUser } from "@/components/useUser";
 import { lineShows, scatterShow, freeSpinShows } from "@/lib/winShow";
 import { CL_PAYLINES, CL_PAYTABLE, CL_FS_AWARD, CL_FS_CAP, CL_SCATTER_PAY, CL_BET_COINS, CL_INNER_WHEEL, CL_OUTER_WHEEL, CL_WHEEL_FS, type ClSymbol, type ClPaySymbol, type Wedge } from "@/lib/games/clover";
 import { CLOVER_MATH, CLOVER_FEATURE_LINE } from "@/lib/gameMath";
-import { slotGlowTier, soundOn, reducedMotion, playSpin, playFeature } from "@/lib/feel";
+import { soundOn, reducedMotion, playSpin, playFeature } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
@@ -325,6 +326,8 @@ export default function CloverPage() {
   const hasFeature = !!(spin?.freeSpins || spin?.wheel);
   const deckWin = phase === "fs" ? fsWon : phase === "summary" || (showResult && hasFeature) ? spin?.winCents ?? 0 : showResult ? spin?.baseWinCents ?? 0 : 0;
 
+  // Backlog #6: one shared honest celebration (plate + glow) from the server's settled result.
+  const cele = celebrationFor({ betCents: coinIn, winCents: spin?.winCents, settled: showResult && !!spin, feature: hasFeature, reduced, feelOn: feelLive });
   return (
     <Shell>
       {(u) => {
@@ -358,8 +361,9 @@ export default function CloverPage() {
                 winCells={winCells}
                 winShows={winShows}
                 onSpinComplete={onSpinComplete}
-                glow={showResult && spin ? slotGlowTier(coinIn, spin.winCents) : 0}
-                glowLive={feelLive}
+                glow={cele.glow}
+                glowLive={cele.live}
+                celebration={cele}
                 turbo={turboOn || phase === "fs"}
                 winLines={winLines}
                 trigger={reduced ? null : trigger}
@@ -419,7 +423,7 @@ export default function CloverPage() {
             )}
             {showResult && spin && !hasFeature && spin.winCents === 0 && <OutcomeBanner quiet title="NO LINE" subtitle="You lose this spin." />}
             {showResult && spin && hasFeature && (
-              <OutcomeBanner win title="FEATURE WIN" amountCents={spin.winCents} stakeCents={coinIn} subtitle={`${money(spin.winCents)} back on a ${money(coinIn)} bet, features included`} />
+              <OutcomeBanner win={spin.winCents > coinIn} push={spin.winCents <= coinIn} title={spin.winCents > coinIn ? "FEATURE WIN" : "FEATURE PAID"} amountCents={spin.winCents} stakeCents={coinIn} subtitle={`${money(spin.winCents)} back on a ${money(coinIn)} bet, features included · net ${spin.winCents === coinIn ? "$0.00" : spin.winCents > coinIn ? `+${money(spin.winCents - coinIn)}` : `−${money(coinIn - spin.winCents)}`}`} />
             )}
 
             <div className="panel mine-info" id="paytable" style={{ marginTop: 20 }}>

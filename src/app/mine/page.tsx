@@ -1,4 +1,5 @@
 "use client";
+import { celebrationFor } from "@/lib/winCelebration";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import MineMachine, { MINE_SYM_ART, type MineMachineHandle, type WinCell } from "@/components/MineMachine";
@@ -9,7 +10,7 @@ import { api, money, useUser } from "@/components/useUser";
 import { lineShows, scatterShow, freeSpinShows } from "@/lib/winShow";
 import { MINE_PAYLINES, MINE_FS_MULT, MINE_PAYTABLE, MINE_FS_AWARD, MINE_FS_CAP, MINE_PICK_CARTS, MINE_PICK_PRIZES, MINE_SCATTER_PAY, type MineSymbol, type CartItem } from "@/lib/games/mine";
 import { MINE_MATH, MINE_FEATURE_LINE } from "@/lib/gameMath";
-import { slotGlowTier, soundOn, reducedMotion, playSpin, playFeature } from "@/lib/feel";
+import { soundOn, reducedMotion, playSpin, playFeature } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
 import { SLOT_COIN_CHIPS, SLOT_COIN_MAX, SLOT_COIN_MIN } from "@/lib/quickBet";
@@ -354,6 +355,8 @@ export default function MinePage() {
   const deckWin = phase === "fs" ? fsWon : phase === "summary" || (showResult && (spin?.freeSpins || spin?.pick)) ? spin?.winCents ?? 0 : showResult ? spin?.baseWinCents ?? 0 : 0;
   const fsTotal = spin?.freeSpins ? spin.freeSpins.spins.length : 0;
 
+  // Backlog #6: one shared honest celebration (plate + glow) from the server's settled result.
+  const cele = celebrationFor({ betCents: coinIn, winCents: spin?.winCents, settled: showResult && !!spin, feature: !!(spin?.freeSpins || spin?.pick), reduced, feelOn: feelLive });
   return (
     <Shell>
       {(u) => {
@@ -387,8 +390,9 @@ export default function MinePage() {
                 winCells={winCells}
                 winShows={winShows}
                 onSpinComplete={onSpinComplete}
-                glow={showResult && spin ? slotGlowTier(coinIn, spin.winCents) : 0}
-                glowLive={feelLive}
+                glow={cele.glow}
+                glowLive={cele.live}
+                celebration={cele}
                 turbo={turboOn || phase === "fs"}
                 winLines={winLines}
                 trigger={reduced ? null : trigger}
@@ -447,7 +451,7 @@ export default function MinePage() {
             )}
             {showResult && spin && !spin.freeSpins && !spin.pick && spin.winCents === 0 && <OutcomeBanner quiet title="NO LINE" subtitle="You lose this spin." />}
             {showResult && spin && (spin.freeSpins || spin.pick) && (
-              <OutcomeBanner win title="FEATURE WIN" amountCents={spin.winCents} stakeCents={coinIn} subtitle={`${money(spin.winCents)} back on a ${money(coinIn)} bet, features included`} />
+              <OutcomeBanner win={spin.winCents > coinIn} push={spin.winCents <= coinIn} title={spin.winCents > coinIn ? "FEATURE WIN" : "FEATURE PAID"} amountCents={spin.winCents} stakeCents={coinIn} subtitle={`${money(spin.winCents)} back on a ${money(coinIn)} bet, features included · net ${spin.winCents === coinIn ? "$0.00" : spin.winCents > coinIn ? `+${money(spin.winCents - coinIn)}` : `−${money(coinIn - spin.winCents)}`}`} />
             )}
 
             <div className="panel mine-info" id="paytable" style={{ marginTop: 20 }}>
