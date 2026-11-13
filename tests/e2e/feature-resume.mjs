@@ -68,7 +68,7 @@ r.odds = await p.evaluate(() => {
   return { coins, left, next: document.querySelector("[data-testid=hold-odds-next]")?.textContent ?? null, full: document.querySelector("[data-testid=hold-odds-full]")?.textContent ?? null, text: document.querySelector("[data-testid=hold-odds]")?.innerText ?? "" };
 });
 r.oddsOk = r.odds.next === null ? /Round over/.test(r.odds.text) : r.odds.next === pct(1 - 0.95 ** (15 - r.odds.coins));
-await p.evaluate(() => { const el = document.querySelector(".pr-hold-bar"); if (el) window.scrollTo(0, el.getBoundingClientRect().top + scrollY - 8); });
+await p.evaluate(() => { const el = document.querySelector(".pr-hold-bar"); if (el) window.scrollTo(0, el.getBoundingClientRect().top + scrollY - 120); });
 await W(250);
 await p.screenshot({ path: `${OUT}/r5-hold-odds-390.png` });
 // wait for the server to record the place, then refresh mid-round
