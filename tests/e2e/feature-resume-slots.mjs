@@ -57,7 +57,6 @@ for (const game of GAMES) {
   r.serverOpen = (await state()).feature?.spin?.id === s.id;
 
   await p.goto(BASE + "/" + game, { waitUntil: "networkidle2" }); await W(900); await dismiss();
-  if (game === "clover") await p.evaluate(() => { try { localStorage.setItem("pit_story_v1:clover", "1"); } catch {} });
   await p.waitForSelector("[data-testid=bonus-intro]", { timeout: 30000 });
   r.introText = (await cardInfo("bonus-intro")).text.slice(0, 160);
   r.introBal = await ledNum();
@@ -93,8 +92,8 @@ for (const game of GAMES) {
     r.sameCarts = JSON.stringify([...r.reopened].sort()) === JSON.stringify(r.expectedOpen);
     await p.screenshot({ path: `${OUT}/r5s2-mine-pick-resumed-390.png` });
   } else {
-    await W(120);
-    r.fsBar = await p.evaluate(() => document.querySelector(".mine-fs-bar, .cl-fs-bar, [role=status]")?.innerText.replace(/\s+/g, " ") ?? "");
+    await p.waitForSelector(".cl-fs-bar", { timeout: 5000 }).catch(() => {});
+    r.fsBar = await p.evaluate(() => document.querySelector(".cl-fs-bar")?.innerText.replace(/\s+/g, " ") ?? "");
     const before = s.freeSpins.spins.slice(0, saved?.step ?? 0).reduce((a, x) => a + x.winCents, 0);
     r.expectedWonBefore = fmt(before);
     r.continued = r.fsBar.includes(`Spin ${(saved?.step ?? 0) + 1} of`) && r.fsBar.includes(`Won ${fmt(before)}`);
