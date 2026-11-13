@@ -59,9 +59,9 @@ for (const game of GAMES) {
   const d = found.d, s = d.spin;
   const kinds = ["freeSpins", "pick", "hold", "wheel"].filter((k) => s[k]);
   console.error(game, `feature after ${found.i} real spins`, kinds.join("+"), "win", s.winCents, "bal", d.user.balanceCents);
-  // Prairie saves unfinished features for resume-after-refresh (research #5); this check replays the spin
+  // Feature cabinets save unfinished features for resume-after-refresh (research #5); this check replays the spin
   // through the cabinet instead, so close the saved copy first (no money moves).
-  if (game === "prairie") await p.evaluate((api, spinId) => fetch(api, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ action: "collect", spinId }) }), api, s.id);
+  await p.evaluate((api, spinId) => fetch(api, { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify({ action: "collect", spinId }) }), api, s.id);
   await p.goto(BASE + "/" + game, { waitUntil: "networkidle2" }); await W(900);
   for (const t of ["Head into the mine", "Ride out", "Cross the bridge", "Got it"]) await p.$(`xpath/.//button[contains(., "${t}")]`).then((h) => h?.evaluate((e) => e.click())).catch(() => {});
   await p.waitForFunction(() => { const btn = document.querySelector("[data-cab-spin]"); return btn && !btn.disabled; }, { timeout: 30000 });

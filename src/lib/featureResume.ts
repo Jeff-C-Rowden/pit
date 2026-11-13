@@ -151,4 +151,28 @@ export function resumeWhere(spin: ResumableSpin, p: ResumeProgress): string {
   }
 }
 
+/**
+ * Research #5 slice 2: one store serves every feature cabinet. A kind names its game_states key, the id
+ * prefix of its rows, its phases in play order (that order is what "forward only" means) and a validator
+ * that checks a client-sent place against the settled spin.
+ */
+export type AnyProgress = { phase: string; step: number; picked?: number[] };
+export type ResumeKind<S extends { id: string } = { id: string }, P extends AnyProgress = AnyProgress> = {
+  game: string;
+  idPrefix: string;
+  phases: readonly string[];
+  start: P;
+  sanitize: (spin: S, raw: unknown) => P | null;
+};
+
+/** Is `next` at or after `prev` in this kind's play order? */
+export function isForwardIn(phases: readonly string[], prev: AnyProgress, next: AnyProgress): boolean {
+  const r = (p: AnyProgress) => phases.indexOf(p.phase) * 1000 + p.step;
+  return r(next) >= r(prev);
+}
+
+export const PRAIRIE_RESUME: ResumeKind<ResumableSpin, ResumeProgress> = {
+  game: FEATURE_RESUME_GAME, idPrefix: "prf", phases: RESUME_PHASES, start: START_PROGRESS, sanitize: sanitizeProgress,
+};
+
 export const RESUME_NOTE = "This round was drawn and paid when you spun. We saved your place on the server, so the rest plays out exactly as drawn. Refreshing never changes a result.";

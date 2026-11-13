@@ -21,6 +21,8 @@ import { ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 import SpinNotice from "@/components/SpinNotice";
 import { BonusIntroCard, BonusSummaryCard, useFeatureCredit } from "@/components/BonusBookend";
 import { bonusIntro, cloverSummary } from "@/lib/bonusBookends";
+import { FS_SAVE_EVERY, RESUME_NOTE } from "@/lib/featureResume";
+import { cloverResumeWhere, wonBefore, type CloverProgress } from "@/lib/featureResumeSlots";
 
 type LineWin = { line: number; symbol: string; count: number; pay: number; winCents: number };
 type FreeSpin = { n: number; grid: ClSymbol[][]; shown: ClSymbol[][]; lineWins: LineWin[]; scatters: number; winCents: number; retrigger: number; awardedTotal: number };
@@ -31,7 +33,7 @@ type Spin = {
   scatters: number; scatterWinCents: number; baseWinCents: number; winCents: number;
   wheel: Wheel | null; freeSpins: FreeSpins | null;
 };
-type Phase = "idle" | "spinning" | "trigger" | "wheel" | "fs" | "summary";
+type Phase = "idle" | "spinning" | "trigger" | "wheel" | "fs" | "summary" | "resume";
 type Step = { kind: "wheel" } | { kind: "fs"; fs: FreeSpins };
 
 const STORY_KEY = "pit_story_v1:clover";
@@ -74,8 +76,27 @@ function StoryCard({ onClose }: { onClose: () => void }) {
 }
 
 export default function CloverPage() {
-  const { setUser } = useUser();
+  const { user, setUser } = useUser();
   const credit = useFeatureCredit(setUser);
+  // Research #5 slice 2: the server keeps the settled feature spin and how far it has been watched.
+  const [resume, setResume] = useState<{ spin: Spin; progress: CloverProgress } | null>(null);
+  const saveQ = useRef<{ busy: boolean; next: { spinId: string; progress: CloverProgress } | null }>({ busy: false, next: null });
+  const saveProgress = useCallback((progress: CloverProgress) => {
+    const s = spinRef.current;
+    if (!s || !(s.wheel || s.freeSpins)) return;
+    const q = saveQ.current;
+    q.next = { spinId: s.id, progress };
+    if (q.busy) return;
+    const pump = async () => {
+      q.busy = true;
+      while (q.next) {
+        const item = q.next; q.next = null;
+        await api("/api/games/clover", { method: "POST", body: JSON.stringify({ action: "progress", ...item }) }).catch(() => { /* a missed save only means resuming a little earlier */ });
+      }
+      q.busy = false;
+    };
+    void pump();
+  }, []);
   const [spin, setSpin] = useState<Spin | null>(null);
   const [grid, setGrid] = useState<ClSymbol[][] | null>(null);
   const [coin, setCoin] = useState(25);
@@ -179,6 +200,7 @@ export default function CloverPage() {
     if (idx >= f.spins.length) { runStep(stepRef.current + 1); return; }
     fsIdxRef.current = idx;
     setFsIdx(idx);
+    if (idx % FS_SAVE_EVERY === 0) saveProgress({ phase: f.source === "wheel" ? "wheelFs" : "kettleFs", step: idx });
     setFsShown(false);
     setRetrig(0);
     setGrid(null);
@@ -193,7 +215,7 @@ export default function CloverPage() {
     if (!s) return;
     const list = steps(s);
     stepRef.current = i;
-    if (i >= list.length) { setPh("summary"); return; }
+    if (i >= list.length) { setPh("summary"); saveProgress({ phase: "summary", step: 0 }); return; }
     const st = list[i]!;
     setTrigger(st.kind);
     if (st.kind === "fs") { fsRef.current = st.fs; setFsCur(st.fs); setFsIdx(-1); }
@@ -203,7 +225,8 @@ export default function CloverPage() {
     if (st.kind === "wheel") { setTrigger(null); setPh("wheel"); return; }
     if (st.fs.source === "wheel") { setTrigger(null); setPh("fs"); setFsWon(0); playNextFree(0); return; }
     setPh("trigger");
-  }, [playNextFree]);
+    if (i > 0) saveProgress({ phase: "kettleIntro", step: 0 });
+  }, [playNextFree, saveProgress]);
 
   // S5: each trigger shows a player-paced intro card; nothing starts until Start.
   const beginFeature = useCallback(() => {
@@ -258,6 +281,8 @@ export default function CloverPage() {
 
   function finishFeature() {
     credit.release();
+    const done = spinRef.current;
+    if (done) void api("/api/games/clover", { method: "POST", body: JSON.stringify({ action: "collect", spinId: done.id }) }).catch(() => { /* next spin closes it anyway */ });
     setPaid((v) => v + (spinRef.current?.winCents ?? 0));
     if (spinRef.current) addRecap(spinRef.current.betCents, spinRef.current.winCents ?? 0, true);
     setPh("idle");
@@ -267,6 +292,47 @@ export default function CloverPage() {
     setFsCur(null);
     if (spinRef.current) setGrid(spinRef.current.grid);
     setSettleTick((n) => n + 1);
+  }
+
+  // Research #5 slice 2: a refresh mid-feature picks the round up where it was (server-saved place).
+  const resumeChecked = useRef(false);
+  useEffect(() => {
+    if (!user || resumeChecked.current) return;
+    resumeChecked.current = true;
+    api("/api/games/clover?resume=1", { cache: "no-store" }).then((d) => {
+      const f = d.feature as { spin: Spin; progress: CloverProgress } | null;
+      if (!f?.spin || !steps(f.spin).length || phaseRef.current !== "idle" || spinRef.current) return;
+      setSpin(f.spin);
+      spinRef.current = f.spin;
+      setCoin(f.spin.coinCents);
+      setGrid(f.spin.grid);
+      credit.accept(d.user, f.spin);
+      const p = f.progress;
+      if (p.phase === "intro") { runStep(0); return; }
+      if (p.phase === "kettleIntro") { runStep(steps(f.spin).length - 1); return; }
+      if (p.phase === "summary") { setPh("summary"); return; }
+      setResume({ spin: f.spin, progress: p });
+      setPh("resume");
+    }).catch(() => { /* nothing saved, or offline: the cabinet just starts fresh */ });
+  }, [user, credit, runStep]);
+
+  function continueResume() {
+    const r = resume;
+    const s = spinRef.current;
+    setResume(null);
+    if (!r || !s) { setPh("idle"); return; }
+    const want = r.progress.phase === "wheelFs" ? "wheel" : r.progress.phase === "kettleFs" ? "kettle" : null;
+    const list = steps(s);
+    const i = list.findIndex((st) => st.kind === "fs" && st.fs.source === want);
+    const st = list[i];
+    if (!want || !st || st.kind !== "fs") { setPh("summary"); return; }
+    stepRef.current = i;
+    fsRef.current = st.fs;
+    setFsCur(st.fs);
+    setTrigger(null);
+    setPh("fs");
+    setFsWon(wonBefore(st.fs, r.progress.step));
+    playNextFree(r.progress.step);
   }
 
   async function go(coinOverride?: number) {
@@ -410,6 +476,23 @@ export default function CloverPage() {
                 theme="cl-bookend"
                 intro={bonusIntro("clover", trigger === "fs" ? { kind: "fs", spins: fsCur?.initial ?? 0, source: fsCur?.source, scatters: fsCur?.source === "kettle" ? spin.scatters : undefined } : { kind: "wheel" }, spin.betCents)}
                 onStart={beginFeature}
+              />
+            )}
+
+            {phase === "resume" && resume && (
+              <BonusIntroCard
+                theme="cl-bookend"
+                testId="bonus-resume"
+                wonLabel="Picking up at:"
+                note={RESUME_NOTE}
+                intro={{
+                  kicker: "Welcome back · your place was saved",
+                  title: resume.progress.phase === "wheelFs" ? "Rainbow Wheel Free Spins" : "Free Spins",
+                  won: cloverResumeWhere(resume.spin, resume.progress),
+                  rule: `Your ${money(resume.spin.betCents)} spin's feature plays on from here, exactly as drawn; Collect at the end shows the win on your Balance.`,
+                  start: "Resume",
+                }}
+                onStart={continueResume}
               />
             )}
 

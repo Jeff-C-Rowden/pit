@@ -20,6 +20,8 @@ import { ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 import SpinNotice from "@/components/SpinNotice";
 import { BonusIntroCard, BonusSummaryCard, useFeatureCredit } from "@/components/BonusBookend";
 import { bonusIntro, mineSummary } from "@/lib/bonusBookends";
+import { FS_SAVE_EVERY, RESUME_NOTE } from "@/lib/featureResume";
+import { mineResumeWhere, minePickedCarts, wonBefore, type MineProgress } from "@/lib/featureResumeSlots";
 
 type LineWin = { line: number; symbol: string; count: number; pay: number; winCents: number };
 type FreeSpin = { n: number; grid: MineSymbol[][]; lineWins: LineWin[]; scatters: number; winCents: number; retrigger: number; awardedTotal: number };
@@ -29,7 +31,7 @@ type Spin = {
   freeSpins: { initial: number; spins: FreeSpin[]; totalWinCents: number; capped: boolean } | null;
   pick: { reveals: CartItem[]; totalX: number; totalWinCents: number } | null;
 };
-type Phase = "idle" | "spinning" | "trigger" | "pick" | "fs" | "summary";
+type Phase = "idle" | "spinning" | "trigger" | "pick" | "fs" | "summary" | "resume";
 
 const STORY_KEY = "pit_story_v1:mine";
 
@@ -63,22 +65,26 @@ function StoryCard({ onClose }: { onClose: () => void }) {
   );
 }
 
-function PickBoard({ pick, betCents, onDone, reduced }: { pick: NonNullable<Spin["pick"]>; betCents: number; onDone: () => void; reduced: boolean }) {
-  const [assigned, setAssigned] = useState<Record<number, CartItem>>({});
-  const n = Object.keys(assigned).length;
-  const done = n >= pick.reveals.length;
-  const runningX = Object.values(assigned).reduce((a, it) => a + (it.kind === "prize" ? it.x : 0), 0);
+/**
+ * Mine Cart pick, replayed from the server's reveal order. `opened` lists the carts tapped so far, in order:
+ * the k-th cart opened always shows reveals[k]. A resumed round (research #5) starts with the carts that were
+ * already open before the refresh; `onOpen` reports every new cart so the server can save the place.
+ */
+function PickBoard({ pick, betCents, onDone, reduced, initialOpened = [], onOpen }: { pick: NonNullable<Spin["pick"]>; betCents: number; onDone: () => void; reduced: boolean; initialOpened?: number[]; onOpen?: (opened: number[]) => void }) {
+  const [opened, setOpened] = useState<number[]>(() => initialOpened.slice(0, pick.reveals.length));
+  const assigned: Record<number, CartItem> = {};
+  opened.forEach((cart, k) => { assigned[cart] = pick.reveals[k]!; });
+  const done = opened.length >= pick.reveals.length;
+  const runningX = opened.reduce((a, _c, k) => { const it = pick.reveals[k]!; return a + (it.kind === "prize" ? it.x : 0); }, 0);
+  const commit = (next: number[]) => { setOpened(next); onOpen?.(next); };
   const reveal = (cart: number) => {
     if (done || assigned[cart]) return;
-    setAssigned((a) => ({ ...a, [cart]: pick.reveals[Object.keys(a).length]! }));
+    commit([...opened, cart]);
   };
   const revealAll = () => {
-    setAssigned((a) => {
-      const out = { ...a };
-      let k = Object.keys(out).length;
-      for (let c = 0; c < MINE_PICK_CARTS && k < pick.reveals.length; c++) if (!out[c]) out[c] = pick.reveals[k++]!;
-      return out;
-    });
+    const next = [...opened];
+    for (let c = 0; c < MINE_PICK_CARTS && next.length < pick.reveals.length; c++) if (!next.includes(c)) next.push(c);
+    commit(next);
   };
   return (
     <div className="mine-modal" role="dialog" aria-modal="true" aria-labelledby="mine-pick-h">
@@ -124,8 +130,28 @@ function PickBoard({ pick, betCents, onDone, reduced }: { pick: NonNullable<Spin
 }
 
 export default function MinePage() {
-  const { setUser } = useUser();
+  const { user, setUser } = useUser();
   const credit = useFeatureCredit(setUser);
+  // Research #5 slice 2: the server keeps the settled feature spin and how far it has been watched.
+  const [resume, setResume] = useState<{ spin: Spin; progress: MineProgress } | null>(null);
+  const [pickStart, setPickStart] = useState<number[]>([]);
+  const saveQ = useRef<{ busy: boolean; next: { spinId: string; progress: MineProgress } | null }>({ busy: false, next: null });
+  const saveProgress = useCallback((progress: MineProgress) => {
+    const s = spinRef.current;
+    if (!s || !(s.pick || s.freeSpins)) return;
+    const q = saveQ.current;
+    q.next = { spinId: s.id, progress };
+    if (q.busy) return;
+    const pump = async () => {
+      q.busy = true;
+      while (q.next) {
+        const item = q.next; q.next = null;
+        await api("/api/games/mine", { method: "POST", body: JSON.stringify({ action: "progress", ...item }) }).catch(() => { /* a missed save only means resuming a little earlier */ });
+      }
+      q.busy = false;
+    };
+    void pump();
+  }, []);
   const [spin, setSpin] = useState<Spin | null>(null);
   const [grid, setGrid] = useState<MineSymbol[][] | null>(null);
   const [coin, setCoin] = useState(25);
@@ -223,16 +249,17 @@ export default function MinePage() {
   const playNextFree = useCallback((idx: number) => {
     const s = spinRef.current;
     if (!s?.freeSpins) return;
-    if (idx >= s.freeSpins.spins.length) { setPh("summary"); return; }
+    if (idx >= s.freeSpins.spins.length) { setPh("summary"); saveProgress({ phase: "summary", step: 0 }); return; }
     fsIdxRef.current = idx;
     setFsIdx(idx);
+    if (idx % FS_SAVE_EVERY === 0) saveProgress({ phase: "fs", step: idx });
     setFsShown(false);
     setRetrig(0);
     setGrid(null);
     setSpinning(true);
     playSpin();
     later(() => setGrid(s.freeSpins!.spins[idx]!.grid), 180);
-  }, []);
+  }, [saveProgress]);
 
   // S5: the trigger shows a player-paced intro card; nothing starts until Start.
   const startFeature = useCallback((kind: "fs" | "pick") => {
@@ -246,9 +273,9 @@ export default function MinePage() {
     if (phaseRef.current !== "trigger") return;
     const kind = triggerRef.current;
     setTrigger(null);
-    if (kind === "pick") setPh("pick");
+    if (kind === "pick") { setPickStart([]); setPh("pick"); saveProgress({ phase: "pick", step: 0, picked: [] }); }
     else { setPh("fs"); setFsWon(0); playNextFree(0); }
-  }, [playNextFree]);
+  }, [playNextFree, saveProgress]);
 
   const onSpinComplete = useCallback(() => {
     setSpinning(false);
@@ -285,10 +312,13 @@ export default function MinePage() {
     setSpinning(false);
     setFsWon(s.freeSpins.totalWinCents);
     setPh("summary");
+    saveProgress({ phase: "summary", step: 0 });
   }
 
   function finishFeature() {
     credit.release();
+    const done = spinRef.current;
+    if (done) void api("/api/games/mine", { method: "POST", body: JSON.stringify({ action: "collect", spinId: done.id }) }).catch(() => { /* next spin closes it anyway */ });
     setPaid((v) => v + (spinRef.current?.winCents ?? 0));
     if (spinRef.current) addRecap(spinRef.current.betCents, spinRef.current.winCents ?? 0, true);
     setPh("idle");
@@ -296,6 +326,44 @@ export default function MinePage() {
     fsIdxRef.current = -1;
     if (spinRef.current) setGrid(spinRef.current.grid);
     setSettleTick((n) => n + 1);
+  }
+
+  // Research #5 slice 2: a refresh mid-feature picks the round up where it was (server-saved place).
+  const resumeChecked = useRef(false);
+  useEffect(() => {
+    if (!user || resumeChecked.current) return;
+    resumeChecked.current = true;
+    api("/api/games/mine?resume=1", { cache: "no-store" }).then((d) => {
+      const f = d.feature as { spin: Spin; progress: MineProgress } | null;
+      if (!f?.spin || !(f.spin.pick || f.spin.freeSpins) || phaseRef.current !== "idle" || spinRef.current) return;
+      setSpin(f.spin);
+      spinRef.current = f.spin;
+      setCoin(f.spin.coinCents);
+      setGrid(f.spin.grid);
+      credit.accept(d.user, f.spin);
+      const p = f.progress;
+      if (p.phase === "intro") { startFeature(f.spin.pick ? "pick" : "fs"); return; }
+      if (p.phase === "fsIntro") { startFeature("fs"); return; }
+      if (p.phase === "summary") { setPh("summary"); return; }
+      setResume({ spin: f.spin, progress: p });
+      setPh("resume");
+    }).catch(() => { /* nothing saved, or offline: the cabinet just starts fresh */ });
+  }, [user, credit, startFeature]);
+
+  function continueResume() {
+    const r = resume;
+    const s = spinRef.current;
+    setResume(null);
+    if (!r || !s) { setPh("idle"); return; }
+    if (r.progress.phase === "pick" && s.pick) { setPickStart(minePickedCarts(r.progress)); setPh("pick"); return; }
+    if (r.progress.phase === "fs" && s.freeSpins) { setPh("fs"); setFsWon(wonBefore(s.freeSpins, r.progress.step)); playNextFree(r.progress.step); return; }
+    setPh("summary");
+  }
+
+  function afterPick() {
+    const s = spinRef.current;
+    if (s?.freeSpins) { startFeature("fs"); saveProgress({ phase: "fsIntro", step: 0 }); }
+    else { setPh("summary"); saveProgress({ phase: "summary", step: 0 }); }
   }
 
   async function go(coinOverride?: number) {
@@ -431,7 +499,24 @@ export default function MinePage() {
               )}
             </div>
 
-            {phase === "pick" && spin?.pick && <PickBoard pick={spin.pick} betCents={spin.betCents} reduced={reduced} onDone={() => { if (spin.freeSpins) startFeature("fs"); else setPh("summary"); }} />}
+            {phase === "pick" && spin?.pick && <PickBoard key={spin.id} pick={spin.pick} betCents={spin.betCents} reduced={reduced} initialOpened={pickStart} onOpen={(opened) => saveProgress({ phase: "pick", step: opened.length, picked: opened })} onDone={afterPick} />}
+
+            {phase === "resume" && resume && (
+              <BonusIntroCard
+                theme="mine-bookend"
+                testId="bonus-resume"
+                wonLabel="Picking up at:"
+                note={RESUME_NOTE}
+                intro={{
+                  kicker: "Welcome back · your place was saved",
+                  title: resume.progress.phase === "pick" ? "Mine Cart Pick" : "Free Spins",
+                  won: mineResumeWhere(resume.spin, resume.progress),
+                  rule: `Your ${money(resume.spin.betCents)} spin's feature plays on from here, exactly as drawn; Collect at the end shows the win on your Balance.`,
+                  start: "Resume",
+                }}
+                onStart={continueResume}
+              />
+            )}
 
             {phase === "trigger" && trigger && spin && (
               <BonusIntroCard
