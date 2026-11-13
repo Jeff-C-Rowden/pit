@@ -3663,3 +3663,21 @@ label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spa
 .result-banner.hand-result.quiet .result-banner-sub { margin-top: 2px; font-size: 12px; }
 .result-banner.hand-result.quiet.dimmed { opacity: .45; }
 @media (prefers-reduced-motion: reduce) { .result-banner.hand-result.quiet { transition: none; } }
+
+/* #11 Guest demo spin (signup page) */
+.demo-spin { margin: 4px 0 18px; }
+.demo-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.demo-head h2 { margin: 0; font-size: 22px; }
+.demo-sub { margin: 6px 0 10px; font-size: 14px; }
+.demo-spin .demo-chip { font-size: 11px; }
+.demo-spin .cab-topper { padding-top: 6px; }
+.demo-deck .cab-meters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.cab-deck .cab-console.demo-console { display: grid; grid-template-columns: minmax(0, 1fr); padding: 10px 14px; }
+.cab-deck .cab-console.demo-console .cab-key-spin { grid-column: 1 / -1; width: 100%; min-height: 64px; }
+.demo-rtp { font-size: 13px; margin: 10px 0 0; opacity: .9; }
+.demo-result { margin-top: 12px; padding: 14px; border-radius: 12px; background: rgba(0,0,0,.28); border: 1px solid rgba(255,255,255,.12); }
+.demo-result-line { margin: 0 0 6px; font-weight: 800; font-size: 16px; }
+.demo-left { margin: 0 0 12px; font-size: 13px; }
+.demo-cta { width: 100%; min-height: 52px; font-size: 16px; }
+.demo-rp { font-size: 12px; margin: 10px 0 0; }
+.home-demo-line { font-size: 13px; margin: 6px 0 0; opacity: .85; }

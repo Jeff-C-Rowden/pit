@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 import { api, useUser } from "@/components/useUser";
+import DemoSpin from "@/components/DemoSpin";
 
 export default function Signup() {
   const r = useRouter();
@@ -32,9 +33,13 @@ export default function Signup() {
       <div className="hero auth-hero">
         <Logo />
         <h1>Take a seat</h1>
-        <p className="muted">Create an account. Cage starts with sandbox credits.</p>
+        <p className="muted">Create an account and claim $100 in sandbox welcome chips. Or try one demo spin first.</p>
       </div>
-      <form className="panel auth-panel" onSubmit={submit}>
+      <DemoSpin onClaim={() => {
+        document.getElementById("signup-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        window.setTimeout(() => document.getElementById("su-name")?.focus({ preventScroll: true }), 350);
+      }} />
+      <form className="panel auth-panel" id="signup-form" onSubmit={submit} aria-label="Create account">
         <label htmlFor="su-name">Display name</label>
         <input id="su-name" autoComplete="nickname" value={displayName} onChange={(e) => setDisplayName(e.target.value)} />
         <label htmlFor="su-email">Email</label>

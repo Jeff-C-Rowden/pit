@@ -45,7 +45,9 @@ describe("test accounts are invisible and can't win", () => {
     expect((db.prepare("SELECT is_test FROM users WHERE id = ?").get(real.id) as { is_test: number }).is_test).toBe(0);
     for (const f of readdirSync("tests/e2e").filter((n) => n.endsWith(".mjs"))) {
       const src = readFileSync(`tests/e2e/${f}`, "utf8");
-      if (!/signup|Create account/.test(src)) continue;
+      // Scripts that actually create an account: hit the signup API or fill the signup form.
+      // (Visiting the /signup page, e.g. the signed-out demo spin check, is not a signup.)
+      if (!/api\/auth\/signup|su-email|su-pass/.test(src)) continue;
       const emails = src.match(/`[a-z0-9]+\$\{Date\.now\(\)\}@[a-z.]+`/g) ?? [];
       expect(emails.length, f).toBeGreaterThan(0);
       for (const e of emails) expect(e.endsWith("@pit.test`"), `${f}: ${e}`).toBe(true);

@@ -48,6 +48,7 @@ function Gate() {
           {busy ? "Confirming…" : "I’m 21+ · enter"}
         </button>
         <p className="home-age-line">21+ only · sandbox chips, no real money</p>
+        <p className="home-demo-line" data-testid="gate-demo-line">Confirm 21+ to try one free demo spin, no account needed.</p>
       </section>
       <div className="age-card">
         <div className="sandbox-chip age-sandbox">Sandbox · test credits</div>

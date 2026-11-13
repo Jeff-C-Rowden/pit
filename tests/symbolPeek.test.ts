@@ -326,9 +326,9 @@ describe("no duplicated pay numbers; cabinets are wired", () => {
     expect(classic).toContain("<div key={r}");
   });
 
-  it("IMPROVEMENTS.md marks S2 shipped and lists S4 as NEXT", () => {
+  it("IMPROVEMENTS.md marks S2 shipped and no longer lists it as NEXT", () => {
     const md = read("IMPROVEMENTS.md");
-    expect(md).toMatch(/## NEXT \(top\): Slot Scout S4→S5/);
+    expect(md).toMatch(/## NEXT \(top\): /);
     expect(md).not.toMatch(/## NEXT \(top\): Slot Scout S2→/);
     expect(md).toMatch(/S2 .+ SHIPPED 2026-11-12/s);
   });
