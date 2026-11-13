@@ -80,16 +80,16 @@ function BookendDialog({ theme, testId, action, onAction, children }: { theme: s
   );
 }
 
-export function BonusIntroCard({ intro, onStart, theme = "" }: { intro: BonusIntro; onStart: () => void; theme?: string }) {
+export function BonusIntroCard({ intro, onStart, theme = "", testId = "bonus-intro", note = INTRO_NOTE, wonLabel = "You won:" }: { intro: BonusIntro; onStart: () => void; theme?: string; testId?: string; note?: string; wonLabel?: string }) {
   return (
-    <BookendDialog theme={theme} testId="bonus-intro" action={intro.start} onAction={onStart}>
+    <BookendDialog theme={theme} testId={testId} action={intro.start} onAction={onStart}>
       {(id) => (
         <>
           <div className="bookend-head"><p className="mine-kicker">{intro.kicker}</p><SandboxChip /></div>
           <h2 id={id}>{intro.title}</h2>
-          <p className="bookend-won">You won: {intro.won}</p>
+          <p className="bookend-won">{wonLabel} {intro.won}</p>
           <p className="bookend-rule">{intro.rule}</p>
-          <p className="mine-honest bookend-note">{INTRO_NOTE}</p>
+          <p className="mine-honest bookend-note">{note}</p>
         </>
       )}
     </BookendDialog>

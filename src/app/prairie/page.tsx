@@ -23,6 +23,7 @@ import { ledText, stepCoin, maxBetCoin, maxBetRefusal } from "@/lib/cabinet";
 import SpinNotice from "@/components/SpinNotice";
 import { BonusIntroCard, BonusSummaryCard, useFeatureCredit } from "@/components/BonusBookend";
 import { bonusIntro, prairieSummary } from "@/lib/bonusBookends";
+import { FS_SAVE_EVERY, RESUME_NOTE, fsWonBefore, holdBoardAt, holdOdds, pctText, resumeWhere, type ResumeProgress } from "@/lib/featureResume";
 
 type WayWin = { symbol: PrPaySymbol; reels: number; ways: number; mult: number; pay: number; winCents: number };
 type FreeSpin = { n: number; grid: PrSymbol[][]; wins: WayWin[]; scatters: number; winCents: number; retrigger: number; awardedTotal: number };
@@ -34,7 +35,7 @@ type Spin = {
   freeSpins: { initial: number; spins: FreeSpin[]; totalWinCents: number; capped: boolean } | null;
   hold: Hold | null;
 };
-type Phase = "idle" | "spinning" | "trigger" | "hold" | "fs" | "summary";
+type Phase = "idle" | "spinning" | "trigger" | "hold" | "fs" | "summary" | "resume";
 
 const STORY_KEY = "pit_story_v1:prairie";
 const WILDS: PrSymbol[] = ["WILD", "W2", "W3"];
@@ -78,13 +79,23 @@ function StoryCard({ onClose }: { onClose: () => void }) {
 }
 
 /** Hold & Spin board, replayed from the server result one respin at a time. */
+/** Research #5: live odds from the visible board only (coins locked, respins left); never the drawn result. */
+function HoldOdds({ hold, step, done }: { hold: Hold; step: number; done: boolean }) {
+  const { left, coins } = holdBoardAt(hold, step);
+  const over = done || left <= 0 || coins >= 15;
+  const odds = holdOdds(coins, over ? 0 : left);
+  return (
+    <p className="pr-hold-odds" data-testid="hold-odds">
+      {over
+        ? <>Round over · {coins} coins locked</>
+        : <>Next respin <b data-testid="hold-odds-next">{pctText(odds.nextCoin)}</b> new-coin chance ({15 - coins} empty × {PR_HS_Q_PERMILLE / 10}%) · Full screen from here <b data-testid="hold-odds-full">{pctText(odds.fullScreen)}</b> · Expect ~{odds.expectedCoins.toFixed(1)} coins</>}
+    </p>
+  );
+}
+
 function HoldBoard({ hold, step, betCents }: { hold: Hold; step: number; betCents: number }) {
-  const board: (number | null)[] = Array(15).fill(null);
-  const fresh = new Set<number>();
-  for (const c of hold.start) board[c.cell] = c.x;
-  hold.respins.slice(0, step).forEach((r, i) => r.landed.forEach((c) => { board[c.cell] = c.x; if (i === step - 1) fresh.add(c.cell); }));
-  const left = step === 0 ? PR_HS_RESPINS : hold.respins[step - 1]!.respinsLeft;
-  const totalX = board.reduce<number>((a, v) => a + (v ?? 0), 0);
+  const { board, left, totalX } = holdBoardAt(hold, step);
+  const fresh = new Set<number>(step > 0 ? hold.respins[step - 1]!.landed.map((c) => c.cell) : []);
   return (
     <div className="pr-hold" aria-live="polite">
       <div className="pr-hold-grid" role="grid" aria-label="Hold and Spin board">
@@ -107,8 +118,27 @@ function HoldBoard({ hold, step, betCents }: { hold: Hold; step: number; betCent
 }
 
 export default function PrairiePage() {
-  const { setUser } = useUser();
+  const { user, setUser } = useUser();
   const credit = useFeatureCredit(setUser);
+  // Research #5: the server keeps the settled feature spin and how far it has been watched.
+  const [resume, setResume] = useState<{ spin: Spin; progress: ResumeProgress } | null>(null);
+  const saveQ = useRef<{ busy: boolean; next: { spinId: string; progress: ResumeProgress } | null }>({ busy: false, next: null });
+  const saveProgress = useCallback((progress: ResumeProgress) => {
+    const s = spinRef.current;
+    if (!s || !(s.hold || s.freeSpins)) return;
+    const q = saveQ.current;
+    q.next = { spinId: s.id, progress };
+    if (q.busy) return;
+    const pump = async () => {
+      q.busy = true;
+      while (q.next) {
+        const item = q.next; q.next = null;
+        await api("/api/games/prairie", { method: "POST", body: JSON.stringify({ action: "progress", ...item }) }).catch(() => { /* a missed save only means resuming a little earlier */ });
+      }
+      q.busy = false;
+    };
+    void pump();
+  }, []);
   const [spin, setSpin] = useState<Spin | null>(null);
   const [grid, setGrid] = useState<PrSymbol[][] | null>(null);
   const [coins, setCoins] = useState<(number | null)[][] | null>(null);
@@ -203,7 +233,7 @@ export default function PrairiePage() {
     return [];
   }, [spin, spinning, phase, fsSpin, fsShown, trigger]);
 
-  const toSummary = useCallback(() => { setPh("summary"); }, []);
+  const toSummary = useCallback(() => { setPh("summary"); saveProgress({ phase: "summary", step: 0 }); }, [saveProgress]);
 
   const playNextFree = useCallback((idx: number) => {
     const s = spinRef.current;
@@ -211,6 +241,7 @@ export default function PrairiePage() {
     if (idx >= s.freeSpins.spins.length) { toSummary(); return; }
     fsIdxRef.current = idx;
     setFsIdx(idx);
+    if (idx % FS_SAVE_EVERY === 0) saveProgress({ phase: "fs", step: idx });
     setFsShown(false);
     setRetrig(0);
     setGrid(null);
@@ -218,7 +249,7 @@ export default function PrairiePage() {
     setSpinning(true);
     playSpin();
     later(() => setGrid(s.freeSpins!.spins[idx]!.grid), 180);
-  }, [toSummary]);
+  }, [toSummary, saveProgress]);
 
   // S5: each trigger shows a player-paced intro card; nothing starts until Start.
   const startFree = useCallback(() => {
@@ -229,19 +260,21 @@ export default function PrairiePage() {
 
   const afterHold = useCallback(() => {
     const s = spinRef.current;
-    if (s?.freeSpins) { setGrid(s.grid); setCoins(s.coins); startFree(); } else toSummary();
-  }, [startFree, toSummary]);
+    if (s?.freeSpins) { setGrid(s.grid); setCoins(s.coins); startFree(); saveProgress({ phase: "fsIntro", step: 0 }); } else toSummary();
+  }, [startFree, toSummary, saveProgress]);
 
-  const runHold = useCallback(() => {
+  const runHold = useCallback((from = 0) => {
     const s = spinRef.current!;
     const h = s.hold!;
-    setHoldStep(0);
+    const start = Math.max(0, Math.min(from, h.respins.length));
+    setHoldStep(start);
     setHoldDone(false);
     setPh("hold");
+    saveProgress({ phase: "hold", step: start });
     const gap = reducedMotion() ? 500 : 1000;
-    h.respins.forEach((r, i) => later(() => { setHoldStep(i + 1); if (r.landed.length) playChip(); }, gap * (i + 1)));
-    later(() => { setHoldDone(true); playFeature(); }, gap * (h.respins.length + 1));
-  }, []);
+    h.respins.slice(start).forEach((r, j) => later(() => { const i = start + j; setHoldStep(i + 1); saveProgress({ phase: "hold", step: i + 1 }); if (r.landed.length) playChip(); }, gap * (j + 1)));
+    later(() => { setHoldDone(true); saveProgress({ phase: "holdDone", step: 0 }); playFeature(); }, gap * (h.respins.length - start + 1));
+  }, [saveProgress]);
 
   const startHold = useCallback(() => {
     setTrigger("hold");
@@ -299,10 +332,13 @@ export default function PrairiePage() {
     clearTimers();
     setHoldStep(s.hold.respins.length);
     setHoldDone(true);
+    saveProgress({ phase: "holdDone", step: 0 });
   }
 
   function finishFeature() {
     credit.release();
+    const done = spinRef.current;
+    if (done) void api("/api/games/prairie", { method: "POST", body: JSON.stringify({ action: "collect", spinId: done.id }) }).catch(() => { /* next spin closes it anyway */ });
     setPaid((v) => v + (spinRef.current?.winCents ?? 0));
     if (spinRef.current) addRecap(spinRef.current.betCents, spinRef.current.winCents ?? 0, true);
     setPh("idle");
@@ -311,6 +347,40 @@ export default function PrairiePage() {
     setHoldDone(false);
     if (spinRef.current) { setGrid(spinRef.current.grid); setCoins(spinRef.current.coins); }
     setSettleTick((n) => n + 1);
+  }
+
+  // Research #5: a refresh mid-feature picks the round up where it was (server-saved place).
+  const resumeChecked = useRef(false);
+  useEffect(() => {
+    if (!user || resumeChecked.current) return;
+    resumeChecked.current = true;
+    api("/api/games/prairie?resume=1", { cache: "no-store" }).then((d) => {
+      const f = d.feature as { spin: Spin; progress: ResumeProgress } | null;
+      if (!f?.spin || !(f.spin.hold || f.spin.freeSpins) || phaseRef.current !== "idle" || spinRef.current) return;
+      setSpin(f.spin);
+      spinRef.current = f.spin;
+      setCoin(f.spin.coinCents);
+      setGrid(f.spin.grid);
+      setCoins(f.spin.coins);
+      credit.accept(d.user, f.spin);
+      const p = f.progress;
+      if (p.phase === "intro") { if (f.spin.hold) startHold(); else startFree(); return; }
+      if (p.phase === "fsIntro") { startFree(); return; }
+      if (p.phase === "summary") { setPh("summary"); return; }
+      setResume({ spin: f.spin, progress: p });
+      setPh("resume");
+    }).catch(() => { /* nothing saved, or offline: the cabinet just starts fresh */ });
+  }, [user, credit, startHold, startFree]);
+
+  function continueResume() {
+    const r = resume;
+    const s = spinRef.current;
+    setResume(null);
+    if (!r || !s) { setPh("idle"); return; }
+    if (r.progress.phase === "hold" && s.hold) { runHold(r.progress.step); return; }
+    if (r.progress.phase === "holdDone" && s.hold) { setHoldStep(s.hold.respins.length); setHoldDone(true); setPh("hold"); return; }
+    if (r.progress.phase === "fs" && s.freeSpins) { setPh("fs"); setFsWon(fsWonBefore(s, r.progress.step)); playNextFree(r.progress.step); return; }
+    toSummary();
   }
 
   async function go(coinOverride?: number) {
@@ -406,6 +476,7 @@ export default function PrairiePage() {
                   <span className="mine-fs-k">HOLD &amp; SPIN</span>
                   <span>New coins reset respins to {PR_HS_RESPINS}</span>
                   {!holdDone && <button type="button" className="btn mine-skip" onClick={skipHold}>Skip to total</button>}
+                  <HoldOdds hold={spin.hold} step={holdStep} done={holdDone} />
                 </div>
               )}
               <PrairieMachine
@@ -474,6 +545,23 @@ export default function PrairiePage() {
                 theme="pr-bookend"
                 intro={bonusIntro("prairie", trigger === "fs" ? { kind: "fs", spins: spin.freeSpins?.initial ?? 0, scatters: spin.scatters } : { kind: "hold", coins: coinsOnGrid }, spin.betCents)}
                 onStart={beginFeature}
+              />
+            )}
+
+            {phase === "resume" && resume && (
+              <BonusIntroCard
+                theme="pr-bookend"
+                testId="bonus-resume"
+                wonLabel="Picking up at:"
+                note={RESUME_NOTE}
+                intro={{
+                  kicker: "Welcome back · your place was saved",
+                  title: resume.spin.hold && (resume.progress.phase === "hold" || resume.progress.phase === "holdDone") ? "Hold & Spin" : "Free Spins",
+                  won: resumeWhere(resume.spin, resume.progress),
+                  rule: `Your ${money(resume.spin.betCents)} spin's feature plays on from here, exactly as drawn; Collect at the end shows the win on your Balance.`,
+                  start: "Resume",
+                }}
+                onStart={continueResume}
               />
             )}
 
