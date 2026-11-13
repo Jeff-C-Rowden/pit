@@ -1,7 +1,7 @@
 "use client";
 // Backlog #6: the shared cabinet win plate. Rendered by CabinetChrome only after every reel has
-// stopped, for real wins that beat the bet (see src/lib/winCelebration.ts). Sits on the seam under
-// the topper sign so it never covers the reels, the S3 win walkthrough or its payout pill.
+// stopped, for real wins that beat the bet (see src/lib/winCelebration.ts). Sits just above the reel
+// window (over the info strip under the topper), so it never covers the reels, the S3 win walkthrough or its pill.
 // Visual only: no sound (the result banner already owns the payout sound), no timers.
 import { sparkLayout, type Celebration } from "@/lib/winCelebration";
 
