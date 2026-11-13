@@ -40,7 +40,7 @@ export function bonusIntro(game: BookendGame, f: FeatureStart, betCents: number)
     const spins = Math.max(0, Math.floor(f.spins));
     const won = `${plural(spins, "free spin")} at your ${bet} bet, at no cost`;
     if (game === "mine") {
-      return { kicker: `Dynamite!${f.scatters ? ` ${f.scatters} scatters` : ""}`, title: `${plural(spins, "Free Spin")}`, won, rule: "Every free-spin win pays ×2, and 3+ dynamite add more spins.", start: "Start free spins" };
+      return { kicker: `Dynamite!${f.scatters ? ` ${f.scatters} scatters` : ""}`, title: `${plural(spins, "Free Spin")}`, won, rule: "Lantern Multiplier starts at ×1 and climbs +1 after every paying free spin, up to ×4. 3+ dynamite add more spins.", start: "Start free spins" };
     }
     if (game === "prairie") {
       return { kicker: `The storm rolls in${f.scatters ? ` · ${f.scatters} storm clouds` : ""}`, title: `${plural(spins, "Free Spin")}`, won, rule: "Sunset wilds carry 2× or 3× and multiply each other on a win.", start: "Start free spins" };
@@ -107,10 +107,15 @@ export type CloverLike = { betCents: number; baseWinCents: number; winCents: num
 
 const CAP = (cap: number) => `This feature reached the ${cap}-free-spin cap.`;
 
+/** Highest Lantern Multiplier a free-spins block was paid at (×1 when no spin carries one). */
+function lanternTop(spins: readonly unknown[]): number {
+  return spins.reduce<number>((a, sp) => Math.max(a, typeof (sp as { mult?: unknown }).mult === "number" ? (sp as { mult: number }).mult : 1), 1);
+}
+
 export function mineSummary(s: MineLike, cap = 100): BonusSummary {
   const rows: BookendRow[] = [{ label: "Base spin", cents: s.baseWinCents }];
   const played: string[] = [];
-  if (s.freeSpins) { rows.push({ label: `Free spins (${s.freeSpins.spins.length} played, wins ×2)`, cents: s.freeSpins.totalWinCents }); played.push(plural(s.freeSpins.spins.length, "free spin")); }
+  if (s.freeSpins) { rows.push({ label: `Free spins (${s.freeSpins.spins.length} played, Lantern up to ×${lanternTop(s.freeSpins.spins)})`, cents: s.freeSpins.totalWinCents }); played.push(plural(s.freeSpins.spins.length, "free spin")); }
   if (s.pick) { rows.push({ label: `Mine Cart (${s.pick.totalX}× bet)`, cents: s.pick.totalWinCents }); played.push(`${plural(s.pick.reveals.length, "cart")} opened`); }
   return buildSummary(rows, s.winCents, s.betCents, played, s.freeSpins?.capped ? CAP(cap) : null);
 }

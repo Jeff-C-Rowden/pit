@@ -74,24 +74,32 @@ export const BOUNTY_MATH = {
  * seeded 10M-spin Monte Carlo in audit/mine.ts. Locked in tests/mine.test.ts.
  */
 export const MINE_MATH = {
-  rtp: 0.954245,
+  rtp: 0.957579,
   baseRtp: 0.724509, // lines 70.33% + dynamite scatter pays 2.12%
   lineRtp: 0.703309,
   scatterRtp: 0.0212,
-  freeSpinsRtp: 0.109736,
+  freeSpinsRtp: 0.11307,
   pickRtp: 0.12,
-  sdPerUnit: 3.11214,
+  sdPerUnit: 3.29859,
   hitRate: 0.447034,
-  winRate: 0.188634,
+  winRate: 0.188615,
   freeSpinsChance: 0.00856,
   pickChance: 0.008,
-  freeSpinsPerFeature: 8.847138,
-  freeSpinFeatureX: 12.819661,
+  freeSpinsPerFeature: 7.635494,
+  freeSpinFeatureX: 13.20909,
   pickExpectedX: 15,
+  /** Lantern Multiplier (research #5 slice 3): x1 start, +1 per paying free spin, max x4. */
+  lanternStart: 1,
+  lanternMax: 4,
+  /** P(at least one free spin of a feature is played at x4), exact DP. */
+  lanternMaxChance: 0.572841,
 } as const;
 
 /** Feature frequencies shown on the lobby tile, game info panel and /rules. */
 export const MINE_FEATURE_LINE = `Free spins about 1 in ${Math.round(1 / MINE_MATH.freeSpinsChance)} spins · Mine Cart pick about 1 in ${Math.round(1 / MINE_MATH.pickChance)} spins`;
+
+/** Research #5 slice 3: the Lantern Multiplier's published odds, from the same exact DP. */
+export const MINE_LANTERN_LINE = `Lantern Multiplier ×${MINE_MATH.lanternStart}–×${MINE_MATH.lanternMax}: +1 after every paying free spin · a free-spins feature averages ${MINE_MATH.freeSpinFeatureX.toFixed(1)}× bet · plays at ×${MINE_MATH.lanternMax} in ${(MINE_MATH.lanternMaxChance * 100).toFixed(0)}% of features`;
 
 /**
  * Frozen Thunderhoof Prairie figures. RTP, feature chances and SD are exact (prairieExactFull: closed-form
@@ -194,10 +202,10 @@ const GAMES: Record<string, GameMath> = {
   mine: {
     id: "mine",
     href: "/mine",
-    rtpLine: "RTP 95.42%",
+    rtpLine: "RTP 95.76%",
     volatility: "Medium",
     sdPerUnit: MINE_MATH.sdPerUnit,
-    line: slotLine("95.42%", "Medium", "features included", winsAbout(MINE_MATH.winRate)),
+    line: slotLine("95.76%", "Medium", "features included", winsAbout(MINE_MATH.winRate)),
     tip: TIP,
     filterBuckets: ["Medium"],
   },

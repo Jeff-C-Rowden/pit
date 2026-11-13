@@ -223,10 +223,11 @@ Updated existing tests:
 - Buckshot Bars needed no math change. Re-ran `audit/exact.ts` against the committed strips:
   94.444% (1–2 coins) / 94.667% (3 coins) over 14,976 combinations.
 
-## Canary Creek Mine (story slot #1) — 11 Nov 2026
+## Canary Creek Mine (story slot #1) — 11 Nov 2026, Lantern Multiplier re-audit 13 Nov 2026
 
 5×3, 9 lines, 30-stop strips. Features: DYNAMITE scatter (3/4/5 pay 2×/10×/50× bet and award
-8/12/20 free spins, all free-spin wins ×2, retriggers, cap 100 free spins per feature) and the Mine
+7/10/15 free spins with the Lantern Multiplier — starts ×1, +1 after every free spin that pays anything,
+max ×4, never drops, carries through retriggers; retriggers, cap 100 free spins per feature) and the Mine
 Cart pick (cart on reels 1, 3 and 5; 12 carts = 2,2,3,3,4,5,6,8,12× bet + 3 COLLECT; first pick is
 always a prize; reveal order drawn at trigger). Code: `src/lib/games/mine.ts`; harness `audit/mine.ts`.
 
@@ -235,16 +236,18 @@ always a prize; reveal order drawn at trigger). Code: `src/lib/games/mine.ts`; h
 | Lines | 70.331% | |
 | Dynamite scatter pays | 2.120% | |
 | **Base game** | **72.451%** (closed form = 30^5 enumeration) | 72.58% |
-| **Free spins** | **10.974%** (P = 0.856%, 8.847 spins avg incl. retriggers, 12.82× bet avg; exact DP + Wald) | 10.98% |
-| **Mine Cart pick** | **12.000%** (P = 0.800%, 15× bet avg) | 11.98% |
-| **Total RTP** | **95.425%** | **95.538% ± 0.193** |
-| SD per $1 | 3.112 (exact, moment DP) → **Medium** | 3.114 |
+| **Free spins** | **11.307%** (P = 0.856%, 7.635 spins avg incl. retriggers, 13.21× bet avg; exact DP over (awarded, remaining, multiplier) using P(spin pays) per scatter count from the enumeration) | 11.26% |
+| Lantern plays at ×4 (≥1 spin) | 57.28% of features (exact DP) | |
+| **Mine Cart pick** | **12.000%** (P = 0.800%, 15× bet avg) | 11.99% |
+| **Total RTP** | **95.758%** | **95.829% ± 0.204** |
+| SD per $1 | 3.299 (exact, moment DP) → **Medium** | 3.296 |
 | Hit rate (any return or feature) | 44.70% | 44.74% |
 | Net-win rate | | 18.86% (1 in 5) |
-| Free spins / Mine Cart frequency | 1 in 116.8 / 1 in 125 | 1 in 116.5 / 1 in 125.1 |
+| Free spins / Mine Cart frequency | 1 in 116.8 / 1 in 125 | 1 in 116.5 / 1 in 125.0 |
 
 Free spins and the Mine Cart can never trigger on the same spin (DYNAMITE and CART never share a
-window on reels 1/3/5). Max observed return in 10M spins: 194.9× bet. Feature cap never reached.
+window on reels 1/3/5). Max observed return in 10M spins: 358× bet. Feature cap never reached.
+(Before 13 Nov: 8/12/20 free spins with flat ×2 wins, total 95.425%, free spins 10.974%.)
 
 ## Thunderhoof Prairie (story slot #2) — 11 Nov 2026
 

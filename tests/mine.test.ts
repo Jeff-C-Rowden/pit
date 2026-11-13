@@ -50,7 +50,7 @@ describe("line evaluation", () => {
     const r = evaluateMineGrid(g, 25);
     expect(r.scatters).toBe(3);
     expect(r.scatterWinCents).toBe(2 * 25 * 9);
-    expect(r.freeSpinsAwarded).toBe(8);
+    expect(r.freeSpinsAwarded).toBe(7);
     const c = evaluateMineGrid(mineWindow([10, 3, 10, 3, 10]), 25);
     expect(c.cart).toBe(true);
   });
@@ -58,26 +58,34 @@ describe("line evaluation", () => {
 
 describe("free spins", () => {
   it("retriggers add spins and the feature stops at the 100-spin cap", () => {
-    // every stop 0 shows DYNAMITE on all 5 reels: each free spin retriggers +20 until the cap
-    const fs = runFreeSpins(25, 20, () => 0);
+    // every stop 0 shows DYNAMITE on all 5 reels: each free spin retriggers +15 until the cap
+    const fs = runFreeSpins(25, 15, () => 0);
     expect(fs.spins).toHaveLength(MINE_FS_CAP);
     expect(fs.capped).toBe(true);
     expect(fs.spins.at(-1)!.awardedTotal).toBe(MINE_FS_CAP);
-    expect(fs.spins.every((s) => s.winCents % 2 === 0)).toBe(true);
+    // every spin pays (5 dynamite), so the Lantern climbs x1, x2, x3 then holds at x4
+    expect(fs.spins.slice(0, 5).map((s) => s.mult)).toEqual([1, 2, 3, 4, 4]);
+    expect(fs.spins.every((s) => s.winCents === s.baseWinCents * s.mult)).toBe(true);
+    expect(fs.maxMult).toBe(4);
     expect(fs.totalWinCents).toBe(fs.spins.reduce((a, s) => a + s.winCents, 0));
   });
-  it("free-spin wins are doubled versus the same grid in the base game", () => {
+  it("the first free spin pays x1 (same as the base game); later spins pay base x the Lantern they started with", () => {
     const stops = [6, 7, 8, 9, 13];
     let i = 0;
-    const fs = runFreeSpins(100, 1, () => stops[i++ % 5]!);
+    const fs = runFreeSpins(100, 3, () => stops[i++ % 5]!);
     const base = evaluateMineGrid(mineWindow(stops), 100);
-    expect(fs.spins[0]!.winCents).toBe(2 * (base.lineWinCents + base.scatterWinCents));
+    const b = base.lineWinCents + base.scatterWinCents;
+    expect(fs.spins[0]!.mult).toBe(1);
+    expect(fs.spins[0]!.winCents).toBe(b);
+    const m = b > 0 ? [1, 2, 3] : [1, 1, 1];
+    expect(fs.spins.map((s) => s.mult)).toEqual(m);
+    expect(fs.spins.map((s) => s.winCents)).toEqual(m.map((x) => x * b));
   });
   it("expected spins per feature (exact DP) matches simulation", () => {
     const pick = seeded(7);
     let n = 0, runs = 20000;
-    for (let i = 0; i < runs; i++) n += runFreeSpins(25, 8, pick).spins.length;
-    expect(n / runs).toBeCloseTo(expectedFreeSpins(8), 1);
+    for (let i = 0; i < runs; i++) n += runFreeSpins(25, 7, pick).spins.length;
+    expect(n / runs).toBeCloseTo(expectedFreeSpins(7), 1);
   });
 });
 
@@ -108,7 +116,7 @@ describe("Mine Cart pick", () => {
 
 describe("exact RTP (published numbers locked)", () => {
   const ex = mineExact();
-  it("closed form: base + free spins + pick = 95.42%", () => {
+  it("exact: base + Lantern free spins + pick = 95.76%", () => {
     expect(ex.totalRtp).toBeCloseTo(MINE_MATH.rtp, 6);
     expect(ex.lineRtp).toBeCloseTo(MINE_MATH.lineRtp, 6);
     expect(ex.scatterRtp).toBeCloseTo(MINE_MATH.scatterRtp, 6);
@@ -145,7 +153,7 @@ describe("exact RTP (published numbers locked)", () => {
   }, 60000);
   it("published strings come from the frozen math", () => {
     const m = gameMath("mine");
-    expect(m.line).toBe("RTP 95.42% · Medium volatility · features included · wins about 1 in 5 spins");
+    expect(m.line).toBe("RTP 95.76% · Medium volatility · features included · wins about 1 in 5 spins");
     expect(m.href).toBe("/mine");
     expect(MINE_FEATURE_LINE).toBe("Free spins about 1 in 117 spins · Mine Cart pick about 1 in 125 spins");
     expect(gameMath("/mine").filterBuckets).toEqual(["Medium"]);

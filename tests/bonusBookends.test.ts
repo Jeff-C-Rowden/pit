@@ -43,7 +43,7 @@ describe("Slot Scout S5: intro card", () => {
     const i = bonusIntro("mine", { kind: "fs", spins: 10, scatters: 3 }, 225);
     expect(i.title).toBe("10 Free Spins");
     expect(i.won).toBe("10 free spins at your $2.25 bet, at no cost");
-    expect(i.rule).toMatch(/×2/);
+    expect(i.rule).toMatch(/Lantern Multiplier starts at ×1.*up to ×4/);
     expect(i.start).toBe("Start free spins");
     expect(JSON.stringify(i)).not.toMatch(/countdown|hurry|seconds|due|hot/i);
     expect(bonusIntro("mine", { kind: "pick" }, 225).title).toBe("Mine Cart Pick");

@@ -21,7 +21,7 @@ const STORIES = [
   },
   {
     href: "/mine", art: "mine", name: "Canary Creek Mine", who: "Clem Hollis and Pip the canary", Portrait: ClemPortrait,
-    blurb: "9 lines. Dynamite brings doubled free spins; mine carts on reels 1, 3 and 5 open a pick bonus.",
+    blurb: "9 lines. Dynamite brings free spins with a climbing ×1–×4 Lantern Multiplier; mine carts on reels 1, 3 and 5 open a pick bonus.",
     feature: MINE_FEATURE_LINE, isNew: false,
   },
 ];

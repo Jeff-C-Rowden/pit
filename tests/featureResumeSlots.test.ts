@@ -234,8 +234,8 @@ describe("Mine and Clover page wiring (source)", () => {
   it("draws nothing: no randomness and no ledger writes in the resume code", () => {
     expect(lib).not.toMatch(/Math\.random|randInt|getRandomValues|creditPayout|debitBet|applyLedger/);
   });
-  it("RTPs unchanged", () => {
-    expect(MINE_MATH.rtp).toBe(0.954245);
+  it("RTPs are the published figures (Mine re-tuned by slice 3's Lantern Multiplier)", () => {
+    expect(MINE_MATH.rtp).toBe(0.957579);
     expect(CLOVER_MATH.rtp).toBe(0.953549);
   });
 });

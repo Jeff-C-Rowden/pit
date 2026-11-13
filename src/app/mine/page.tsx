@@ -8,8 +8,9 @@ import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { lineShows, scatterShow, freeSpinShows } from "@/lib/winShow";
-import { MINE_PAYLINES, MINE_FS_MULT, MINE_PAYTABLE, MINE_FS_AWARD, MINE_FS_CAP, MINE_PICK_CARTS, MINE_PICK_PRIZES, MINE_SCATTER_PAY, type MineSymbol, type CartItem } from "@/lib/games/mine";
-import { MINE_MATH, MINE_FEATURE_LINE } from "@/lib/gameMath";
+import { MINE_PAYLINES, MINE_FS_MULT_MAX, lanternMultAt, MINE_PAYTABLE, MINE_FS_AWARD, MINE_FS_CAP, MINE_PICK_CARTS, MINE_PICK_PRIZES, MINE_SCATTER_PAY, type MineSymbol, type CartItem } from "@/lib/games/mine";
+import { MINE_MATH, MINE_FEATURE_LINE, MINE_LANTERN_LINE } from "@/lib/gameMath";
+import { lanternMeter } from "@/lib/lanternMeter";
 import { soundOn, reducedMotion, playSpin, playFeature } from "@/lib/feel";
 import { SLOT_TURBO_KEY, slotTurboEffective } from "@/lib/slotFeel";
 import QuickBetRow, { useLastBet } from "@/components/QuickBet";
@@ -24,7 +25,7 @@ import { FS_SAVE_EVERY, RESUME_NOTE } from "@/lib/featureResume";
 import { mineResumeWhere, minePickedCarts, wonBefore, type MineProgress } from "@/lib/featureResumeSlots";
 
 type LineWin = { line: number; symbol: string; count: number; pay: number; winCents: number };
-type FreeSpin = { n: number; grid: MineSymbol[][]; lineWins: LineWin[]; scatters: number; winCents: number; retrigger: number; awardedTotal: number };
+type FreeSpin = { n: number; grid: MineSymbol[][]; lineWins: LineWin[]; scatters: number; mult?: number; baseWinCents?: number; winCents: number; retrigger: number; awardedTotal: number };
 type Spin = {
   id: string; coinCents: number; betCents: number; grid: MineSymbol[][]; lineWins: LineWin[];
   scatters: number; scatterWinCents: number; baseWinCents: number; winCents: number;
@@ -56,7 +57,7 @@ function StoryCard({ onClose }: { onClose: () => void }) {
         <h2 id="mine-story-h">Clem &amp; Pip of Canary Creek</h2>
         <p>
           Clementine &ldquo;Clem&rdquo; Hollis stayed on at Canary Creek after the boom went quiet, with Pip the canary riding on her lamp hat.
-          When three sticks of dynamite light up, Clem blasts open a fresh seam of free spins, and when mine carts roll in on reels 1, 3 and 5 she lets you pick through the ore.
+          When three sticks of dynamite light up, Clem blasts open a fresh seam of free spins, and every free spin that pays lights another lantern on her meter, up to ×4. When mine carts roll in on reels 1, 3 and 5 she lets you pick through the ore.
         </p>
         <p className="mine-story-note">Sandbox / test chips only · no cash value · 21+. Every result is drawn by the server; features don&apos;t change the odds of the next spin.</p>
         <button type="button" className="btn primary" onClick={onClose} autoFocus>Head into the mine</button>
@@ -233,7 +234,7 @@ export default function MinePage() {
 
   const winShows = useMemo(() => {
     if (spinning) return [];
-    if (phase === "fs" && fsSpin && fsShown) return freeSpinShows(fsSpin.grid, fsSpin.lineWins, MINE_PAYLINES, "DYNAMITE", "DYNAMITE scatter", fsSpin.winCents, MINE_FS_MULT);
+    if (phase === "fs" && fsSpin && fsShown) return freeSpinShows(fsSpin.grid, fsSpin.lineWins, MINE_PAYLINES, "DYNAMITE", "DYNAMITE scatter", fsSpin.winCents, lanternMultAt(spin?.freeSpins?.spins ?? [], fsIdx));
     if (phase === "idle" && spin) return [...lineShows(spin.lineWins, MINE_PAYLINES), ...scatterShow(spin.grid, "DYNAMITE", spin.scatterWinCents, "DYNAMITE scatter")];
     return [];
   }, [spin, spinning, phase, fsSpin, fsShown]);
@@ -422,6 +423,8 @@ export default function MinePage() {
   const showResult = phase === "idle" && !!spin && !spinning;
   const deckWin = phase === "fs" ? fsWon : phase === "summary" || (showResult && (spin?.freeSpins || spin?.pick)) ? spin?.winCents ?? 0 : showResult ? spin?.baseWinCents ?? 0 : 0;
   const fsTotal = spin?.freeSpins ? spin.freeSpins.spins.length : 0;
+  // Research #5 slice 3: the Lantern meter reads only the free spins already shown on screen.
+  const lantern = inFs && spin?.freeSpins ? lanternMeter(spin.freeSpins.spins, phase === "summary" ? spin.freeSpins.spins.length - 1 : Math.max(0, fsIdx), phase === "summary" ? false : fsShown) : null;
 
   // Backlog #6: one shared honest celebration (plate + glow) from the server's settled result.
   const cele = celebrationFor({ betCents: coinIn, winCents: spin?.winCents, settled: showResult && !!spin, feature: !!(spin?.freeSpins || spin?.pick), reduced, feelOn: feelLive });
@@ -437,16 +440,29 @@ export default function MinePage() {
               <p className="muted">9 lines · 5 reels · <button type="button" className="linkish mine-story-link" onClick={() => setStory(true)}>Clem&apos;s story</button></p>
               <MathStrip game="mine" variant="hero" />
               <p className="math-strip math-strip-hero mine-feature-line">{MINE_FEATURE_LINE}</p>
+              <p className="math-strip math-strip-hero mine-feature-line" data-testid="lantern-odds">{MINE_LANTERN_LINE}</p>
             </div>
             <FirstVisitTip game="mine" />
 
             <div className="slot-stage-wrap mine-stage">
               {inFs && (
                 <div className="mine-fs-bar" role="status" aria-live="polite">
-                  <span className="mine-fs-k">FREE SPINS ×2</span>
+                  <span className="mine-fs-k">FREE SPINS</span>
                   <span>Spin <b>{Math.max(1, fsIdx + 1)}</b> of <b>{fsSpin?.awardedTotal ?? fsTotal}</b></span>
                   <span>Won <b>{money(fsWon)}</b></span>
                   {phase === "fs" && <button type="button" className="btn mine-skip" onClick={skipFree}>Skip to total</button>}
+                  {lantern && (
+                    <span className="mine-lantern" data-testid="lantern-meter" data-mult={lantern.mult} data-next={lantern.next ?? ""} aria-label={lantern.label}>
+                      <span className="mine-lantern-k">LANTERN</span>
+                      <span className="mine-lantern-pips" aria-hidden>
+                        {Array.from({ length: MINE_FS_MULT_MAX }, (_, i) => (
+                          <span key={i} className={`mine-lantern-pip${i < lantern.mult ? " lit" : ""}${lantern.next && i === lantern.next - 1 ? " next" : ""}`}>×{i + 1}</span>
+                        ))}
+                      </span>
+                      <b className="mine-lantern-x">×{lantern.mult}</b>
+                      {lantern.next ? <span className="mine-lantern-up">+1 next spin</span> : null}
+                    </span>
+                  )}
                 </div>
               )}
               <MineMachine
@@ -466,7 +482,7 @@ export default function MinePage() {
                 trigger={reduced ? null : trigger}
                 freeMode={phase === "fs"}
                 topper={<CabinetTopper title="Canary Creek Mine" kicker="Free spins · Mine Cart · 9 lines" infoGame="mine" info={<>3+ dynamite = free spins · carts on reels 1, 3 &amp; 5 = Mine Cart pick · Coin {money(coin)} × 9 lines</>} />}
-                belly={<CabinetBelly pays={pays} note={<>5 of a kind × coin · 3+ dynamite pay 2× / 10× / 50× bet · RTP 95.42% incl. features</>} />}
+                belly={<CabinetBelly pays={pays} note={<>5 of a kind × coin · 3+ dynamite pay 2× / 10× / 50× bet · RTP 95.76% incl. features</>} />}
                 deck={
                   <CabinetDeck
                     creditCents={u.balanceCents}
@@ -554,7 +570,7 @@ export default function MinePage() {
               <ul className="mine-rules">
                 <li><b>Wild</b> (Clem&apos;s lamp hat) lands on reels 2–4 and stands in for every pay symbol, not dynamite or carts.</li>
                 <li><b>Dynamite</b> pays anywhere: 3 / 4 / 5 pay {MINE_SCATTER_PAY[3]}× / {MINE_SCATTER_PAY[4]}× / {MINE_SCATTER_PAY[5]}× the total bet and award {MINE_FS_AWARD[3]} / {MINE_FS_AWARD[4]} / {MINE_FS_AWARD[5]} free spins.</li>
-                <li><b>Free spins</b> use the same reels and bet; every free-spin win is doubled. 3+ dynamite during free spins add the same awards again, up to {MINE_FS_CAP} free spins per feature. Carts do nothing during free spins.</li>
+                <li><b>Free spins</b> use the same reels and bet with the <b>Lantern Multiplier</b>: it starts at ×{MINE_MATH.lanternStart} and climbs +1 after every free spin that pays anything, up to ×{MINE_MATH.lanternMax}. Each spin pays its lines and dynamite at the multiplier it started with; the meter never drops and carries through retriggers. At least one spin plays at ×{MINE_MATH.lanternMax} in {(MINE_MATH.lanternMaxChance * 100).toFixed(1)}% of features. 3+ dynamite during free spins add the same awards again, up to {MINE_FS_CAP} free spins per feature. Carts do nothing during free spins.</li>
                 <li><b>Mine Cart pick</b>: a cart on reels 1, 3 and 5 (any row). 12 carts hold {MINE_PICK_PRIZES.join(", ")}× bet and 3 COLLECT lamps. The first cart always holds ore; you keep picking until a COLLECT. Average {MINE_MATH.pickExpectedX}× bet.</li>
                 <li><b>Honest picks</b>: the server draws the reveal order at trigger time and pays it at once. The cart you tap shows the next result in that order, so there is no better or worse cart.</li>
               </ul>

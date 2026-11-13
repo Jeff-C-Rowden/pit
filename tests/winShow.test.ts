@@ -7,7 +7,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "fs";
 import { PAYLINES, REELS, evaluateGrid, type Symbol } from "../src/lib/games/slot";
 import { VS_PAYLINES, VS_REELS, evaluateVsGrid, type VsSymbol } from "../src/lib/games/slotProgressive";
-import { MINE_PAYLINES, MINE_FS_MULT, playMine, evaluateMineLine } from "../src/lib/games/mine";
+import { MINE_PAYLINES, playMine, evaluateMineLine } from "../src/lib/games/mine";
 import { CL_PAYLINES, playClover, evaluateClLine, expandWilds } from "../src/lib/games/clover";
 import { playPrairie, evaluateWays, PR_PAY_SYMBOLS } from "../src/lib/games/prairie";
 import { spinBuckshot, evaluateBuckshot, BB_BOUNTY_TABLE } from "../src/lib/games/buckshot";
@@ -78,7 +78,7 @@ describe("Canary Creek Mine and Kettle of Clover", () => {
         }
       }
       for (const f of s.freeSpins?.spins ?? []) {
-        const fsShows = freeSpinShows(f.grid, f.lineWins, MINE_PAYLINES, "DYNAMITE", "DYNAMITE scatter", f.winCents, MINE_FS_MULT);
+        const fsShows = freeSpinShows(f.grid, f.lineWins, MINE_PAYLINES, "DYNAMITE", "DYNAMITE scatter", f.winCents, f.mult);
         expect(sum(fsShows)).toBe(f.winCents);
         if (f.winCents === 0) expect(fsShows).toEqual([]);
         fsChecked++;

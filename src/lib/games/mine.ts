@@ -16,10 +16,13 @@ import { randInt, newId } from "../rng";
  *
  * Features
  * - DYNAMITE scatter (one per strip, all reels): 3 / 4 / 5 anywhere pay 2x / 10x / 50x the total
- *   bet and award 8 / 12 / 20 free spins.
- * - Free spins: same reels and bet, every free-spin win doubled. 3+ DYNAMITE retrigger the same
- *   awards. At most 100 free spins per feature in total (a retrigger past the cap adds only up to it).
- *   Mine carts do nothing during free spins.
+ *   bet and award 7 / 10 / 15 free spins.
+ * - Free spins: same reels and bet, with the LANTERN MULTIPLIER (research #5 slice 3). It starts at x1
+ *   and climbs +1 after every free spin that pays anything (lines or dynamite), up to x4; it never
+ *   drops and carries through retriggers. A spin pays its own lines + scatter times the multiplier it
+ *   started with, so the meter always equals 1 + paying free spins already shown (max 4).
+ *   3+ DYNAMITE retrigger the same awards. At most 100 free spins per feature in total (a retrigger
+ *   past the cap adds only up to it). Mine carts do nothing during free spins.
  * - CART bonus symbol (two per strip, reels 1, 3 and 5 only): one on each of reels 1, 3 and 5
  *   (any row) opens the Mine Cart pick. 12 carts hold 9 ore prizes (2,2,3,3,4,5,6,8,12 x bet)
  *   and 3 COLLECT lamps. Picks reveal prizes until a COLLECT; the first pick is always a prize.
@@ -69,8 +72,10 @@ export const MINE_CART_REELS = [0, 2, 4] as const;
 /** DYNAMITE pays x total bet for 0..5 on screen. */
 export const MINE_SCATTER_PAY = [0, 0, 0, 2, 10, 50] as const;
 /** Free spins awarded for 0..5 DYNAMITE. */
-export const MINE_FS_AWARD = [0, 0, 0, 8, 12, 20] as const;
-export const MINE_FS_MULT = 2;
+export const MINE_FS_AWARD = [0, 0, 0, 7, 10, 15] as const;
+/** Lantern Multiplier: starts at x1, +1 after each paying free spin, never above x4. */
+export const MINE_FS_MULT_START = 1;
+export const MINE_FS_MULT_MAX = 4;
 export const MINE_FS_CAP = 100;
 
 /** Mine Cart pick board: prizes are x total bet. */
@@ -162,7 +167,11 @@ export type MineFreeSpin = {
   grid: MineSymbol[][];
   lineWins: MineLineWin[];
   scatters: number;
-  /** Doubled win for this free spin (lines + scatter). */
+  /** Lantern Multiplier this spin was paid at (1..4). */
+  mult: number;
+  /** Lines + scatter before the multiplier. */
+  baseWinCents: number;
+  /** Multiplied win for this free spin: baseWinCents x mult. */
   winCents: number;
   /** Extra spins actually added by a retrigger on this spin (after the cap). */
   retrigger: number;
@@ -170,7 +179,17 @@ export type MineFreeSpin = {
   awardedTotal: number;
 };
 
-export type MineFreeSpins = { initial: number; spins: MineFreeSpin[]; totalWinCents: number; capped: boolean };
+export type MineFreeSpins = { initial: number; spins: MineFreeSpin[]; totalWinCents: number; capped: boolean; maxMult: number };
+
+/**
+ * The Lantern Multiplier a free spin is paid at, read only from the spins before it: 1 + how many of
+ * them paid anything, capped at x4. Client-safe; the page meter uses exactly this.
+ */
+export function lanternMultAt(spins: { baseWinCents?: number; winCents: number }[], idx: number): number {
+  let m = MINE_FS_MULT_START;
+  for (let i = 0; i < Math.min(idx, spins.length); i++) if ((spins[i]!.baseWinCents ?? spins[i]!.winCents) > 0) m = Math.min(m + 1, MINE_FS_MULT_MAX);
+  return m;
+}
 
 export function runFreeSpins(coinCents: number, initial: number, pick: Pick): MineFreeSpins {
   let awarded = Math.min(initial, MINE_FS_CAP);
@@ -178,10 +197,12 @@ export function runFreeSpins(coinCents: number, initial: number, pick: Pick): Mi
   const spins: MineFreeSpin[] = [];
   let total = 0;
   let capped = false;
+  let mult = MINE_FS_MULT_START;
   while (remaining > 0) {
     remaining--;
     const g = spinGrid(coinCents, pick);
-    const win = (g.lineWinCents + g.scatterWinCents) * MINE_FS_MULT;
+    const base = g.lineWinCents + g.scatterWinCents;
+    const win = base * mult;
     let add = 0;
     if (g.freeSpinsAwarded > 0) {
       add = Math.min(g.freeSpinsAwarded, MINE_FS_CAP - awarded);
@@ -190,9 +211,10 @@ export function runFreeSpins(coinCents: number, initial: number, pick: Pick): Mi
       remaining += add;
     }
     total += win;
-    spins.push({ n: spins.length + 1, grid: g.grid, lineWins: g.lineWins, scatters: g.scatters, winCents: win, retrigger: add, awardedTotal: awarded });
+    spins.push({ n: spins.length + 1, grid: g.grid, lineWins: g.lineWins, scatters: g.scatters, mult, baseWinCents: base, winCents: win, retrigger: add, awardedTotal: awarded });
+    if (base > 0) mult = Math.min(mult + 1, MINE_FS_MULT_MAX);
   }
-  return { initial: Math.min(initial, MINE_FS_CAP), spins, totalWinCents: total, capped };
+  return { initial: Math.min(initial, MINE_FS_CAP), spins, totalWinCents: total, capped, maxMult: spins.reduce((a, sp) => Math.max(a, sp.mult), MINE_FS_MULT_START) };
 }
 
 export type CartItem = { kind: "prize"; x: number } | { kind: "collect" };
@@ -353,17 +375,20 @@ export type MineExact = {
   pickExpectedX: number;
 };
 
-export function mineExact(): MineExact {
+/**
+ * Exact RTP. Lines, scatter and pick are closed form; free spins use the exact Lantern Multiplier DP
+ * (freeSpinMoments), which needs P(spin pays) per scatter count from the 30^5 enumeration (cached).
+ */
+export function mineExact(en: MineEnumeration = mineEnumerate()): MineExact {
   const law = scatterLaw();
   const lineRtp = mineLineRtpExact();
   const scatterRtp = law.reduce((a, p, k) => a + p * MINE_SCATTER_PAY[k]!, 0);
-  const perFreeSpin = MINE_FS_MULT * (lineRtp + scatterRtp);
   let freeSpinsRtp = 0;
   let freeSpinsChance = 0;
   let eSpins = 0;
   for (let k = 3; k <= 5; k++) {
     const n = expectedFreeSpins(MINE_FS_AWARD[k]!, law);
-    freeSpinsRtp += law[k]! * n * perFreeSpin; // Wald: spin values are i.i.d. and N is a stopping time
+    freeSpinsRtp += law[k]! * freeSpinMoments(MINE_FS_AWARD[k]!, en).m1;
     freeSpinsChance += law[k]!;
     eSpins += law[k]! * n;
   }
@@ -376,7 +401,7 @@ export function mineExact(): MineExact {
     totalRtp: baseRtp + freeSpinsRtp + pickRtp,
     freeSpinsChance, pickChance,
     expectedFreeSpinsPerFeature: eSpins / freeSpinsChance,
-    freeSpinValueX: eSpins / freeSpinsChance * perFreeSpin,
+    freeSpinValueX: freeSpinsRtp / freeSpinsChance,
     pickExpectedX: px,
   };
 }
@@ -390,8 +415,8 @@ export type MineEnumeration = {
   /** Net win on the base grid alone (lines + scatter > bet), features excluded. */
   baseWinRate: number;
   lineHitRate: number;
-  /** Per scatter count k = 0..5: P(k), E[B 1{k}], E[B^2 1{k}], P(k and cart trigger). B = base return per unit bet. */
-  byScatter: { p: number; eB: number; eB2: number; pCart: number }[];
+  /** Per scatter count k = 0..5: P(k), E[B 1{k}], E[B^2 1{k}], P(k and cart trigger), P(k and B > 0). B = base return per unit bet. */
+  byScatter: { p: number; eB: number; eB2: number; pCart: number; pPay: number }[];
   /** E[B 1{cart}] */
   eBCart: number;
   pCart: number;
@@ -401,13 +426,19 @@ export type MineEnumeration = {
  * Full 30^5 enumeration of the base grid (24.3M windows, about 4 s): exact base line + scatter
  * RTP, hit rate, and the joint moments needed for the exact SD. Not used at request time.
  */
+let enumCache: MineEnumeration | null = null;
 export function mineEnumerate(): MineEnumeration {
+  if (enumCache) return enumCache;
+  enumCache = mineEnumerateUncached();
+  return enumCache;
+}
+function mineEnumerateUncached(): MineEnumeration {
   const L = MINE_REEL_LEN;
   const win = MINE_REELS.map((strip) => strip.map((_, st) => [0, 1, 2].map((k) => strip[(st + k) % L]!)));
   const scat = win.map((ws) => ws.map((w) => (w.includes("DYNAMITE") ? 1 : 0)));
   const cart = win.map((ws) => ws.map((w) => w.includes("CART")));
   let sum = 0, sum2 = 0, hits = 0, combos = 0, anyLine = 0, baseWins = 0, bCart = 0, nCart = 0;
-  const by = Array.from({ length: 6 }, () => ({ n: 0, b: 0, b2: 0, cart: 0 }));
+  const by = Array.from({ length: 6 }, () => ({ n: 0, b: 0, b2: 0, cart: 0, pay: 0 }));
   const g: MineSymbol[][] = [[], [], [], [], []];
   const lineSyms: MineSymbol[] = ["ORE", "ORE", "ORE", "ORE", "ORE"];
   for (let a = 0; a < L; a++) { g[0] = win[0]![a]!;
@@ -430,6 +461,7 @@ export function mineEnumerate(): MineEnumeration {
             if (unit > 0 || sc >= 3 || ct) hits++;
             const row = by[sc]!;
             row.n++; row.b += unit; row.b2 += unit * unit;
+            if (unit > 0) row.pay++;
             if (ct) { row.cart++; bCart += unit; nCart++; }
           } } } } }
   const mean = sum / combos;
@@ -440,7 +472,7 @@ export function mineEnumerate(): MineEnumeration {
     hitRate: hits / combos,
     baseWinRate: baseWins / combos,
     lineHitRate: anyLine / combos,
-    byScatter: by.map((r) => ({ p: r.n / combos, eB: r.b / combos, eB2: r.b2 / combos, pCart: r.cart / combos })),
+    byScatter: by.map((r) => ({ p: r.n / combos, eB: r.b / combos, eB2: r.b2 / combos, pCart: r.cart / combos, pPay: r.pay / combos })),
     eBCart: bCart / combos,
     pCart: nCart / combos,
   };
@@ -465,47 +497,58 @@ function factorial(n: number): number { return n <= 1 ? 1 : n * factorial(n - 1)
 
 /**
  * Exact first and second moments of a free-spins feature for an initial award, by DP over
- * (awarded, remaining). Each free spin returns Y = 2B (B = base lines + scatter) and its scatter
- * count k drives the retrigger, using the joint law of (B, k) from the enumeration.
+ * (awarded, remaining, multiplier). Each free spin returns Y = m B (B = base lines + scatter, m = the
+ * Lantern Multiplier it started with); its scatter count k drives the retrigger and whether it paid
+ * (B > 0) moves m up by one (max 4), using the joint law of (B, k, B > 0) from the enumeration.
+ * Also returns pMax = P(at least one free spin in the feature is played at x4).
  */
-export function freeSpinMoments(initial: number, en: MineEnumeration): { m1: number; m2: number } {
-  const memo = new Map<number, [number, number]>();
+export function freeSpinMoments(initial: number, en: MineEnumeration): { m1: number; m2: number; pMax: number } {
+  const memo = new Map<number, [number, number, number]>();
   const by = en.byScatter;
-  const f = (awarded: number, remaining: number): [number, number] => {
-    if (remaining <= 0) return [0, 0];
-    const key = awarded * 1000 + remaining;
+  const f = (awarded: number, remaining: number, m: number): [number, number, number] => {
+    if (remaining <= 0) return [0, 0, 0];
+    const key = (awarded * 1000 + remaining) * 10 + m;
     const hit = memo.get(key);
     if (hit) return hit;
-    let m1 = 0, m2 = 0;
+    let m1 = 0, m2 = 0, pm = 0;
+    const up = Math.min(m + 1, MINE_FS_MULT_MAX);
     for (let k = 0; k <= 5; k++) {
       const add = Math.min(MINE_FS_AWARD[k]!, MINE_FS_CAP - awarded);
-      const [n1, n2] = f(awarded + add, remaining - 1 + add);
-      const pk = by[k]!.p, eY = MINE_FS_MULT * by[k]!.eB, eY2 = MINE_FS_MULT ** 2 * by[k]!.eB2; // unconditional on k
-      m1 += eY + pk * n1;
-      m2 += eY2 + 2 * eY * n1 + pk * n2;
+      const row = by[k]!;
+      const pPay = row.pPay, pNo = row.p - row.pPay;
+      const [u1, u2, uM] = f(awarded + add, remaining - 1 + add, up); // after a paying spin
+      const [s1, s2, sM] = pNo > 0 ? f(awarded + add, remaining - 1 + add, m) : [0, 0, 0]; // after a blank spin
+      const eY = m * row.eB, eY2 = m * m * row.eB2; // B > 0 only on paying spins, so eB / eB2 sit on the paying branch
+      m1 += eY + pPay * u1 + pNo * s1;
+      m2 += eY2 + 2 * eY * u1 + pPay * u2 + pNo * s2;
+      pm += pPay * uM + pNo * sM;
     }
-    const v: [number, number] = [m1, m2];
+    const v: [number, number, number] = [m1, m2, m >= MINE_FS_MULT_MAX ? 1 : pm]; // this spin itself plays at x4
     memo.set(key, v);
     return v;
   };
   const a = Math.min(initial, MINE_FS_CAP);
-  const [m1, m2] = f(a, a);
-  return { m1, m2 };
+  const [m1, m2, pMax] = f(a, a, MINE_FS_MULT_START);
+  return { m1, m2, pMax };
 }
 
 /** Exact total RTP and SD per unit bet (base + free spins + pick), from the enumeration. */
 export function mineExactFull(en: MineEnumeration = mineEnumerate()) {
-  const ex = mineExact();
+  const ex = mineExact(en);
+  let pMaxW = 0;
   const pick1 = pickExpectedX(), pick2 = pickSecondMoment();
   let eX = en.baseRtp + en.pCart * pick1;
   let eX2 = en.byScatter.reduce((a, r) => a + r.eB2, 0) + en.pCart * pick2 + 2 * en.eBCart * pick1;
   for (let k = 3; k <= 5; k++) {
     const r = en.byScatter[k]!;
-    const { m1, m2 } = freeSpinMoments(MINE_FS_AWARD[k]!, en);
+    const { m1, m2, pMax } = freeSpinMoments(MINE_FS_AWARD[k]!, en);
+    pMaxW += r.p * pMax;
     eX += r.p * m1;
     eX2 += r.p * m2 + 2 * r.eB * m1 + 2 * r.pCart * m1 * pick1;
   }
-  return { ...ex, totalRtpEnumerated: eX, sdPerUnit: Math.sqrt(eX2 - eX * eX), hitRate: en.hitRate, baseSd: en.baseSd, baseWinRate: en.baseWinRate };
+  return { ...ex, totalRtpEnumerated: eX, sdPerUnit: Math.sqrt(eX2 - eX * eX), hitRate: en.hitRate, baseSd: en.baseSd, baseWinRate: en.baseWinRate,
+    /** P(at least one free spin of a feature is played at x4). */
+    lanternMaxChance: pMaxW / ex.freeSpinsChance };
 }
 
 export const MINE_INFO = {
@@ -516,7 +559,7 @@ export const MINE_INFO = {
   paytable: MINE_PAYTABLE,
   scatterPay: MINE_SCATTER_PAY,
   freeSpinsAward: MINE_FS_AWARD,
-  freeSpinsMultiplier: MINE_FS_MULT,
+  lanternMultiplier: { start: MINE_FS_MULT_START, max: MINE_FS_MULT_MAX, step: "+1 after every paying free spin" },
   freeSpinsCap: MINE_FS_CAP,
   pickPrizes: MINE_PICK_PRIZES,
   pickCollects: MINE_PICK_COLLECTS,

@@ -83,3 +83,17 @@
   .mine-trig-fs .sym.tone-mine-dyn .sym-icon, .mine-trig-pick .sym.tone-mine-cart .sym-icon, .mine-trigger-card, .mine-cart-btn.open { animation: none !important; }
   .mine-cart-btn { transition: none; }
 }
+
+/* Research #5 slice 3: Lantern Multiplier meter (reads only the free spins already shown) */
+.mine-lantern { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px; flex-basis: 100%; }
+.mine-lantern-k { font: 400 14px/1 var(--st-display, Impact), sans-serif; color: #ffcf6b; letter-spacing: .06em; }
+.mine-lantern-pips { display: inline-flex; gap: 4px; }
+.mine-lantern-pip {
+  min-width: 34px; padding: 4px 0; border-radius: 999px; text-align: center; font-size: 12px; font-weight: 700;
+  background: #23313d; color: #7d8a96; border: 1px solid #3b4b59; transition: background .25s, color .25s, box-shadow .25s;
+}
+.mine-lantern-pip.lit { background: radial-gradient(circle at 50% 35%, #fff3b0, #fedd52 55%, #c98a00); color: #3a2300; border-color: #fff1a8; box-shadow: 0 0 10px rgba(254,221,82,.6); }
+.mine-lantern-pip.next { border: 1px dashed #fedd52; color: #fedd52; }
+.mine-lantern-x { font-size: 18px; }
+.mine-lantern-up { font-size: 12px; color: #ffe9a3; }
+@media (prefers-reduced-motion: reduce) { .mine-lantern-pip { transition: none; } }

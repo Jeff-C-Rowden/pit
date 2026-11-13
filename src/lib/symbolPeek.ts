@@ -214,7 +214,7 @@ export function symbolPeek(game: PeekGame, symbol: string, bet: PeekBet): Symbol
         symbol, title, kind: "scatter",
         unit: `Scatter — pays anywhere, × this spin's bet (${formatCents(peekBetCents(game, bet))})`,
         rows: scatterRows(MINE_SCATTER_PAY, MINE_FS_AWARD, peekBetCents(game, bet)),
-        note: "Wilds do not substitute for Dynamite. Free spins use the same reels; every free-spin win is doubled. Retriggers add the same awards, up to a cap of 100 free spins.",
+        note: "Wilds do not substitute for Dynamite. Free spins use the same reels with the Lantern Multiplier: ×1, then +1 after every paying free spin, up to ×4. Retriggers add the same awards, up to a cap of 100 free spins.",
       };
     }
     if (symbol === "CART") {
@@ -231,7 +231,7 @@ export function symbolPeek(game: PeekGame, symbol: string, bet: PeekBet): Symbol
       symbol, title, kind: "pay",
       unit: coinUnit(coin, "on a line"),
       rows: ofAKindRows(MINE_PAYTABLE[symbol as MinePaySymbol], coin),
-      note: "Pays left to right on a line. Wilds substitute. Free-spin line wins are doubled.",
+      note: "Pays left to right on a line. Wilds substitute. Free-spin line wins are multiplied by the Lantern Multiplier (×1 to ×4).",
     };
   }
 
