@@ -73,7 +73,7 @@ export function howItPlays(idOrHref: string): HowItPlays {
   const m = gameMath(idOrHref);
   const tags: HowTag[] = [{ kind: "rtp", label: m.rtpLine, long: m.rtpLine }];
   if (m.volatility === "by-bet") tags.push({ kind: "vol", label: "Volatility by bet", long: "Volatility depends on the bet; see the rules." });
-  else tags.push({ kind: "vol", label: m.volatility, long: `${m.volatility} volatility` });
+  else tags.push({ kind: "vol", label: `${m.volatility} volatility`, long: `${m.volatility} volatility` });
   const r = SLOT_RATES[m.id];
   if (r) {
     const w = oneIn(r.winRate);

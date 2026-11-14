@@ -19,7 +19,7 @@ describe("SS1 how-it-plays tags", () => {
   it("volatility tag matches the published bucket", () => {
     for (const m of allGameMath()) {
       const vol = howItPlays(m.id).tags.find((t) => t.kind === "vol")!;
-      expect(vol.label).toBe(m.volatility === "by-bet" ? "Volatility by bet" : m.volatility);
+      expect(vol.label).toBe(m.volatility === "by-bet" ? "Volatility by bet" : `${m.volatility} volatility`);
     }
   });
 
