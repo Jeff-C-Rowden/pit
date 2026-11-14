@@ -11,6 +11,8 @@ import {
   type ReseedMoment,
 } from "@/lib/reseedMoment";
 import MhbBar from "@/components/MhbBar";
+import { NEXT_SPIN_NOTE, tierNextSpinOdds, type OddsMeterLike } from "@/lib/nextSpinOdds";
+import { SandboxChip } from "@/components/SandboxChip";
 
 /**
  * J4 reseed moments: holds real post-hit "Won $X · reset to $seed" notes for
@@ -80,6 +82,7 @@ export default function ProgressiveMeterStrip({
   reseed = [],
   onOpenInfo,
   className = "",
+  betCents,
 }: {
   meters: MeterPublic[];
   /** Softer animation during active spins */
@@ -89,6 +92,8 @@ export default function ProgressiveMeterStrip({
   reseed?: ReseedMoment[];
   onOpenInfo?: (meter: MeterPublic) => void;
   className?: string;
+  /** JD1: when set, each meter shows the exact chance the next spin at this bet pays it. */
+  betCents?: number;
 }) {
   const order = ["Mini", "Minor", "Major", "Grand"];
   const sorted = [...meters].sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
@@ -125,6 +130,7 @@ export default function ProgressiveMeterStrip({
               <span className="prog-tier-tag">{m.hasMustHitBy ? "Must-hit" : "Mystery"}</span>
             )}
             <MhbBar meter={m} shownCents={shown} />
+            {betCents != null && <NextSpinOddsLine meter={m} betCents={betCents} />}
           </button>
         );
       })}
@@ -132,6 +138,36 @@ export default function ProgressiveMeterStrip({
         {reseed.map((r) => `${r.tierName} ${reseedLabel(r)}.`).join(" ")}
       </span>
     </div>
+  );
+}
+
+/** JD1: one tiny line under a meter: exact next-spin chance at the current bet (rounded down). */
+export function NextSpinOddsLine({ meter, betCents }: { meter: OddsMeterLike; betCents: number }) {
+  const o = tierNextSpinOdds(meter, betCents);
+  if (!o) return null;
+  return (
+    <span
+      className="nso-line"
+      data-testid="next-spin-odds"
+      data-tier={o.tierId}
+      data-num={o.chance.num}
+      data-den={o.chance.den}
+      title={o.long}
+    >
+      <span className="nso-lab">Next spin</span> <span className="nso-val">{o.short}</span>
+    </span>
+  );
+}
+
+/** JD1 note shown once beside the odds lines. */
+export function NextSpinOddsNote({ betCents, reference, chip = true }: { betCents: number; reference?: string; chip?: boolean }) {
+  return (
+    <p className="nso-note" data-testid="next-spin-odds-note">
+      {chip && <SandboxChip />}
+      <span>
+        Odds shown for a {money(betCents)} bet{reference ? ` (${reference})` : ""}. {NEXT_SPIN_NOTE}
+      </span>
+    </p>
   );
 }
 

@@ -8,7 +8,7 @@ import Shell from "@/components/Shell";
 import VaultSpireMachine, { type VaultSpireMachineHandle, type WinCell } from "@/components/VaultSpireMachine";
 import HitHistoryStrip from "@/components/HitHistory";
 import PotSheet from "@/components/PotSheet";
-import ProgressiveMeterStrip, { type MeterPublic, useReseedMoments } from "@/components/ProgressiveMeter";
+import ProgressiveMeterStrip, { NextSpinOddsNote, type MeterPublic, useReseedMoments } from "@/components/ProgressiveMeter";
 import { momentsFromNewHits, momentsFromSpinHits } from "@/lib/reseedMoment";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
 import { MathStrip } from "@/components/VolatilityMeter";
@@ -351,8 +351,10 @@ export default function VaultPage() {
                       hitTierIds={hitTierIds}
                       reseed={reseed}
                       onOpenInfo={(m) => setInfoSheet(m)}
+                      betCents={coinIn}
                     />
                     <div className="prog-strip-sandbox"><SandboxChip /></div>
+                    <NextSpinOddsNote betCents={coinIn} chip={false} />
                   </CabinetTopper>
                 }
                 belly={<CabinetBelly pays={pays} note={<>Pays left to right on 9 lines · × coin · 3% of each bet feeds the pots</>} />}

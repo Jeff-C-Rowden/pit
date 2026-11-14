@@ -18,10 +18,12 @@ import { howItPlays } from "@/lib/howItPlays";
 import { usePauseInfo } from "@/components/PauseStatus";
 import { ExclusionEndedNote } from "@/components/ExclusionReminder";
 import { exclusionNote } from "@/lib/pauseText";
-import { useReseedMoments } from "@/components/ProgressiveMeter";
+import { NextSpinOddsLine, NextSpinOddsNote, useReseedMoments } from "@/components/ProgressiveMeter";
 import MhbBar from "@/components/MhbBar";
 import PotSheet from "@/components/PotSheet";
 import { activeMoment, displayCents, momentsFromNewHits, reseedLabel } from "@/lib/reseedMoment";
+/** JD1: lobby odds use the $1 coin reference bet (9 lines = $9). */
+const LOBBY_ODDS_BET_CENTS = 900;
 
 type MeterPublic = {
   id: string;
@@ -131,10 +133,12 @@ function VaultLobbyMeters() {
               <span className="vault-lobby-tier-amt">{money(displayCents(m.progressiveCents, moment))}</span>
               {moment && <span className="vault-lobby-reseed">{reseedLabel(moment)}</span>}
               <MhbBar meter={m} shownCents={displayCents(m.progressiveCents, moment)} />
+              <NextSpinOddsLine meter={m} betCents={LOBBY_ODDS_BET_CENTS} />
             </button>
           );
         })}
       </div>
+      <NextSpinOddsNote betCents={LOBBY_ODDS_BET_CENTS} reference="$1 coin × 9 lines" />
       <span className="vault-lobby-info-hint muted">Tap a meter to see how that pot works.</span>
       {potId && sorted.some((m) => m.id === potId) && (
         <PotSheet meter={sorted.find((m) => m.id === potId)!} onClose={() => setPotId(null)} />

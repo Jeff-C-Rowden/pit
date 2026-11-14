@@ -3681,3 +3681,19 @@ label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spa
 .demo-cta { width: 100%; min-height: 52px; font-size: 16px; }
 .demo-rp { font-size: 12px; margin: 10px 0 0; }
 .home-demo-line { font-size: 13px; margin: 6px 0 0; opacity: .85; }
+
+/* JD1: live next-spin odds under each Antler Ridge meter (exact, rounded down) */
+.nso-line {
+  display: flex; flex-direction: column; align-items: center; margin-top: 3px; min-width: 0; max-width: 100%;
+  font-size: 8px; line-height: 1.15; font-variant-numeric: tabular-nums; color: #f3e6c4;
+}
+.nso-lab { font-weight: 700; letter-spacing: .08em; text-transform: uppercase; opacity: .7; white-space: nowrap; }
+.nso-val { font-weight: 800; font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.vault-lobby-tier .nso-line { align-items: inherit; }
+.nso-note {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 6px;
+  margin: 6px 0 0; font-size: 10px; line-height: 1.35; text-align: center; color: #e8dcc0; opacity: .85;
+  overflow-wrap: anywhere;
+}
+.nso-note > span:last-child { flex: 1 1 220px; min-width: 0; }
+@media (max-width: 420px) { .nso-note { font-size: 9.5px; } .prog-tier .nso-val { font-size: 8.5px; } }
