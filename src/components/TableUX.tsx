@@ -4,6 +4,7 @@ import { money, useUser } from "./useUser";
 import PauseStatus from "./PauseStatus";
 import Link from "next/link";
 import { recordAchievement } from "@/lib/achievements";
+import { HowItPlays } from "./HowItPlays";
 import { celebrationLevel, playChip, playPayout, shouldSlidePayout, TABLE_TIPS, rulesHref } from "@/lib/feel";
 
 const LOADED_AT = typeof performance !== "undefined" ? performance.now() : 0;
@@ -661,6 +662,7 @@ export function FirstVisitTip({ game }: { game: string }) {
       <div className="first-tip-k">{first ? "First time here" : "How to play"}</div>
       <b>{tip.title}</b>
       <ol>{tip.steps.map((s) => <li key={s}>{s}</li>)}</ol>
+      <HowItPlays game={game} variant="first" />
       <p className="first-tip-odds"><span className="first-tip-odds-k">The odds</span> {tip.odds}</p>
       <div className="first-tip-row">
         <button type="button" className="btn first-tip-ok" onClick={close}>Got it</button>

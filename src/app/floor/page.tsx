@@ -12,7 +12,9 @@ import Onboarding from "@/components/Onboarding";
 import { api, money } from "@/components/useUser";
 import { filterGames, readRecent } from "@/lib/lobby";
 import { filterByVolatility, type VolFilter } from "@/lib/gameMath";
-import { MathStrip, volAria } from "@/components/VolatilityMeter";
+import { volAria } from "@/components/VolatilityMeter";
+import { HowItPlays } from "@/components/HowItPlays";
+import { howItPlays } from "@/lib/howItPlays";
 import { usePauseInfo } from "@/components/PauseStatus";
 import { ExclusionEndedNote } from "@/components/ExclusionReminder";
 import { exclusionNote } from "@/lib/pauseText";
@@ -273,7 +275,7 @@ type Game = (typeof GAMES)[number] & { isNew?: boolean; progressive?: boolean; c
 function GameCard({ g, size = "grid" }: { g: Game; size?: "grid" | "row" | "tall" }) {
   const ribbon = g.bonusCash ? "Bonus to Cash" : g.isNew ? "New" : tileRibbon(g);
   return (
-    <Link href={g.href} className={`st-card st-card-${size}${g.accent ? ` accent-${g.accent}` : ""}${g.progressive ? " progressive-card" : ""}${g.bonusCash ? " b2c-card" : ""}`} aria-label={`${g.name}. ${g.line}. ${volAria(g.href)}`}>
+    <Link href={g.href} className={`st-card st-card-${size}${g.accent ? ` accent-${g.accent}` : ""}${g.progressive ? " progressive-card" : ""}${g.bonusCash ? " b2c-card" : ""}`} aria-label={`${g.name}. ${g.line}. ${volAria(g.href)}. ${howItPlays(g.href).trigger}`}>
       <span className="st-card-art">
         <GameArt kind={g.accent} variant="tile" />
         <span className={`st-ribbon st-ribbon-${ribbon.toLowerCase().replace(/ /g, "-")}`}>{ribbon}</span>
@@ -283,7 +285,7 @@ function GameCard({ g, size = "grid" }: { g: Game; size?: "grid" | "row" | "tall
       <span className="st-card-info">
         <h2 className="gname">{g.name}</h2>
         <span className="gmeta">{g.meta}</span>
-        <MathStrip game={g.href} variant="lobby" />
+        <HowItPlays game={g.href} variant="lobby" />
       </span>
     </Link>
   );

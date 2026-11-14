@@ -699,3 +699,21 @@ a { color: var(--st-link); }
 .vault-lobby-tier-btn:focus-visible, .prog-tier:focus-visible { outline: 2px solid #ffd75e; outline-offset: 2px; }
 .vault-lobby-info-hint { display: block; margin-top: 6px; font-size: 11px; opacity: .75; }
 @media (max-width: 360px) { .pot-sheet-rows { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- SS1 how-it-plays tags (lobby cards + first-load card) ---------- */
+.hip { display: flex; flex-direction: column; gap: 4px; margin-top: 5px; }
+.hip-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.hip-tag {
+  display: inline-flex; align-items: center; gap: 0; padding: 1px 6px; border-radius: 3px; white-space: nowrap;
+  font: 700 10.5px/16px var(--st-body); color: #f3e0b0; background: rgba(32, 12, 13, .55); box-shadow: inset 0 0 0 1px #5b1c1b;
+}
+.hip-tag .vol-meter { height: 10px; margin-right: 4px; padding: 0 2px; box-shadow: none; background: transparent; }
+.hip-tag .vol-bar:nth-child(1) { height: 4px; } .hip-tag .vol-bar:nth-child(2) { height: 7px; } .hip-tag .vol-bar:nth-child(3) { height: 10px; }
+.hip-rtp { color: var(--st-on-gold, #2a1206); background: linear-gradient(#ffe28a, #c9a227); box-shadow: none; }
+.hip-trigger { font: 500 11px/1.3 var(--st-body); color: #e6cf9c; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.hip-first { margin: 0 0 10px; padding: 8px 10px; border-radius: 8px; background: rgba(32, 12, 13, .5); border: 1px solid #5b1c1b; }
+.hip-first .hip-trigger { -webkit-line-clamp: unset; display: block; font-size: 13px; color: #f0e2c0; }
+.hip-first .hip-tag { font-size: 12px; line-height: 18px; }
+.hip-k { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #d8b25a; }
+.hip-foot { font-size: 11px; color: rgba(232, 220, 192, .65); }
+.st-card-row .hip-trigger { -webkit-line-clamp: 3; }
