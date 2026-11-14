@@ -144,6 +144,9 @@ for (const c of cards) {
 }
 r.missing = Object.keys(EXPECTED).filter((h) => !seen.has(h));
 r.overflow = await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+// The welcome sheet can cover the lobby on a fresh browser profile; skip the tour (no claim) before the screenshot.
+await p.$('xpath/.//button[contains(., "Skip tour")]').then((h) => h?.evaluate((e) => e.click())).catch(() => {});
+await W(500);
 await p.evaluate(() => document.querySelector('.st-grid .st-card[href="/mine"]')?.scrollIntoView({ block: "center" }));
 await W(400);
 await p.screenshot({ path: `${OUT}/ss1-lobby-tags-390.png` });
