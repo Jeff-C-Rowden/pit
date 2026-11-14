@@ -92,19 +92,20 @@ export function mysteryChance(coinInPerHitCents: number, betCents: number): Exac
 const fmtInt = (n: number) => n.toLocaleString("en-US");
 
 /**
- * Conservative display. >= 1%: whole percent rounded DOWN. Below 1%: "1 in N"
+ * Conservative display. >= 10%: whole percent rounded DOWN; 1–10%: one decimal rounded DOWN. Below 1%: "1 in N"
  * with N rounded UP (so 1/N <= true chance). 100% only when the hit is certain.
  */
 export function formatChance(c: ExactChance): string {
   if (c.num <= 0) return "0%";
   if (c.num >= c.den) return "100%";
-  if (c.num * 100 >= c.den) return `${Math.floor((c.num * 100) / c.den)}%`;
+  if (c.num * 10 >= c.den) return `${Math.floor((c.num * 100) / c.den)}%`;
+  if (c.num * 100 >= c.den) return `${(Math.floor((c.num * 1_000) / c.den) / 10).toFixed(1)}%`;
   return `1 in ${fmtInt(Math.ceil(c.den / c.num))}`;
 }
 
 /** The chance a displayed string claims (for tests): must be <= the true chance. */
 export function shownChanceValue(s: string): number {
-  const pct = s.match(/^(\d+)%$/);
+  const pct = s.match(/^(\d+(?:\.\d)?)%$/);
   if (pct) return Number(pct[1]) / 100;
   const one = s.match(/^1 in ([\d,]+)$/);
   if (one) return 1 / Number(one[1]!.replace(/,/g, ""));

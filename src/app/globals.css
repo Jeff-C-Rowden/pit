@@ -3697,3 +3697,5 @@ label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spa
 }
 .nso-note > span:last-child { flex: 1 1 220px; min-width: 0; }
 @media (max-width: 420px) { .nso-note { font-size: 9.5px; } .prog-tier .nso-val { font-size: 8.5px; } }
+.prog-tier-grand .nso-line, .st-jackpots .vault-lobby-grand .nso-line { color: var(--st-on-gold, #3b1d06); }
+.prog-tier-grand .nso-lab, .st-jackpots .vault-lobby-grand .nso-lab { opacity: .85; }

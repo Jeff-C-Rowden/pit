@@ -88,6 +88,9 @@ describe("JD1 display never rounds in the player's favour", () => {
     expect(formatChance({ num: 1, den: 3 })).toBe("33%");
     expect(formatChance({ num: 2, den: 3 })).toBe("66%");
     expect(formatChance({ num: 999, den: 100_000 })).toBe("1 in 101");
+    expect(formatChance({ num: 9, den: 809 })).toBe("1.1%"); // 1.112%
+    expect(formatChance({ num: 99, den: 1_000 })).toBe("9.9%");
+    expect(formatChance({ num: 1, den: 100 })).toBe("1.0%");
     expect(formatChance({ num: 9, den: 2_000 })).toBe("1 in 223");
   });
 });
