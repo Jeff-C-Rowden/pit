@@ -541,6 +541,21 @@ a { color: var(--st-link); }
 .hh-vs-bar { display: inline-block; width: 40px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; flex: none; }
 .hh-vs-bar > span { display: block; height: 100%; background: var(--st-gold-grad); }
 .hh-note { margin: 8px 0 0; font-size: 11px; color: #c9aaa3; line-height: 1.4; }
+/* JD4 theory vs actual */
+.hh-tv { margin-top: 10px; padding: 8px; border: 1px solid #5b1c1b; border-radius: 4px; background: rgba(0,0,0,.18); min-width: 0; }
+.hh-tv-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 8px; margin-bottom: 6px; }
+.hh-tv-title { margin: 0; font: 700 12px var(--st-narrow); letter-spacing: .1em; text-transform: uppercase; color: var(--st-heading-gold); }
+.hh-tv-sub { font-size: 11px; color: #c9aaa3; }
+.hh-tv-cols, .hh-tv-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 6.5em) minmax(0, 6.5em); gap: 2px 8px; align-items: baseline; }
+.hh-tv-cols { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: #c9aaa3; }
+.hh-tv-cols > span:not(:first-child), .hh-tv-theory, .hh-tv-actual { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hh-tv-row { padding: 6px 0 4px; border-top: 1px solid rgba(255,255,255,.07); }
+.hh-tv-label { font-size: 12px; color: #fff; min-width: 0; }
+.hh-tv-theory { font-size: 13px; color: #e8cfc8; }
+.hh-tv-actual { font-size: 13px; color: var(--st-jackpot); }
+.hh-tv-status { grid-column: 1 / -1; margin: 2px 0 0; font-size: 11px; color: #c9aaa3; line-height: 1.35; }
+.hh-tv-row.drift .hh-tv-status { color: #ffe0a0; }
+.hh-tv-why { margin: 6px 0 0; font-size: 11px; color: #c9aaa3; line-height: 1.4; }
 @media (max-width: 359px) {
   .hh { padding: 10px 8px; }
   .hh-tab-name { font-size: 11px; letter-spacing: .04em; }

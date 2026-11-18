@@ -11,6 +11,7 @@ import {
   type HitRecordLike,
   type TierConfigLike,
 } from "@/lib/hitHistory";
+import { ALL_TIER_THEORY, THEORY_NOTE, THEORY_WINDOW, buildTheoryCompare, theoryExplainer, type MetricCompare } from "@/lib/hitTheory";
 
 const ORDER = ["Mini", "Minor", "Major", "Grand"];
 
@@ -23,9 +24,12 @@ const ORDER = ["Mini", "Minor", "Major", "Grand"];
 export default function HitHistoryStrip({
   tiers,
   hits,
+  samples,
 }: {
   tiers: TierConfigLike[];
   hits: HitRecordLike[] | null | undefined;
+  /** JD4: last 50 real hits per tier (amount + recorded cycle coin-in). */
+  samples?: unknown;
 }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -37,6 +41,7 @@ export default function HitHistoryStrip({
     [tiers],
   );
   const history = useMemo(() => buildHitHistory(hits ?? [], ordered, now), [hits, ordered, now]);
+  const theory = useMemo(() => buildTheoryCompare(samples ?? []), [samples]);
   const [sel, setSel] = useState<string | null>(null);
   if (!ordered.length) return null;
   const active = history.find((t) => t.tierId === sel) ?? history[0]!;
@@ -96,8 +101,43 @@ export default function HitHistoryStrip({
             ))}
           </ol>
         )}
+        {!loading && <TheoryBlock cmp={theory.find((t) => t.tierId === active.tierId)} />}
         <p className="hh-note">Meter amount when each pot paid. Past hits do not change the odds of the next spin.</p>
       </div>
     </section>
+  );
+}
+
+function MetricRow({ m }: { m: MetricCompare }) {
+  return (
+    <div className={`hh-tv-row${m.drift ? " drift" : ""}`} data-metric={m.label} data-n={m.n} data-enough={m.enough ? "1" : "0"} data-drift={m.drift ? "1" : "0"}>
+      <span className="hh-tv-label">{m.label}</span>
+      <span className="hh-tv-theory">{m.theoryLabel}</span>
+      <span className="hh-tv-actual">{m.enough ? m.actualLabel : "—"}</span>
+      <p className="hh-tv-status">{m.status}</p>
+    </div>
+  );
+}
+
+/** JD4 — expected vs actual over the last 50 real hits for the selected tier. */
+function TheoryBlock({ cmp }: { cmp: ReturnType<typeof buildTheoryCompare>[number] | undefined }) {
+  if (!cmp) return null;
+  const th = ALL_TIER_THEORY.find((t) => t.tierId === cmp.tierId);
+  return (
+    <div className="hh-tv" aria-label={`${cmp.name} theory vs actual`} data-tier={cmp.tierId}>
+      <div className="hh-tv-head">
+        <h3 className="hh-tv-title">Theory vs actual</h3>
+        <span className="hh-tv-sub">last {THEORY_WINDOW} real hits</span>
+      </div>
+      <div className="hh-tv-cols" aria-hidden>
+        <span />
+        <span>Theory</span>
+        <span>Actual</span>
+      </div>
+      <MetricRow m={cmp.hit} />
+      <MetricRow m={cmp.coinIn} />
+      {th && <p className="hh-tv-why">{theoryExplainer(th)}</p>}
+      <p className="hh-tv-why">{THEORY_NOTE}</p>
+    </div>
   );
 }

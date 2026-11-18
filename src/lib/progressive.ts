@@ -10,6 +10,8 @@ export type ProgressiveRow = {
   contribution_bps: number;
   ceiling_cents: number | null;
   trigger_cents: number | null;
+  /** JD4: real coin-in (bets, cents) since this tier last reseeded; null = cycle began before tracking. */
+  coin_in_cents?: number | null;
   last_hit_at: string | null;
   updated_at: string;
 };
@@ -21,6 +23,8 @@ export type ProgressiveHitRow = {
   amount_cents: number;
   user_id: string | null;
   created_at: string;
+  /** JD4: real coin-in for the cycle this hit ended; null for hits before tracking began. */
+  coin_in_cents?: number | null;
 };
 
 export type RecentHitPublic = {
@@ -55,6 +59,11 @@ function migrateColumns(db: Database.Database) {
   if (!names.has("trigger_cents")) {
     db.exec("ALTER TABLE progressive_meters ADD COLUMN trigger_cents INTEGER");
   }
+  // JD4: coin-in since the last reseed. Existing meters start NULL (that cycle's
+  // coin-in is unknown, so its hit records NULL rather than a guess).
+  if (!names.has("coin_in_cents")) {
+    db.exec("ALTER TABLE progressive_meters ADD COLUMN coin_in_cents INTEGER");
+  }
 }
 
 /** Ensure progressive_hits exists (for DBs opened before the table was added to SCHEMA). */
@@ -71,6 +80,10 @@ export function ensureHitsTable(db: Database.Database = getDb()) {
     CREATE INDEX IF NOT EXISTS idx_progressive_hits_at ON progressive_hits(created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_progressive_hits_tier_at ON progressive_hits(tier_id, created_at DESC);
   `);
+  const cols = db.prepare("PRAGMA table_info(progressive_hits)").all() as { name: string }[];
+  if (!cols.some((c) => c.name === "coin_in_cents")) {
+    db.exec("ALTER TABLE progressive_hits ADD COLUMN coin_in_cents INTEGER");
+  }
 }
 
 /** Privacy-safe winner label from a real account display name (never invented). */
@@ -93,8 +106,8 @@ export function ensureAllTiers(db: Database.Database = getDb()): ProgressiveRow[
       const trigger = rollTriggerCents(t);
       db.prepare(
         `INSERT INTO progressive_meters
-          (id, amount_cents, seed_cents, contribution_bps, ceiling_cents, trigger_cents, last_hit_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, NULL, ?)`,
+          (id, amount_cents, seed_cents, contribution_bps, ceiling_cents, trigger_cents, coin_in_cents, last_hit_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, 0, NULL, ?)`,
       ).run(t.id, t.seedCents, t.seedCents, t.contributionBps, t.ceilingCents, trigger, now);
     } else {
       // Keep live amount; refresh config columns if defs changed.
@@ -152,6 +165,9 @@ export function applyProgressiveSpin(
     const contrib = Math.max(0, Math.floor(opts.contributionByTier[t.id] ?? 0));
     const row = db.prepare("SELECT * FROM progressive_meters WHERE id = ?").get(t.id) as ProgressiveRow;
     const afterContrib = row.amount_cents + contrib;
+    // JD4: count this spin's real bet toward the cycle's coin-in (null stays null: unknown cycle).
+    const bet = opts.betCents != null && opts.betCents > 0 ? Math.floor(opts.betCents) : 0;
+    const coinIn = row.coin_in_cents == null ? null : row.coin_in_cents + bet;
 
     let hit = false;
     if (t.ceilingCents != null && row.trigger_cents != null && afterContrib >= row.trigger_cents) {
@@ -169,18 +185,18 @@ export function applyProgressiveSpin(
       const newTrigger = rollTriggerCents(t);
       db.prepare(
         `UPDATE progressive_meters
-         SET amount_cents = ?, trigger_cents = ?, last_hit_at = ?, updated_at = ?
+         SET amount_cents = ?, trigger_cents = ?, coin_in_cents = 0, last_hit_at = ?, updated_at = ?
          WHERE id = ?`,
       ).run(t.seedCents, newTrigger, now, now, t.id);
       db.prepare(
-        `INSERT INTO progressive_hits (id, tier_id, tier_name, amount_cents, user_id, created_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-      ).run(newId(), t.id, t.name, award, opts.userId ?? null, now);
+        `INSERT INTO progressive_hits (id, tier_id, tier_name, amount_cents, user_id, created_at, coin_in_cents)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      ).run(newId(), t.id, t.name, award, opts.userId ?? null, now, coinIn);
       hits.push({ tierId: t.id, name: t.name, awardCents: award, reseedsTo: t.seedCents });
     } else {
       db.prepare(
-        `UPDATE progressive_meters SET amount_cents = ?, updated_at = ? WHERE id = ?`,
-      ).run(afterContrib, now, t.id);
+        `UPDATE progressive_meters SET amount_cents = ?, coin_in_cents = ?, updated_at = ? WHERE id = ?`,
+      ).run(afterContrib, coinIn, now, t.id);
     }
   }
 
@@ -292,4 +308,48 @@ export function getHitHistoryByTier(
   const rows: ProgressiveHitRow[] = [];
   for (const t of VS_TIERS) rows.push(...(stmt.all(t.id, cap) as ProgressiveHitRow[]));
   return toPublicHits(db, rows);
+}
+
+/** JD4: how many real hits per tier the theory-vs-actual check looks at. */
+export const HIT_SAMPLES_PER_TIER_MAX = 50;
+
+export type HitSamplePublic = {
+  tierId: TierId;
+  amountCents: number;
+  /** Real coin-in over the cycle that ended in this hit; null when it began before tracking. */
+  coinInCents: number | null;
+  at: string;
+};
+
+/**
+ * JD4: last N genuine hits per tier (default 50) for the theory-vs-actual
+ * check — amount (meter at hit) and the recorded cycle coin-in. Same test-account
+ * filter as the public hit lists; no names (not needed for the averages).
+ */
+export function getHitSamplesByTier(
+  db: Database.Database = getDb(),
+  perTier = HIT_SAMPLES_PER_TIER_MAX,
+): HitSamplePublic[] {
+  ensureHitsTable(db);
+  const cap = Math.max(0, Math.min(HIT_SAMPLES_PER_TIER_MAX, Math.floor(perTier)));
+  if (cap === 0) return [];
+  const stmt = db.prepare(
+    `SELECT tier_id, amount_cents, coin_in_cents, created_at
+     FROM progressive_hits
+     WHERE tier_id = ? ${hideTestHits(db, "AND")}
+     ORDER BY created_at DESC
+     LIMIT ?`,
+  );
+  const out: HitSamplePublic[] = [];
+  for (const t of VS_TIERS) {
+    for (const r of stmt.all(t.id, cap) as ProgressiveHitRow[]) {
+      out.push({
+        tierId: r.tier_id as TierId,
+        amountCents: r.amount_cents,
+        coinInCents: r.coin_in_cents == null ? null : r.coin_in_cents,
+        at: r.created_at,
+      });
+    }
+  }
+  return out;
 }

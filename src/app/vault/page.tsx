@@ -451,7 +451,11 @@ export default function VaultPage() {
             </div>
           )}
 
-          <HitHistoryStrip tiers={meters} hits={info ? (Array.isArray(info.hitHistory) ? info.hitHistory : []) : null} />
+          <HitHistoryStrip
+            tiers={meters}
+            hits={info ? (Array.isArray(info.hitHistory) ? info.hitHistory : []) : null}
+            samples={info && Array.isArray(info.hitSamples) ? info.hitSamples : []}
+          />
 
           <div className="vault-info-blurb panel">
             <p>
