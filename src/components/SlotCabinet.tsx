@@ -12,7 +12,8 @@ import type { Celebration } from "@/lib/winCelebration";
 import { useCallback, useEffect, useRef, useState, type ButtonHTMLAttributes, type CSSProperties, type ReactNode } from "react";
 import Link from "next/link";
 import { autoNext, autoStopText, CAB_AUTO_SPINS, leverFires, leverTravel, ledText, paylineTabs } from "@/lib/cabinet";
-import { playChip, setSoundOn, soundOn } from "@/lib/feel";
+import { soundOn } from "@/lib/feel";
+import { FeelSheet, useFeelSummary } from "./FeelSettings";
 import type { PeekBet, PeekGame } from "@/lib/symbolPeek";
 import WinLineOverlay from "./WinLineOverlay";
 import { GameInfoButton, SymbolPeekLayer } from "./SymbolPeek";
@@ -36,6 +37,8 @@ function BulbRow({ n, side }: { n: number; side: "t" | "b" | "l" | "r" }) {
 
 function SoundPill() {
   const [on, setOn] = useState(false);
+  const [open, setOpen] = useState(false);
+  const summary = useFeelSummary();
   useEffect(() => {
     setOn(soundOn());
     const f = () => setOn(soundOn());
@@ -43,10 +46,13 @@ function SoundPill() {
     return () => window.removeEventListener("pit-sound", f);
   }, []);
   return (
-    <button type="button" className={`cab-pill cab-sound${on ? " on" : ""}`} aria-pressed={on} aria-label={`Sound ${on ? "on" : "off"}`} onClick={() => { setSoundOn(!on); if (!on) setTimeout(playChip, 30); }}>
+    <>
+    <button type="button" className={`cab-pill cab-sound${on ? " on" : ""}`} aria-haspopup="dialog" aria-expanded={open} aria-label={`Sound and feel: ${summary}`} data-feel-summary={summary} onClick={() => setOpen(true)}>
       {on ? "ON" : "OFF"}
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />{on && <path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" />}</svg>
     </button>
+    <FeelSheet open={open} onClose={() => setOpen(false)} />
+    </>
   );
 }
 

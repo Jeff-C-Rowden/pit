@@ -391,6 +391,7 @@ export default function VaultPage() {
           {lineOnlyWin && lastWinCents > coinIn && (
             <OutcomeBanner
               win
+              tierHaptics
               title="YOU WIN"
               amountCents={lastWinCents}
               stakeCents={coinIn}

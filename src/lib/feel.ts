@@ -1,9 +1,13 @@
 // Tactile feedback: how big a result effect should be, plus soft synthesized sounds.
 // Effects follow the real settled result only. Losses, pushes and wins smaller than the
-// stake never celebrate. Sound & feel stay off by default (localStorage pit.sound !== "on")
-// and are remembered per device. Buzz never fires when feel is off or reduced-motion is on.
+// stake never celebrate. Music / Effects / Haptics stay off by default (SS3, feelSettings.ts)
+// and are remembered per device. Buzz never fires when Haptics is off or reduced-motion is on.
 
-import { tierGlow, winTier } from "./winCelebration";
+import { tierGlow, winTier, type WinTier } from "./winCelebration";
+import {
+  anyFeelOn, BONUS_DOUBLE_PULSE, hapticPattern, hapticsAllowed, MUSIC_CHORD_SECONDS, MUSIC_CHORDS, MUSIC_GAIN,
+  readFeel, writeFeel, type FeelChannel, type FeelState,
+} from "./feelSettings";
 
 export type FeelLevel = 0 | 1 | 2 | 3;
 
@@ -30,27 +34,93 @@ export function shouldSlidePayout(tone: "win" | "loss" | "push", returnCents: nu
   return tone === "win" && (Number(returnCents) || 0) > 0;
 }
 
-const KEY = "pit.sound";
-export function soundOn(): boolean {
-  try { return typeof window !== "undefined" && window.localStorage.getItem(KEY) === "on"; } catch { return false; }
+// SS3: three remembered switches (Music / Effects / Haptics), all off by default; see feelSettings.ts.
+function store(): Storage | null {
+  try { return typeof window !== "undefined" ? window.localStorage : null; } catch { return null; }
 }
+export function feelState(): FeelState { return readFeel(store()); }
+export function effectsOn(): boolean { return feelState().effects; }
+export function hapticsOn(): boolean { return feelState().haptics; }
+export function musicOn(): boolean { return feelState().music; }
+/** True when any of Music / Effects / Haptics is on (cabinet lights animate only then). */
+export function soundOn(): boolean {
+  return typeof window !== "undefined" && anyFeelOn(feelState());
+}
+/** Turn one channel on or off; remembered on this device. Music starts/stops right away. */
+export function setFeel(ch: FeelChannel, on: boolean) {
+  writeFeel(store(), ch, on);
+  if (ch === "music") { if (on) startMusic(); else stopMusic(); }
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("pit-sound"));
+}
+/** Legacy master switch: Effects + Haptics together (Music is only ever turned on by its own switch). */
 export function setSoundOn(on: boolean) {
-  try { window.localStorage.setItem(KEY, on ? "on" : "off"); } catch {}
-  window.dispatchEvent(new Event("pit-sound"));
+  writeFeel(store(), "effects", on);
+  writeFeel(store(), "haptics", on);
+  if (!on) { writeFeel(store(), "music", false); stopMusic(); }
+  if (typeof window !== "undefined") window.dispatchEvent(new Event("pit-sound"));
 }
 export function reducedMotion(): boolean {
   return typeof window !== "undefined" && !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 }
 
 let ctx: AudioContext | null = null;
-function ac(): AudioContext | null {
-  if (!soundOn() || typeof window === "undefined") return null;
+function rawCtx(): AudioContext | null {
+  if (typeof window === "undefined") return null;
   const C = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!C) return null;
   ctx = ctx || new C();
   if (ctx.state === "suspended") void ctx.resume();
   return ctx;
 }
+/** AudioContext for effects, only when the Effects switch is on. */
+function ac(): AudioContext | null {
+  if (typeof window === "undefined" || !effectsOn()) return null;
+  return rawCtx();
+}
+
+// ---- Music: a quiet, original generative pad (WebAudio only, no files). Never reacts to wins or losses.
+let music: { gain: GainNode; timer: number; oscs: OscillatorNode[] } | null = null;
+function playChord(c: AudioContext, out: GainNode, idx: number): OscillatorNode[] {
+  const chord = MUSIC_CHORDS[idx % MUSIC_CHORDS.length]!;
+  const t = c.currentTime, d = MUSIC_CHORD_SECONDS;
+  const oscs: OscillatorNode[] = [];
+  chord.forEach((f, i) => {
+    for (const detune of [-6, 6]) {
+      const o = c.createOscillator(); const g = c.createGain();
+      o.type = i === 0 ? "sine" : "triangle"; o.frequency.value = f; o.detune.value = detune;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(0.5 / chord.length, t + 2.5);
+      g.gain.linearRampToValueAtTime(0.5 / chord.length, t + d - 1.5);
+      g.gain.linearRampToValueAtTime(0.0001, t + d + 1);
+      o.connect(g).connect(out); o.start(t); o.stop(t + d + 1.1);
+      oscs.push(o);
+    }
+  });
+  return oscs;
+}
+export function startMusic() {
+  if (music || typeof window === "undefined" || !musicOn() || (typeof document !== "undefined" && document.hidden)) return;
+  const c = rawCtx(); if (!c) return;
+  const lp = c.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 900;
+  const gain = c.createGain(); gain.gain.value = MUSIC_GAIN;
+  gain.connect(lp).connect(c.destination);
+  let i = 0;
+  const m = { gain, timer: 0, oscs: playChord(c, gain, i++) };
+  m.timer = window.setInterval(() => { m.oscs = playChord(c, gain, i++); }, MUSIC_CHORD_SECONDS * 1000);
+  music = m;
+}
+export function stopMusic() {
+  if (!music) return;
+  window.clearInterval(music.timer);
+  const m = music; music = null;
+  try {
+    const c = m.gain.context;
+    m.gain.gain.setTargetAtTime(0.0001, c.currentTime, 0.3);
+    window.setTimeout(() => { m.oscs.forEach((o) => { try { o.stop(); } catch {} }); try { m.gain.disconnect(); } catch {} }, 1200);
+  } catch {}
+}
+/** True while the music loop is playing (for tests and the e2e check). */
+export function musicPlaying(): boolean { return !!music; }
 
 function tone(c: AudioContext, freq: number, at: number, dur: number, gain: number, type: OscillatorType = "sine") {
   const o = c.createOscillator(); const g = c.createGain();
@@ -79,9 +149,10 @@ export function playChip() {
   buzz(vibratePattern("chip")); const c = ac(); if (c) clack(c, 0);
 }
 
-/** Chips paid to the player; size follows the level. Never called for losses. */
-export function playPayout(level: FeelLevel) {
-  buzz(vibratePattern("pay", level));
+/** Chips paid to the player; size follows the level. Never called for losses.
+ *  Slot cabinets pass haptic=false: their per-win-tier haptic comes from the win plate (playWinTier). */
+export function playPayout(level: FeelLevel, haptic = true) {
+  if (haptic) buzz(vibratePattern("pay", level));
   const c = ac(); if (!c) return;
   const clacks = [2, 3, 4, 5][level];
   for (let i = 0; i < clacks; i++) clack(c, i * 0.06, 0.09);
@@ -109,13 +180,21 @@ export function playThunk() {
   if (!c) return;
   clack(c, 0, 0.07);
   tone(c, 140, 0, 0.045, 0.03, "sine");
+  // SS3 reel-stop tick: identical on every reel of every spin (sound only, never a haptic).
+  tone(c, 1760, 0, 0.018, 0.018, "square");
 }
 
 /** Feature trigger fanfare (free spins / Mine Cart). Gated like every other sound and buzz. */
 export function playFeature() {
-  buzz([20, 40, 20, 40, 60]);
+  buzz(BONUS_DOUBLE_PULSE);
   const c = ac(); if (!c) return;
   [523, 659, 784, 1047].forEach((f, i) => tone(c, f, i * 0.1, 0.3, 0.05, "triangle"));
+}
+
+/** SS3 per-win-tier haptic for slot cabinets, fired once when the honest win plate appears.
+ *  "none" (loss, push, or a pay that does not beat the bet) is silent. */
+export function playWinTier(tier: WinTier) {
+  buzz(hapticPattern({ kind: "win", tier }));
 }
 
 /** Soft kick when a deal actually starts. Gated like every other buzz. */
@@ -146,7 +225,7 @@ export function vibratePattern(kind: "chip" | "pay" | "spin" | "deal", level: Fe
 
 /** Buzz only when the feel setting is on, motion is allowed and the phone supports it. */
 export function buzz(pattern: number[]) {
-  if (!pattern.length || !soundOn() || reducedMotion()) return;
+  if (!pattern.length || typeof window === "undefined" || !hapticsAllowed(feelState(), reducedMotion())) return;
   try { (navigator as Navigator & { vibrate?: (p: number[]) => boolean }).vibrate?.(pattern); } catch {}
 }
 

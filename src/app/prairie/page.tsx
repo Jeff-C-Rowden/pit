@@ -568,7 +568,7 @@ export default function PrairiePage() {
             {phase === "summary" && spin && <BonusSummaryCard theme="pr-bookend" summary={prairieSummary(spin, PR_FS_CAP)} onCollect={finishFeature} />}
 
             {showResult && spin && !hasFeature && spin.winCents > coinIn && (
-              <OutcomeBanner win title="YOU WIN" amountCents={spin.winCents} stakeCents={coinIn} subtitle={`${money(spin.winCents)} back on a ${money(coinIn)} bet · net +${money(spin.winCents - coinIn)}`} />
+              <OutcomeBanner win tierHaptics title="YOU WIN" amountCents={spin.winCents} stakeCents={coinIn} subtitle={`${money(spin.winCents)} back on a ${money(coinIn)} bet · net +${money(spin.winCents - coinIn)}`} />
             )}
             {showResult && spin && !hasFeature && spin.winCents > 0 && spin.winCents <= coinIn && (
               <OutcomeBanner push title={spin.winCents === coinIn ? "BET BACK" : "PART BACK"} amountCents={spin.winCents} stakeCents={coinIn} subtitle={spin.winCents === coinIn ? `${money(spin.winCents)} back · net $0.00` : `${money(spin.winCents)} back on a ${money(coinIn)} bet · net −${money(coinIn - spin.winCents)}`} />

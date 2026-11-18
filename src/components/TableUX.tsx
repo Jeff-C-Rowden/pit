@@ -49,7 +49,10 @@ export function OutcomeBanner({
   stakeCents,
   cageHref,
   quiet,
+  tierHaptics,
 }: {
+  /** SS3: a slot cabinet whose win plate owns the per-win-tier haptic (this banner then only plays sound). */
+  tierHaptics?: boolean;
   /** Slot Scout S3: a losing spin resolves quietly (muted, compact, no entry animation, dims after a beat). */
   quiet?: boolean;
   /** Link to the matching ledger lines in the Cage. */
@@ -70,8 +73,8 @@ export function OutcomeBanner({
   const level = fxTone === "win" ? celebrationLevel(stakeCents, amountCents) : 0;
   const slide = shouldSlidePayout(fxTone, amountCents);
   useEffect(() => {
-    if (slide) playPayout(level);
-  }, [slide, level, amountCents]);
+    if (slide) playPayout(level, !tierHaptics);
+  }, [slide, level, amountCents, tierHaptics]);
   const [dimmed, setDimmed] = useState(false);
   useEffect(() => {
     setDimmed(false);

@@ -9,10 +9,12 @@ import "./stag.css";
 import "./winlines.css";
 import "./wincele.css";
 import "./symbolPeek.css";
+import "./feel.css";
 import { Nunito, Passion_One, PT_Sans_Narrow } from "next/font/google";
 
 import { UserProvider } from "@/components/useUser";
 import LedgerNotice from "@/components/LedgerNotice";
+import { MusicKeeper } from "@/components/FeelSettings";
 
 const body = Nunito({ subsets: ["latin"], weight: ["400", "500", "700", "800"], variable: "--font-body", display: "swap" });
 const display = Passion_One({ subsets: ["latin"], weight: ["400", "700"], variable: "--font-display", display: "swap" });
@@ -38,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${body.variable} ${display.variable} ${narrow.variable}`}>
       <body>
+        <MusicKeeper />
         <LedgerNotice />
         <UserProvider>{children}</UserProvider>
       </body>

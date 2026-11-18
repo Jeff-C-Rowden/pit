@@ -10,7 +10,8 @@ import { AchievementToast } from "./Achievements";
 import RealityCheck from "./RealityCheck";
 import SessionStrip from "./SessionStrip";
 import RefillBar from "./RefillBar";
-import { playChip, setSoundOn, soundOn } from "@/lib/feel";
+import { soundOn } from "@/lib/feel";
+import { FeelPanel, FeelSheet } from "./FeelSettings";
 import { ChipCoin } from "./WesternArt";
 
 function AnimatedBalance({ cents }: { cents: number }) {
@@ -48,6 +49,7 @@ function AnimatedBalance({ cents }: { cents: number }) {
 
 function SoundToggle() {
   const [on, setOn] = useState(false);
+  const [open, setOpen] = useState(false);
   useEffect(() => {
     setOn(soundOn());
     const f = () => setOn(soundOn());
@@ -55,10 +57,13 @@ function SoundToggle() {
     return () => window.removeEventListener("pit-sound", f);
   }, []);
   return (
-    <button type="button" className={`nav-sound${on ? " on" : ""}`} aria-pressed={on} title={`Sound & feel ${on ? "on" : "off"}`} onClick={() => { setSoundOn(!on); if (!on) setTimeout(playChip, 30); }}>
+    <>
+    <button type="button" className={`nav-sound${on ? " on" : ""}`} aria-haspopup="dialog" aria-expanded={open} title={`Sound & feel ${on ? "on" : "off"}`} onClick={() => setOpen(true)}>
       <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor" />{on ? <path d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" /> : <path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />}</svg>
       <span className="nav-sound-text">Sound &amp; feel {on ? "on" : "off"}</span>
     </button>
+    <FeelSheet open={open} onClose={() => setOpen(false)} />
+    </>
   );
 }
 
@@ -128,6 +133,10 @@ function Rail({ path, open, onClose, isOperator }: { path: string; open: boolean
         <div className="st-rail-pills">
           <Link href="/rules" className="st-pill st-pill-outline" onClick={onClose}>Odds &amp; Rules</Link>
           <Link href="/wallet" className="st-pill st-pill-gold" onClick={onClose}>The Cage</Link>
+        </div>
+        <div className="st-rail-feel">
+          <p className="st-rail-feel-h">Sound &amp; feel</p>
+          <FeelPanel compact />
         </div>
         <p className="st-rail-note">Sandbox chips only · no cash value</p>
       </aside>

@@ -236,6 +236,7 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
           {showOutcome && spin && spin.winCents > stake && (
             <OutcomeBanner
               win
+              tierHaptics
               title="YOU WIN"
               amountCents={spin.winCents}
               stakeCents={stake}

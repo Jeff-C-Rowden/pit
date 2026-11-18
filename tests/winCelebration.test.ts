@@ -120,7 +120,11 @@ describe("#6 wired on all seven cabinets", () => {
   });
   it("the plate makes no sound and the CSS honours reduced motion", () => {
     const comp = read("src/components/WinCelebration.tsx");
-    expect(comp).not.toMatch(/play[A-Z]\w*\(/);
+    // SS3: the only play* call is the haptic-only playWinTier (no audio in it).
+    expect(comp.replace(/playWinTier\(/g, "")).not.toMatch(/play[A-Z]\w*\(/);
+    const feel = read("src/lib/feel.ts");
+    const pwt = feel.slice(feel.indexOf("export function playWinTier"), feel.indexOf("/** Soft kick when a deal"));
+    expect(pwt).not.toMatch(/ac\(\)|tone\(|clack\(/);
     expect(comp).toMatch(/no cash value/);
     const css = read("src/app/wincele.css");
     expect(css).toMatch(/prefers-reduced-motion: reduce/);

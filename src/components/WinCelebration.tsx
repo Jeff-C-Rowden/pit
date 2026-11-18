@@ -2,11 +2,19 @@
 // Backlog #6: the shared cabinet win plate. Rendered by CabinetChrome only after every reel has
 // stopped, for real wins that beat the bet (see src/lib/winCelebration.ts). Sits just above the reel
 // window (over the info strip under the topper), so it never covers the reels, the S3 win walkthrough or its pill.
-// Visual only: no sound (the result banner already owns the payout sound), no timers.
+// No sound (the result banner already owns the payout sound), no timers. SS3: fires the per-win-tier
+// haptic once per new plate (Haptics switch on, no Reduce Motion); no plate (loss / sub-bet pay) = no buzz.
+import { useEffect } from "react";
 import { sparkLayout, type Celebration } from "@/lib/winCelebration";
+import { playWinTier } from "@/lib/feel";
 
 export function WinCelebration({ celebration }: { celebration: Celebration | null | undefined }) {
   const plate = celebration?.plate;
+  const hapticKey = celebration && plate ? celebration.key : null;
+  const tier = celebration?.tier ?? "none";
+  useEffect(() => {
+    if (hapticKey) playWinTier(tier);
+  }, [hapticKey, tier]);
   if (!celebration || !plate) return null;
   const sparks = sparkLayout(plate.sparks);
   return (

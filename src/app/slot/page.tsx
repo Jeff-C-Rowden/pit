@@ -256,6 +256,7 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
           {showOutcome && spin && spin.winCents > coinIn && (
             <OutcomeBanner
               win
+              tierHaptics
               title="YOU WIN"
               amountCents={spin.winCents}
               stakeCents={coinIn}
