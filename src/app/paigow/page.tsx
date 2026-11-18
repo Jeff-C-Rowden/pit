@@ -5,6 +5,7 @@ import Shell from "@/components/Shell";
 import { paigowResultLabel } from "@/lib/feel";
 import PlayingCard from "@/components/PlayingCard";
 import { ActionDock, OutcomeBanner, ResultsStrip, TableReplay, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import YourBests from "@/components/YourBests";
 import { CARD_BACK, DealerBooth, TableHeart, TableSeat, botPaiGowCards, useTableSeats } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 import { usePausedLabel } from "@/components/PauseStatus";
@@ -193,6 +194,7 @@ function PaiGowFelt({ u, game, bet, setBet, err, sel, busy, act, toggle, manualS
       )}
       {/* r26: tip sits below the felt so the bet circle stays above the dock */}
       <FirstVisitTip game="paigow" />
+      <YourBests game="paigow" />
       <ActionDock hint={hint} busy={busy}>
         <TableReplay game="paigow" show={betting} resetKey={`${game?.id}-${game?.phase}`} render={(r) => (
           <>

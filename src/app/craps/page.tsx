@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Shell from "@/components/Shell";
 import { crapsFeltCents, crapsRiskedCents, playSpin } from "@/lib/feel";
 import { ActionDock, ChipRow, ChipStack, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import YourBests from "@/components/YourBests";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
 import { usePausedLabel } from "@/components/PauseStatus";
@@ -243,6 +244,7 @@ export default function CrapsPage({ searchParams }: { searchParams?: { t?: strin
             </div>
           </div>
           <FirstVisitTip game="craps" />
+          <YourBests game="craps" />
           <LiveAnnounce text={rollRef && table?.lastRoll ? `Rolled ${table.lastRoll[0]} and ${table.lastRoll[1]}, total ${table.lastTotal}. ${lastPay ? `You ${paidPhrase(lastPay, lastBack, money)}.` : "No payout this roll."}` : null} />
           {!tny && <ResultsStrip game="craps" refreshKey={rollRef} />}
           {replay ? (

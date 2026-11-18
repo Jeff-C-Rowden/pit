@@ -6,6 +6,7 @@ import CloverMachine, { CL_SYM_ART, type CloverMachineHandle, type WinCell } fro
 import { OrlaPortrait } from "@/components/CloverSymbols";
 import RainbowWheel, { type WheelResult } from "@/components/RainbowWheel";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import YourBests from "@/components/YourBests";
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { lineShows, scatterShow, freeSpinShows } from "@/lib/winShow";
@@ -408,6 +409,7 @@ export default function CloverPage() {
               <p className="math-strip math-strip-hero mine-feature-line">{CLOVER_FEATURE_LINE}</p>
             </div>
             <FirstVisitTip game="clover" />
+            <YourBests game="clover" />
 
             <div className="slot-stage-wrap mine-stage cl-stage">
               {phase === "fs" && fsCur && (

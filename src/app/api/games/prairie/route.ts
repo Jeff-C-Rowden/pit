@@ -4,6 +4,7 @@ import { debitBet, creditPayout, getBalance } from "@/lib/ledger";
 import { toPublic } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { newId } from "@/lib/rng";
+import { featureTag } from "@/lib/personalBests";
 import { PRAIRIE_INFO, playPrairie, publicPrairieSpin } from "@/lib/games/prairie";
 import { PRAIRIE_MATH } from "@/lib/gameMath";
 import { closeOpenFeatures, collectFeature, loadOpenFeature, openFeature, saveProgress } from "@/lib/featureResumeStore";
@@ -48,7 +49,7 @@ async function _POST(req: Request) {
     const db = getDb();
     const pub = publicPrairieSpin(spin);
     db.transaction(() => {
-      debitBet(user.id, spin.betCents, "prairie", spin.id, `prairie-bet-${spin.id}-${key}`, { coinCents: spin.coinCents }, db);
+      debitBet(user.id, spin.betCents, "prairie", spin.id, `prairie-bet-${spin.id}-${key}`, { coinCents: spin.coinCents, ...featureTag([spin.freeSpins && "freeSpins", spin.hold && "hold"]) }, db);
       if (spin.winCents > 0) {
         creditPayout(user.id, spin.winCents, "prairie", spin.id, `prairie-pay-${spin.id}`, {
           baseWinCents: spin.baseWinCents,

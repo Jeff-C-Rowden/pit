@@ -5,6 +5,7 @@ import Shell from "@/components/Shell";
 import MineMachine, { MINE_SYM_ART, type MineMachineHandle, type WinCell } from "@/components/MineMachine";
 import { ClemPortrait, MineCart } from "@/components/MineSymbols";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import YourBests from "@/components/YourBests";
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { lineShows, scatterShow, freeSpinShows } from "@/lib/winShow";
@@ -443,6 +444,7 @@ export default function MinePage() {
               <p className="math-strip math-strip-hero mine-feature-line" data-testid="lantern-odds">{MINE_LANTERN_LINE}</p>
             </div>
             <FirstVisitTip game="mine" />
+            <YourBests game="mine" />
 
             <div className="slot-stage-wrap mine-stage">
               {inFs && (

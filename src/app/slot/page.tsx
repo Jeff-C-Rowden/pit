@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import SlotMachine, { type SlotMachineHandle, type WinCell } from "@/components/SlotMachine";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import YourBests from "@/components/YourBests";
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { PAYLINES, type Symbol } from "@/lib/games/slot";
@@ -195,6 +196,7 @@ export default function SlotPage({ searchParams }: { searchParams?: { t?: string
           </div>
           {tournamentId && <TournamentStrip tournamentId={tournamentId} hud={tourney} onHud={setTourney} />}
           <FirstVisitTip game="slot" />
+          <YourBests game="slot" />
 
           <div className="slot-stage-wrap">
             <SlotMachine

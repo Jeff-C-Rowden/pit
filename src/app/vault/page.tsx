@@ -11,6 +11,7 @@ import PotSheet from "@/components/PotSheet";
 import ProgressiveMeterStrip, { NextSpinOddsNote, type MeterPublic, useReseedMoments } from "@/components/ProgressiveMeter";
 import { momentsFromNewHits, momentsFromSpinHits } from "@/lib/reseedMoment";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import YourBests from "@/components/YourBests";
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { VS_MAX_COIN_CENTS, VS_MIN_COIN_CENTS, VS_PAYLINES, VS_TOTAL_CONTRIBUTION_BPS, type VsSymbol } from "@/lib/games/slotProgressive";
@@ -325,6 +326,7 @@ export default function VaultPage() {
           </div>
 
           <FirstVisitTip game="vault" />
+          <YourBests game="vault" />
           {err && <p className="err">{err}</p>}
 
           <div className="vault-hero">

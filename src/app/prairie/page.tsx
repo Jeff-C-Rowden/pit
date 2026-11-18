@@ -6,6 +6,7 @@ import { scatterShow, waysShows } from "@/lib/winShow";
 import PrairieMachine, { PR_SYM_ART, type PrairieMachineHandle, type WinCell } from "@/components/PrairieMachine";
 import { AdaPortrait, PrairieCoin } from "@/components/PrairieSymbols";
 import { ActionDock, OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import YourBests from "@/components/YourBests";
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import {
@@ -461,6 +462,7 @@ export default function PrairiePage() {
               <p className="math-strip math-strip-hero mine-feature-line">{PRAIRIE_FEATURE_LINE}</p>
             </div>
             <FirstVisitTip game="prairie" />
+            <YourBests game="prairie" />
 
             <div className="slot-stage-wrap mine-stage pr-stage">
               {inFs && (

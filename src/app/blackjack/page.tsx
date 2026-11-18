@@ -5,6 +5,7 @@ import Shell from "@/components/Shell";
 import { blackjackResultLabel, playDeal } from "@/lib/feel";
 import PlayingCard from "@/components/PlayingCard";
 import { ActionDock, ChipRow, OutcomeBanner, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import YourBests from "@/components/YourBests";
 import { DealerBooth, TableHeart, TableSeat, botBlackjackHand, botHandValue, useTableSeats } from "@/components/Seating";
 import LiveAnnounce from "@/components/LiveAnnounce";
 import { api, money, useUser } from "@/components/useUser";
@@ -240,6 +241,7 @@ function BlackjackFelt({ u, replay, closeReplay, replayLast, game, bet, setBet, 
       </div>
       {/* r26: tip sits below the felt so the bet circle stays above the dock */}
       <FirstVisitTip game="blackjack" />
+      <YourBests game="blackjack" />
       <ActionDock hint={dealHint} busy={busy}>
         {err && <p className="err dock-err">{err}</p>}
         {betting && replay && (

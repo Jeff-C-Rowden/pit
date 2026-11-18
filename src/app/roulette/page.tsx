@@ -9,6 +9,7 @@ import { planSpin, type SpinPlan } from "@/lib/games/rouletteBall";
 import Shell from "@/components/Shell";
 import TournamentStrip from "@/components/TournamentStrip";
 import { Chip, ReplayCard, ResultsStrip, cageHref, useHasPlayed, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import YourBests from "@/components/YourBests";
 import { celebrationLevel, playChip, playPayout, playSpin } from "@/lib/feel";
 import { StandingRail } from "@/components/Seating";
 import { api, money, useUser } from "@/components/useUser";
@@ -339,6 +340,7 @@ export default function RoulettePage({ searchParams }: { searchParams?: { t?: st
           )}
 
           <FirstVisitTip game="roulette" />
+          <YourBests game="roulette" />
 
 
           <div className="rl-stage">

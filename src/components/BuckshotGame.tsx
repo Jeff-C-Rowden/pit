@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Shell from "@/components/Shell";
 import BuckshotMachine, { type BuckshotHandle } from "@/components/BuckshotMachine";
 import { OutcomeBanner, FirstVisitTip, useClearErrOnBalance } from "@/components/TableUX";
+import YourBests from "@/components/YourBests";
 import { MathStrip } from "@/components/VolatilityMeter";
 import { api, money, useUser } from "@/components/useUser";
 import { BB_DENOMS, BB_MAX_COINS, type BbSymbol } from "@/lib/games/buckshot";
@@ -161,6 +162,7 @@ export default function BuckshotGame({ variant = "buckshot", tournamentId = null
           </div>
           {tournamentId && <TournamentStrip tournamentId={tournamentId} hud={tourney} onHud={setTourney} />}
           <FirstVisitTip game="buckshot" />
+          <YourBests game={variant} />
 
           <div className="slot-stage-wrap">
             <BuckshotMachine
