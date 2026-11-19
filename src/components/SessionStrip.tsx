@@ -4,7 +4,7 @@ import Link from "next/link";
 import { api, money } from "./useUser";
 import { countBets, fmtMinutes, nudgeDue, nudgeBlock } from "@/lib/sessionStrip";
 
-type Data = { session: { active: boolean; startedAt: string | null; minutes: number; netCents: number }; rows: { type: string; amountCents: number }[]; tournamentBets?: number };
+type Data = { session: { active: boolean; startedAt: string | null; minutes: number; netCents: number }; rows: { type: string; amountCents: number }[]; tournamentBets?: number; checkIns?: boolean };
 
 /**
  * Compact session summary (time, real ledger net, bets) with a gentle 30-minute break nudge.
@@ -27,7 +27,8 @@ export default function SessionStrip() {
   const { minutes, netCents } = d.session;
   const bets = countBets(d.rows) + (d.tournamentBets ?? 0);
   const netTxt = `${netCents >= 0 ? "+" : "−"}${money(Math.abs(netCents))}`;
-  const due = nudgeDue(minutes, dismissed);
+  // SS5: if the player turned on check-ins, the check-in card handles breaks; no second nudge here.
+  const due = !d.checkIns && nudgeDue(minutes, dismissed);
   const dismiss = () => { const b = nudgeBlock(minutes); setDismissed(b); try { if (key) sessionStorage.setItem(key, String(b)); } catch {} };
   return (
     <div className="session-strip" aria-label="Session summary">

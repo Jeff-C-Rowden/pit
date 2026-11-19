@@ -15,15 +15,18 @@ import { COOL_OFF_MS } from "./limits";
 export const BREAK_MS = 30 * 60 * 1000;
 export const REALITY_CHOICES = [15, 30, 45, 60];
 export const SESSION_CHOICES = [30, 60, 90, 120, 180, 240];
-export type SettingKind = "reality" | "session";
+/** SS5: opt-in session budget check-in, in cents (a calm card when this session's net loss reaches it). */
+export const BUDGET_CHOICES = [1000, 2500, 5000, 10000, 25000];
+export type SettingKind = "reality" | "session" | "budget";
 const COLS: Record<SettingKind, { cur: string; pv: string; pa: string }> = {
   reality: { cur: "reality_check_min", pv: "reality_pending_min", pa: "reality_pending_at" },
   session: { cur: "session_limit_min", pv: "session_pending_min", pa: "session_pending_at" },
+  budget: { cur: "budget_check_cents", pv: "budget_pending_cents", pa: "budget_pending_at" },
 };
 
 export function migrateSession(db: Database.Database) {
   const have = new Set((db.prepare("PRAGMA table_info(users)").all() as { name: string }[]).map((c) => c.name));
-  for (const c of ["reality_check_min INTEGER", "reality_pending_min INTEGER", "reality_pending_at TEXT", "session_limit_min INTEGER", "session_pending_min INTEGER", "session_pending_at TEXT", "break_until TEXT", "break_kind TEXT"]) {
+  for (const c of ["reality_check_min INTEGER", "reality_pending_min INTEGER", "reality_pending_at TEXT", "session_limit_min INTEGER", "session_pending_min INTEGER", "session_pending_at TEXT", "break_until TEXT", "break_kind TEXT", "budget_check_cents INTEGER", "budget_pending_cents INTEGER", "budget_pending_at TEXT"]) {
     if (!have.has(c.split(" ")[0])) db.exec(`ALTER TABLE users ADD COLUMN ${c}`);
   }
 }
@@ -67,6 +70,12 @@ export function settleSettings(db: Database.Database, userId: string, now = new 
   }
 }
 
+/** The budget check-in, same cooling-off rules as the time settings (the stored value is cents). */
+export type BudgetView = { cents: number | null; pending: { cents: number | null; effectiveAt: string } | null };
+export function budgetView(db: Database.Database, userId: string, now = new Date()): BudgetView {
+  const v = settingView(db, userId, "budget", now);
+  return { cents: v.minutes, pending: v.pending ? { cents: v.pending.minutes, effectiveAt: v.pending.effectiveAt } : null };
+}
 export type SettingView = { minutes: number | null; pending: { minutes: number | null; effectiveAt: string } | null };
 export function settingView(db: Database.Database, userId: string, kind: SettingKind, now = new Date()): SettingView {
   settleSettings(db, userId, now);
@@ -77,8 +86,10 @@ export function settingView(db: Database.Database, userId: string, kind: Setting
 
 export function requestSetting(db: Database.Database, userId: string, kind: SettingKind, next: number | null, now = new Date()):
   { applied: "now" | "pending" | "unchanged"; effectiveAt: string | null } {
-  const choices = kind === "reality" ? REALITY_CHOICES : SESSION_CHOICES;
-  if (next != null && !choices.includes(next)) throw new Error(`pick one of ${choices.join(", ")} minutes`);
+  const choices = kind === "reality" ? REALITY_CHOICES : kind === "budget" ? BUDGET_CHOICES : SESSION_CHOICES;
+  if (next != null && !choices.includes(next)) {
+    throw new Error(kind === "budget" ? `pick one of ${choices.map((c) => `$${c / 100}`).join(", ")}` : `pick one of ${choices.join(", ")} minutes`);
+  }
   const v = settingView(db, userId, kind, now); const k = COLS[kind];
   if (v.minutes === next) {
     db.prepare(`UPDATE users SET ${k.pv} = NULL, ${k.pa} = NULL WHERE id = ?`).run(userId);

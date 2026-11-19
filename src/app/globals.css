@@ -3699,3 +3699,17 @@ label.remind-toggle, label.remind-toggle span { text-transform: none; letter-spa
 @media (max-width: 420px) { .nso-note { font-size: 9.5px; } .prog-tier .nso-val { font-size: 8.5px; } }
 .prog-tier-grand .nso-line, .st-jackpots .vault-lobby-grand .nso-line { color: var(--st-on-gold, #3b1d06); }
 .prog-tier-grand .nso-lab, .st-jackpots .vault-lobby-grand .nso-lab { opacity: .85; }
+/* SS5: opt-in check-in card (calm, no countdown). Extends the reality-note. */
+.checkin-card { gap: 6px; }
+.checkin-card .ci-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.checkin-card .ci-figs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 2px 0; }
+.checkin-card .ci-figs > div { padding: 6px 8px; border-radius: 8px; background: rgba(255,255,255,.04); border: 1px solid rgba(230,196,110,.18); }
+.checkin-card dt { font-size: 11.5px; opacity: .75; }
+.checkin-card dd { margin: 0; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.checkin-card .ci-why { margin: 0; font-size: 13px; }
+.checkin-card .ci-note { margin: 0; font-size: 12px; opacity: .8; }
+.checkin-card .ci-foot { margin: 0; font-size: 12px; opacity: .85; }
+.checkin-card .ci-foot a { color: inherit; text-decoration: underline; }
+@media (prefers-reduced-motion: no-preference) { .checkin-card { animation: ci-in .45s ease-out both; } }
+@keyframes ci-in { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 360px) { .checkin-card .ci-figs { grid-template-columns: 1fr; } }

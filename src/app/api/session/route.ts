@@ -2,7 +2,7 @@ import { withDbSync } from "@/lib/dbSync";
 import { withUser, json, err } from "@/lib/http";
 import { getDb } from "@/lib/db";
 import { serverNow } from "@/lib/clock";
-import { weekSummary, breakUntil, breakKind, selfExclude, EXCLUSION_CHOICES, takeBreak, currentSession, settingView, requestSetting, cancelSettingPending, sessionBlock, REALITY_CHOICES, SESSION_CHOICES, type SettingKind } from "@/lib/session";
+import { weekSummary, breakUntil, breakKind, selfExclude, EXCLUSION_CHOICES, takeBreak, currentSession, settingView, requestSetting, cancelSettingPending, sessionBlock, budgetView, REALITY_CHOICES, SESSION_CHOICES, BUDGET_CHOICES, type SettingKind } from "@/lib/session";
 
 function view(userId: string) {
   const db = getDb(); const now = serverNow();
@@ -10,10 +10,11 @@ function view(userId: string) {
     session: currentSession(db, userId, now),
     reality: settingView(db, userId, "reality", now),
     sessionLimit: settingView(db, userId, "session", now),
+    budget: budgetView(db, userId, now),
     blocked: sessionBlock(db, userId, now),
     breakUntil: breakUntil(db, userId, now),
     breakKind: breakKind(db, userId, now),
-    choices: { reality: REALITY_CHOICES, session: SESSION_CHOICES, exclusion: Object.keys(EXCLUSION_CHOICES) },
+    choices: { reality: REALITY_CHOICES, session: SESSION_CHOICES, budget: BUDGET_CHOICES, exclusion: Object.keys(EXCLUSION_CHOICES) },
     week: weekSummary(db, userId, now),
     serverNow: now.toISOString(),
   };
@@ -36,14 +37,16 @@ async function _POST(req: Request) {
       return json(view(u.id));
     }
     if (body.cancelPending !== undefined) {
-      if (body.cancelPending !== "reality" && body.cancelPending !== "session") return err("cancelPending must be reality or session");
+      if (body.cancelPending !== "reality" && body.cancelPending !== "session" && body.cancelPending !== "budget") return err("cancelPending must be reality, session or budget");
       cancelSettingPending(db, u.id, body.cancelPending as SettingKind);
       return json(view(u.id));
     }
     try {
+      // Each setting changes only when its key is sent, so saving one never turns another off.
       const result = db.transaction(() => ({
-        reality: requestSetting(db, u.id, "reality", num(body.realityMin), serverNow()),
-        session: requestSetting(db, u.id, "session", num(body.sessionMin), serverNow()),
+        reality: "realityMin" in body ? requestSetting(db, u.id, "reality", num(body.realityMin), serverNow()) : { applied: "unchanged" as const, effectiveAt: null },
+        session: "sessionMin" in body ? requestSetting(db, u.id, "session", num(body.sessionMin), serverNow()) : { applied: "unchanged" as const, effectiveAt: null },
+        budget: "budgetCents" in body ? requestSetting(db, u.id, "budget", num(body.budgetCents), serverNow()) : { applied: "unchanged" as const, effectiveAt: null },
       }))();
       return json({ result, ...view(u.id) });
     } catch (e) { return err(e instanceof Error ? e.message : "bad request"); }

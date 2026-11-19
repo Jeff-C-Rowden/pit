@@ -2,7 +2,7 @@ import { withDbSync } from "@/lib/dbSync";
 import { withUser, json } from "@/lib/http";
 import { getDb } from "@/lib/db";
 import { serverNow } from "@/lib/clock";
-import { sessionActivity, activityCsv, historyRange, historyActivity, historyCsv } from "@/lib/session";
+import { settingView, sessionActivity, activityCsv, historyRange, historyActivity, historyCsv } from "@/lib/session";
 
 async function _GET(req: Request) {
   return withUser(req, async (u) => {
@@ -15,7 +15,12 @@ async function _GET(req: Request) {
       });
     }
     const data = sessionActivity(getDb(), u.id, serverNow());
-    if (new URL(req.url).searchParams.get("format") !== "csv") return json(data);
+    if (new URL(req.url).searchParams.get("format") !== "csv") {
+      // SS5: when the player opted into check-ins, the strip leaves its own break nudge to the check-in card.
+      const db = getDb(); const now = serverNow();
+      const checkIns = settingView(db, u.id, "reality", now).minutes != null || settingView(db, u.id, "budget", now).minutes != null;
+      return json({ ...data, checkIns });
+    }
     const day = serverNow().toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
     return new Response(activityCsv(data.rows), {
       headers: { "content-type": "text/csv; charset=utf-8", "content-disposition": `attachment; filename="pit-session-${day}.csv"`, "cache-control": "no-store" },
