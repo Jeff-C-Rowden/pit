@@ -1,6 +1,7 @@
 import type Database from "better-sqlite3";
 import { getDb } from "./db";
-import { newId, randInt } from "./rng";
+import { newId, randBytes, randInt } from "./rng";
+import { commitmentHash, commitmentPreimage, type FairReveal, type FairTier } from "./potFairness";
 import { VS_TIERS, type TierDef, type TierId } from "./games/slotProgressive";
 
 export type ProgressiveRow = {
@@ -14,6 +15,8 @@ export type ProgressiveRow = {
   coin_in_cents?: number | null;
   last_hit_at: string | null;
   updated_at: string;
+  /** JD2: open provably-fair cycle for this tier (never sent to clients). */
+  cycle_id?: string | null;
 };
 
 export type ProgressiveHitRow = {
@@ -64,6 +67,57 @@ function migrateColumns(db: Database.Database) {
   if (!names.has("coin_in_cents")) {
     db.exec("ALTER TABLE progressive_meters ADD COLUMN coin_in_cents INTEGER");
   }
+  // JD2: which committed cycle the hidden trigger belongs to.
+  if (!names.has("cycle_id")) {
+    db.exec("ALTER TABLE progressive_meters ADD COLUMN cycle_id TEXT");
+  }
+}
+
+/** JD2: one row per must-hit cycle — commitment public now, trigger + salt public after it ends. */
+export function ensureCyclesTable(db: Database.Database = getDb()) {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS progressive_cycles (
+      id TEXT PRIMARY KEY,
+      tier_id TEXT NOT NULL,
+      trigger_cents INTEGER NOT NULL,
+      salt_hex TEXT NOT NULL,
+      commitment TEXT NOT NULL,
+      committed_at TEXT NOT NULL,
+      mid_cycle INTEGER NOT NULL DEFAULT 0,
+      meter_at_commit_cents INTEGER NOT NULL,
+      ended_at TEXT,
+      end_reason TEXT,
+      meter_before_cents INTEGER,
+      hit_amount_cents INTEGER
+    );
+    CREATE INDEX IF NOT EXISTS idx_progressive_cycles_tier ON progressive_cycles(tier_id, ended_at);
+  `);
+}
+
+type CycleRow = {
+  id: string; tier_id: string; trigger_cents: number; salt_hex: string; commitment: string;
+  committed_at: string; mid_cycle: number; meter_at_commit_cents: number; ended_at: string | null;
+  end_reason: string | null; meter_before_cents: number | null; hit_amount_cents: number | null;
+};
+
+/** Open a committed cycle for a trigger (crypto-secure 32-byte salt). Returns the cycle id. */
+function openCycle(db: Database.Database, tierId: string, triggerCents: number, meterCents: number, midCycle: boolean, now: string): string {
+  const id = newId();
+  const salt = randBytes(32).toString("hex");
+  db.prepare(
+    `INSERT INTO progressive_cycles (id, tier_id, trigger_cents, salt_hex, commitment, committed_at, mid_cycle, meter_at_commit_cents)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(id, tierId, triggerCents, salt, commitmentHash(triggerCents, salt, id), now, midCycle ? 1 : 0, meterCents);
+  db.prepare("UPDATE progressive_meters SET cycle_id = ? WHERE id = ?").run(id, tierId);
+  return id;
+}
+
+function endCycle(db: Database.Database, cycleId: string | null | undefined, reason: "hit" | "settings", now: string, meterBefore: number | null, hitAmount: number | null) {
+  if (!cycleId) return;
+  db.prepare(
+    `UPDATE progressive_cycles SET ended_at = ?, end_reason = ?, meter_before_cents = ?, hit_amount_cents = ?
+     WHERE id = ? AND ended_at IS NULL`,
+  ).run(now, reason, meterBefore, hitAmount, cycleId);
 }
 
 /** Ensure progressive_hits exists (for DBs opened before the table was added to SCHEMA). */
@@ -99,6 +153,7 @@ export function privacyDisplayName(raw: string | null | undefined): string {
 export function ensureAllTiers(db: Database.Database = getDb()): ProgressiveRow[] {
   migrateColumns(db);
   ensureHitsTable(db);
+  ensureCyclesTable(db);
   const now = new Date().toISOString();
   for (const t of VS_TIERS) {
     const existing = db.prepare("SELECT * FROM progressive_meters WHERE id = ?").get(t.id) as ProgressiveRow | undefined;
@@ -109,6 +164,8 @@ export function ensureAllTiers(db: Database.Database = getDb()): ProgressiveRow[
           (id, amount_cents, seed_cents, contribution_bps, ceiling_cents, trigger_cents, coin_in_cents, last_hit_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, 0, NULL, ?)`,
       ).run(t.id, t.seedCents, t.seedCents, t.contributionBps, t.ceilingCents, trigger, now);
+      // JD2: a brand-new pot starts its first cycle here, so this commitment is at cycle start.
+      if (trigger != null) openCycle(db, t.id, trigger, t.seedCents, false, now);
     } else {
       // Keep live amount; refresh config columns if defs changed.
       let trigger = existing.trigger_cents;
@@ -116,11 +173,28 @@ export function ensureAllTiers(db: Database.Database = getDb()): ProgressiveRow[
         trigger = rollTriggerCents(t);
       }
       if (t.ceilingCents == null) trigger = null;
-      db.prepare(
-        `UPDATE progressive_meters
-         SET seed_cents = ?, contribution_bps = ?, ceiling_cents = ?, trigger_cents = ?
-         WHERE id = ?`,
-      ).run(t.seedCents, t.contributionBps, t.ceilingCents, trigger, t.id);
+      const changed =
+        existing.seed_cents !== t.seedCents || existing.contribution_bps !== t.contributionBps ||
+        existing.ceiling_cents !== t.ceilingCents || existing.trigger_cents !== trigger;
+      if (changed) {
+        db.prepare(
+          `UPDATE progressive_meters
+           SET seed_cents = ?, contribution_bps = ?, ceiling_cents = ?, trigger_cents = ?
+           WHERE id = ?`,
+        ).run(t.seedCents, t.contributionBps, t.ceilingCents, trigger, t.id);
+      }
+      // JD2: make sure the live trigger has a commitment. A cycle running before commitments
+      // existed (or whose point was redrawn by a settings change) is committed now and flagged
+      // midCycle with the meter at this moment; never presented as committed at its start.
+      const open = existing.cycle_id
+        ? (db.prepare("SELECT * FROM progressive_cycles WHERE id = ?").get(existing.cycle_id) as CycleRow | undefined)
+        : undefined;
+      const openOk = open && open.ended_at == null && open.trigger_cents === trigger;
+      if (!openOk) {
+        if (open && open.ended_at == null) endCycle(db, open.id, "settings", now, null, null);
+        if (trigger != null) openCycle(db, t.id, trigger, existing.amount_cents, true, now);
+        else if (existing.cycle_id) db.prepare("UPDATE progressive_meters SET cycle_id = NULL WHERE id = ?").run(t.id);
+      }
     }
   }
   return VS_TIERS.map((t) => db.prepare("SELECT * FROM progressive_meters WHERE id = ?").get(t.id) as ProgressiveRow);
@@ -183,11 +257,14 @@ export function applyProgressiveSpin(
     if (hit) {
       const award = afterContrib;
       const newTrigger = rollTriggerCents(t);
+      // JD2: reveal the finished cycle (trigger + salt become public) and commit the next one at its start.
+      endCycle(db, row.cycle_id, "hit", now, row.amount_cents, award);
       db.prepare(
         `UPDATE progressive_meters
          SET amount_cents = ?, trigger_cents = ?, coin_in_cents = 0, last_hit_at = ?, updated_at = ?
          WHERE id = ?`,
       ).run(t.seedCents, newTrigger, now, now, t.id);
+      if (newTrigger != null) openCycle(db, t.id, newTrigger, t.seedCents, false, now);
       db.prepare(
         `INSERT INTO progressive_hits (id, tier_id, tier_name, amount_cents, user_id, created_at, coin_in_cents)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -352,4 +429,51 @@ export function getHitSamplesByTier(
     }
   }
   return out;
+}
+
+/** JD2: how many revealed cycles per tier the pot sheet lists. */
+export const FAIR_REVEALS_PER_TIER = 5;
+
+/**
+ * JD2 public view: the open cycle's commitment only (never its trigger or salt), plus the
+ * last few ENDED cycles with trigger + salt revealed for verification.
+ */
+export function getFairness(db: Database.Database = getDb(), perTier = FAIR_REVEALS_PER_TIER): FairTier[] {
+  const meters = ensureAllTiers(db);
+  const cap = Math.max(0, Math.min(20, Math.floor(perTier)));
+  const ended = db.prepare(
+    `SELECT * FROM progressive_cycles WHERE tier_id = ? AND ended_at IS NOT NULL ORDER BY ended_at DESC, committed_at DESC LIMIT ?`,
+  );
+  return VS_TIERS.map((t) => {
+    const m = meters.find((r) => r.id === t.id)!;
+    const open = m.cycle_id
+      ? (db.prepare("SELECT * FROM progressive_cycles WHERE id = ? AND ended_at IS NULL").get(m.cycle_id) as CycleRow | undefined)
+      : undefined;
+    const base = (c: CycleRow) => ({
+      cycleId: c.id,
+      commitment: c.commitment,
+      committedAt: c.committed_at,
+      midCycle: c.mid_cycle === 1,
+      meterAtCommitCents: c.meter_at_commit_cents,
+    });
+    const revealed: FairReveal[] = t.ceilingCents == null ? [] : (ended.all(t.id, cap) as CycleRow[]).map((c) => ({
+      ...base(c),
+      triggerCents: c.trigger_cents,
+      salt: c.salt_hex,
+      preimage: commitmentPreimage(c.trigger_cents, c.salt_hex, c.id),
+      endedAt: c.ended_at!,
+      reason: c.end_reason === "settings" ? "settings" : "hit",
+      meterBeforeCents: c.meter_before_cents,
+      hitAmountCents: c.hit_amount_cents,
+    }));
+    return {
+      tierId: t.id,
+      name: t.name,
+      kind: t.ceilingCents != null ? "must-hit" : "mystery",
+      seedCents: t.seedCents,
+      ceilingCents: t.ceilingCents,
+      current: open ? base(open) : null,
+      revealed,
+    };
+  });
 }

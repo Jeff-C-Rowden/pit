@@ -1,6 +1,7 @@
 "use client";
 
 import { SandboxChip } from "@/components/SandboxChip";
+import PotFairness from "@/components/PotFairness";
 import { useEffect, useId, useRef } from "react";
 import { buildPotSheet, type PotMeterLike } from "@/lib/potSheet";
 
@@ -82,6 +83,7 @@ export default function PotSheet({ meter, onClose }: { meter: PotMeterLike; onCl
             {sheet.average.text} <em>{sheet.average.caveat}</em>
           </p>
         )}
+        <PotFairness tierId={sheet.tierId} />
         <button ref={closeRef} type="button" className="btn pot-sheet-close" onClick={onClose}>
           Close
         </button>
