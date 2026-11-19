@@ -20,6 +20,7 @@ export default function YourBests({ game }: { game: string }) {
     if (!open) return;
     let live = true;
     setMsg(null);
+    setData(null); // always show fresh figures, never the last open's
     fetch(`/api/bests?game=${encodeURIComponent(game)}`, { credentials: "same-origin", cache: "no-store" })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d) => { if (live) setData(d.bests as PersonalBests); })
