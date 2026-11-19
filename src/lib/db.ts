@@ -151,8 +151,10 @@ export function serializeDb(): Buffer {
 
 export function getDb(): Database.Database {
   if (singleton) return singleton;
-  if ((process.env.BLOB_READ_WRITE_TOKEN || (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN)) && !process.env.PIT_DB_PATH) {
-    // Vercel: in-memory DB, snapshotted to Vercel Blob by withDbSync().
+  const durable = process.env.BLOB_READ_WRITE_TOKEN || process.env.DATABASE_URL || process.env.POSTGRES_URL
+    || (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN);
+  if (durable && !process.env.PIT_DB_PATH) {
+    // Vercel: in-memory DB, snapshotted to Turso / Postgres / Blob by withDbSync().
     return loadDbFromImage(null);
   }
   const dbPath = process.env.PIT_DB_PATH || path.join(process.cwd(), "data", "pit.sqlite");

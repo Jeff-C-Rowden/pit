@@ -4,11 +4,13 @@
  * writes use compare-and-swap so two instances can't silently clobber each other: on
  * conflict we reload the newer snapshot and re-run the request once.
  *
- * Store priority: Postgres (DATABASE_URL, Neon free plan via the Vercel Marketplace) →
- * Turso (TURSO_DATABASE_URL + TURSO_AUTH_TOKEN) → Vercel Blob (BLOB_READ_WRITE_TOKEN).
- * Postgres is the durable account store: if it errors we answer 503 (retry) instead of
- * serving an ephemeral ledger, so a balance can never silently diverge between instances.
- * Turso/Blob keep the older behavior of falling back to an ephemeral per-instance ledger.
+ * Store priority: Turso (TURSO_DATABASE_URL + TURSO_AUTH_TOKEN, free Starter plan via the
+ * Vercel Marketplace) → Postgres (DATABASE_URL, Neon) → Vercel Blob (BLOB_READ_WRITE_TOKEN).
+ * Turso wins when both are set: Neon's free plan ran out of quota (HTTP 402) in Nov 2026 and
+ * the Marketplace-managed Neon env vars can't simply be deleted.
+ * Turso and Postgres are durable account stores: if one errors we answer 503 (retry) instead
+ * of serving an ephemeral ledger, so a balance can never silently diverge between instances.
+ * Blob keeps the older behavior of falling back to an ephemeral per-instance ledger.
  * With neither configured (local dev, tests) or with PIT_DB_PATH set, this is a passthrough.
  */
 import { get, put } from "@vercel/blob";
@@ -157,8 +159,8 @@ const pgStore: SnapshotStore = {
 
 function pickStore(): SnapshotStore | null {
   if (process.env.PIT_DB_PATH) return null;
-  if (pgUrl()) return pgStore;
   if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) return tursoStore;
+  if (pgUrl()) return pgStore;
   if (process.env.BLOB_READ_WRITE_TOKEN) return blobStore;
   return null;
 }
@@ -182,9 +184,10 @@ export function ledgerMode(): "postgres" | "turso" | "blob" | "ephemeral" | "loc
 class StoreDown extends Error {}
 
 function degrade(stage: string, e: unknown): void {
-  if (pickStore()?.name === "postgres") {
+  const name = pickStore()?.name;
+  if (name === "postgres" || name === "turso") {
     // durable store: never fork into a private ledger; fail this request so the client retries
-    console.error(`[pit] postgres ledger ${stage} failed: ${e instanceof Error ? e.message : String(e)}`);
+    console.error(`[pit] ${name} ledger ${stage} failed: ${e instanceof Error ? e.message : String(e)}`);
     throw new StoreDown(stage);
   }
   if (degraded) return;

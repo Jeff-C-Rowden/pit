@@ -114,8 +114,7 @@ describe("Postgres (Neon) durable ledger across serverless instances", () => {
     err.mockRestore();
   });
 
-  it("prefers Postgres over Turso and Blob", async () => {
-    process.env.TURSO_DATABASE_URL = "libsql://x"; process.env.TURSO_AUTH_TOKEN = "t";
+  it("prefers Postgres over Blob (Turso, when set, wins over both)", async () => {
     const A = await instance(fakePg());
     await A.run(() => null);
     expect(A.sync.ledgerMode()).toBe("postgres");

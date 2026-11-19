@@ -91,15 +91,32 @@ describe("withDbSync with Turso configured", () => {
     expect(t.rows.get("pit/ledger.sqlite")?.version).toBe(3);
   });
 
-  it("falls back to ephemeral when Turso errors, logging once", async () => {
+  it("answers 503 instead of forking an ephemeral ledger when Turso is down, then recovers", async () => {
     const err = vi.spyOn(console, "error").mockImplementation(() => {});
-    const m = await load(async () => { throw new Error("SERVER_ERROR: 401 unauthorized"); });
-    const h = m.withDbSync(async (_r: Request) => new Response("ok"));
+    const t = fakeTurso();
+    let down = true;
+    const m = await load(async (sql, args) => { if (down) throw new Error("SERVER_ERROR: 503"); return t.exec(sql, args); });
+    const ran = vi.fn();
+    const h = m.withDbSync(async (_r: Request) => { ran(); return new Response("ok"); });
+    const res = await h(new Request("http://x/"));
+    expect(res.status).toBe(503);
+    expect(ran).not.toHaveBeenCalled();
+    expect(m.ledgerMode()).toBe("turso");
+    down = false;
     expect((await h(new Request("http://x/"))).status).toBe(200);
-    expect((await h(new Request("http://x/"))).status).toBe(200);
-    expect(m.ledgerMode()).toBe("ephemeral");
-    expect(err).toHaveBeenCalledTimes(1);
     err.mockRestore();
+  });
+
+  it("prefers Turso over Postgres when both are configured", async () => {
+    process.env.DATABASE_URL = "postgres://neon-over-quota.example/db";
+    const t = fakeTurso();
+    const m = await load(t.exec);
+    await m.withDbSync(async (_r: Request) => {
+      m.getDb().prepare("INSERT INTO progressive_meters (id, amount_cents, seed_cents, contribution_bps, updated_at) VALUES ('y', 1, 0, 0, 'now')").run();
+      return new Response("ok");
+    })(new Request("http://x/"));
+    expect(m.ledgerMode()).toBe("turso");
+    expect(t.rows.get("pit/ledger.sqlite")?.version).toBe(1);
   });
 
   it("uses Blob when Turso is unset", async () => {
