@@ -127,4 +127,57 @@ describe("withDbSync with Turso configured", () => {
     expect(m.ledgerMode()).toBe("blob");
     expect(blob.get).toHaveBeenCalled();
   });
+  it("a cold start that reads 'no snapshot' while one exists never serves the empty ledger (JD2 find)", async () => {
+    const t = fakeTurso();
+    let m = await load(t.exec);
+    await m.withDbSync(async (_r: Request) => {
+      m.getDb().prepare("INSERT INTO progressive_meters (id, amount_cents, seed_cents, contribution_bps, updated_at) VALUES ('real', 4242, 0, 0, 'now')").run();
+      return new Response("ok");
+    })(new Request("http://x/"));
+    // New instance whose first version reads come back empty (seen live on a cold-start burst).
+    let blanks = 4;
+    const flaky = async (sql: string, args: unknown[] = []) => {
+      if (/^SELECT version FROM/i.test(sql) && blanks > 0) { blanks--; return { rows: [], rowsAffected: 0 }; }
+      return t.exec(sql, args);
+    };
+    vi.resetModules();
+    m = await load(flaky);
+    // Handler writes when it finds nothing (like ensureAllTiers seeding meters), then reports what it saw.
+    const h = m.withDbSync(async (_r: Request) => {
+      const db = m.getDb();
+      const r = db.prepare("SELECT amount_cents a FROM progressive_meters WHERE id='real'").get() as { a: number } | undefined;
+      if (!r) db.prepare("INSERT OR IGNORE INTO progressive_meters (id, amount_cents, seed_cents, contribution_bps, updated_at) VALUES ('fresh', 1, 0, 0, 'now')").run();
+      return new Response(r ? String(r.a) : "EMPTY");
+    });
+    // 2 blank reads on the first load → fresh DB → write → INSERT conflicts → full reload (2 more blanks)
+    // must NOT keep the fresh copy: durable store answers 503.
+    const err = vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await h(new Request("http://x/"));
+    expect(res.status).toBe(503);
+    expect(t.rows.get("pit/ledger.sqlite")?.version).toBe(1);
+    // next request reads normally and sees the real ledger
+    expect(await (await h(new Request("http://x/"))).text()).toBe("4242");
+    err.mockRestore();
+  });
+
+  it("one blank read is retried inside load, so the real snapshot is used", async () => {
+    const t = fakeTurso();
+    let m = await load(t.exec);
+    await m.withDbSync(async (_r: Request) => {
+      m.getDb().prepare("INSERT INTO progressive_meters (id, amount_cents, seed_cents, contribution_bps, updated_at) VALUES ('real', 99, 0, 0, 'now')").run();
+      return new Response("ok");
+    })(new Request("http://x/"));
+    let blanks = 1;
+    vi.resetModules();
+    m = await load(async (sql: string, args: unknown[] = []) => {
+      if (/^SELECT version FROM/i.test(sql) && blanks > 0) { blanks--; return { rows: [], rowsAffected: 0 }; }
+      return t.exec(sql, args);
+    });
+    const r = await m.withDbSync(async (_r: Request) => {
+      const x = m.getDb().prepare("SELECT amount_cents a FROM progressive_meters WHERE id='real'").get() as { a: number } | undefined;
+      return new Response(String(x?.a));
+    })(new Request("http://x/"));
+    expect(await r.text()).toBe("99");
+  });
 });
+

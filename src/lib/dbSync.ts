@@ -84,7 +84,10 @@ const tursoStore: SnapshotStore = {
   name: "turso",
   async load(known) {
     const x = await turso();
-    const v = await x("SELECT version FROM pit_snapshots WHERE key = ?", [KEY]);
+    let v = await x("SELECT version FROM pit_snapshots WHERE key = ?", [KEY]);
+    // Seen live on cold-start bursts (Nov 2026): an empty read while the row exists. Look once more
+    // before reporting "no snapshot"; a later save conflict is also caught in withDbSync.
+    if (!v.rows.length) v = await x("SELECT version FROM pit_snapshots WHERE key = ?", [KEY]);
     if (!v.rows.length) return { kind: "none" };
     const ver = String(v.rows[0].version);
     if (known === ver) return { kind: "same" };
@@ -200,11 +203,16 @@ function degrade(stage: string, e: unknown): void {
 /** test-only */
 export function __resetDbSyncForTests(): void { version = null; loaded = false; degraded = null; chain = Promise.resolve(); }
 
-async function syncIn(store: SnapshotStore): Promise<void> {
-  const res = await store.load(loaded ? version : null);
+async function syncIn(store: SnapshotStore, afterConflict = false): Promise<void> {
+  const res = await store.load(loaded && !afterConflict ? version : null);
   if (res.kind === "same") return;
   if (res.kind === "none") {
-    if (!loaded) { loadDbFromImage(null); version = null; loaded = true; }
+    // A save just conflicted, so a snapshot exists: "none" now is a bad read. Never keep serving
+    // the in-memory copy (it may be a fresh empty ledger); durable stores fail with 503 instead.
+    if (afterConflict && (store.name === "turso" || store.name === "postgres")) {
+      throw new Error("snapshot exists (save conflicted) but the store returned none");
+    }
+    if (!loaded || afterConflict) { loadDbFromImage(null); version = null; loaded = true; }
     return;
   }
   loadDbFromImage(res.buf);
@@ -229,8 +237,9 @@ export function withDbSync<A extends unknown[]>(handler: Handler<A>): Handler<A>
     const run = async (): Promise<Response> => {
       const req = args[0] instanceof Request ? args[0] : null;
       const spare = req ? req.clone() : null;
+      let conflicted = false;
       for (let attempt = 0; attempt < 3; attempt++) {
-        if (!degraded) await syncIn(store).catch((e) => degrade("load", e));
+        if (!degraded) await syncIn(store, conflicted).catch((e) => degrade("load", e));
         if (degraded) { getDb(); const res = await handler(...args); clearDirty(); return res; }
         getDb();
         clearDirty();
@@ -240,7 +249,7 @@ export function withDbSync<A extends unknown[]>(handler: Handler<A>): Handler<A>
         let saved: boolean;
         try { saved = await syncOut(store); } catch (e) { degrade("save", e); clearDirty(); return res; }
         if (saved) return res;
-        loaded = true; // force a fresh pull of the winning snapshot, then retry
+        conflicted = true; // force a full pull of the winning snapshot, then retry
       }
       return new Response(JSON.stringify({ error: "busy, please retry" }), { status: 503 });
     };
