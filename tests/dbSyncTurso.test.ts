@@ -181,3 +181,32 @@ describe("withDbSync with Turso configured", () => {
   });
 });
 
+describe("Turso client fetch", () => {
+  it("creates the libSQL client with a no-store fetch (Next.js must not cache snapshot reads)", async () => {
+    vi.resetModules();
+    const seen: { cfg?: { fetch?: (u: string, i?: RequestInit) => Promise<Response> } } = {};
+    vi.doMock("@libsql/client/web", () => ({
+      createClient: (cfg: never) => {
+        seen.cfg = cfg;
+        return { execute: async () => ({ rows: [], rowsAffected: 0 }) };
+      },
+    }));
+    const saved = { ...process.env };
+    process.env.TURSO_DATABASE_URL = "libsql://pit-test.turso.io";
+    process.env.TURSO_AUTH_TOKEN = "test";
+    delete process.env.PIT_DB_PATH;
+    const sync = await import("@/lib/dbSync");
+    sync.__resetDbSyncForTests();
+    sync.__setTursoExecForTests(null);
+    await sync.withDbSync(async (_r: Request) => new Response("ok"))(new Request("http://x/"));
+    expect(typeof seen.cfg?.fetch).toBe("function");
+    const orig = globalThis.fetch;
+    let initSeen: RequestInit | undefined;
+    globalThis.fetch = (async (_u: unknown, i?: RequestInit) => { initSeen = i; return new Response("{}"); }) as typeof fetch;
+    await seen.cfg!.fetch!("https://pit-test.turso.io/v2/pipeline", { method: "POST" });
+    globalThis.fetch = orig;
+    expect(initSeen).toMatchObject({ method: "POST", cache: "no-store" });
+    vi.doUnmock("@libsql/client/web");
+    process.env = { ...saved };
+  });
+});

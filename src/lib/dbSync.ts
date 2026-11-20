@@ -60,7 +60,14 @@ export function __setTursoExecForTests(fn: Exec | null): void { tursoExec = fn; 
 async function turso(): Promise<Exec> {
   if (!tursoExec) {
     const { createClient } = await import("@libsql/client/web");
-    const client = createClient({ url: process.env.TURSO_DATABASE_URL!, authToken: process.env.TURSO_AUTH_TOKEN });
+    // no-store: libSQL talks HTTP through fetch(), and Next.js caches fetch() (even POST) inside
+    // GET-only route handlers — the same trap as Neon (b9efad2). Seen live on the JD2 fairness
+    // route: cached blank snapshot reads served a fresh empty ledger.
+    const client = createClient({
+      url: process.env.TURSO_DATABASE_URL!,
+      authToken: process.env.TURSO_AUTH_TOKEN,
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => fetch(input, { ...init, cache: "no-store" }),
+    });
     tursoExec = async (sql, args = []) => {
       const r = await client.execute({ sql, args: args as never });
       return { rows: r.rows as unknown as Record<string, unknown>[], rowsAffected: r.rowsAffected };
